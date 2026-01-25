@@ -1,0 +1,14 @@
+// Authenticated layout styles
+:host {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+// Adjust main content margin when sidebar is open on desktop
+@media (min-width: 768px) {
+  .flex.flex-1.flex-col {
+    margin-left: 0; // Sidebar is fixed, content flows naturally
+  }
+}
+

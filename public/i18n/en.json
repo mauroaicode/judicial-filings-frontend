@@ -1,0 +1,88 @@
+{
+  "auth": {
+    "signIn": {
+      "title": "Sign In",
+      "welcome": "Welcome again",
+      "toOurWebsite": "to our website",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Remember me",
+      "termsAndConditions": "By proceeding, you agree to the",
+      "termsAndConditionsLink": "Terms and Conditions",
+      "signInButton": "Sign In",
+      "forgotPassword": "Forgot your password?",
+      "loading": "Loading...",
+      "securityTitle": "Security Tips",
+      "securityTip1": "Never share your login credentials",
+      "securityTip2": "Use strong passwords and change them regularly",
+      "securityTip3": "Log out when you finish using the system"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email to receive a recovery code",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your@email.com",
+      "codeLabel": "Recovery code",
+      "codePlaceholder": "Enter the code",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "sendCodeButton": "Send code",
+      "resetPasswordButton": "Reset password",
+      "sendingCode": "Sending code...",
+      "resetting": "Resetting...",
+      "backToSignIn": "← Back to sign in",
+      "codeSent": "Recovery code sent to your email",
+      "passwordReset": "Password reset successfully",
+      "invalidCode": "Invalid or expired code",
+      "passwordsNotMatch": "Passwords do not match",
+      "securityTitle": "Protect Your Account",
+      "securityTip1": "Recovery code expires in 15 minutes",
+      "securityTip2": "Use a unique and strong password",
+      "securityTip3": "Do not share your recovery code with anyone"
+    },
+    "errors": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email",
+      "passwordRequired": "Password is required",
+      "codeRequired": "Code is required",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "fieldRequired": "This field is required",
+      "emailOrPasswordIncorrect": "Email or password incorrect",
+      "serverError": "Server error. Please try again later.",
+      "somethingWentWrong": "Something went wrong. Please try again."
+    },
+    "success": {
+      "login": "Login successful"
+    }
+  },
+  "generics": {
+    "email": "Email",
+    "password": "Password",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "spanish": "Spanish",
+    "english": "English"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "toggleSidebar": "Toggle sidebar"
+  },
+  "header": {
+    "searchPlaceholder": "Search...",
+    "search": "Search",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "userMenu": "User menu",
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  },
+  "dashboard": {
+    "title": "Dashboard"
+  }
+}
+

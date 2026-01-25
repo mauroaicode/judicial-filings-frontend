@@ -1,0 +1,24 @@
+<div class="flex min-h-screen bg-base-200">
+  <!-- Sidebar -->
+  <app-sidebar #sidebar></app-sidebar>
+
+  <!-- Main Content Area -->
+  <div
+    class="flex flex-1 flex-col min-w-0 transition-all duration-300"
+    [class.ml-64]="sidebar?.isOpen() && !sidebar?.isMobile()"
+    [class.ml-16]="!sidebar?.isOpen() && !sidebar?.isMobile()"
+  >
+    <!-- Header -->
+    <app-header
+      [pageTitle]="pageTitle()"
+      [sidebar]="sidebar"
+      (toggleSidebar)="onToggleSidebar()"
+    ></app-header>
+
+    <!-- Page Content -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+

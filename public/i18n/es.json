@@ -1,0 +1,87 @@
+{
+  "generics": {
+    "spanish": "Español",
+    "english": "Inglés",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Iniciar Sesión",
+      "welcome": "Bienvenido de nuevo",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Recordarme",
+      "termsAndConditions": "Al continuar, aceptas los",
+      "termsAndConditionsLink": "Términos y Condiciones",
+      "signInButton": "Iniciar Sesión",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "loading": "Cargando...",
+      "securityTitle": "Consejos de Seguridad",
+      "securityTip1": "Nunca compartas tus credenciales de acceso",
+      "securityTip2": "Utiliza contraseñas seguras y cámbialas regularmente",
+      "securityTip3": "Cierra sesión cuando termines de usar el sistema"
+    },
+    "forgotPassword": {
+      "title": "Recuperar Contraseña",
+      "subtitle": "Ingresa tu email para recibir un código de recuperación",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "codeLabel": "Código de recuperación",
+      "codePlaceholder": "Ingresa el código",
+      "newPasswordLabel": "Nueva contraseña",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPasswordLabel": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "••••••••",
+      "sendCodeButton": "Enviar código",
+      "resetPasswordButton": "Restablecer contraseña",
+      "sendingCode": "Enviando código...",
+      "resetting": "Restableciendo...",
+      "backToSignIn": "← Volver a iniciar sesión",
+      "codeSent": "Código de recuperación enviado a tu email",
+      "passwordReset": "Contraseña restablecida exitosamente",
+      "invalidCode": "Código inválido o expirado",
+      "passwordsNotMatch": "Las contraseñas no coinciden",
+      "securityTitle": "Protege tu Cuenta",
+      "securityTip1": "El código de recuperación expira en 15 minutos",
+      "securityTip2": "Usa una contraseña única y segura",
+      "securityTip3": "No compartas tu código de recuperación con nadie"
+    },
+    "errors": {
+      "emailRequired": "El correo electrónico es requerido",
+      "emailInvalid": "Correo electrónico inválido",
+      "passwordRequired": "La contraseña es requerida",
+      "codeRequired": "El código es requerido",
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+      "fieldRequired": "Este campo es requerido",
+      "emailOrPasswordIncorrect": "Correo electrónico o contraseña incorrectos",
+      "serverError": "Error del servidor. Por favor, intenta más tarde.",
+      "somethingWentWrong": "Algo salió mal. Intenta nuevamente."
+    },
+    "success": {
+      "login": "Inicio de sesión exitoso"
+    }
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "toggleSidebar": "Alternar menú lateral"
+  },
+  "header": {
+    "searchPlaceholder": "Buscar...",
+    "search": "Buscar",
+    "messages": "Mensajes",
+    "notifications": "Notificaciones",
+    "userMenu": "Menú de usuario",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "signOut": "Cerrar Sesión"
+  },
+  "dashboard": {
+    "title": "Dashboard"
+  }
+}
+

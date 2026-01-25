@@ -1,0 +1,29 @@
+// Sidebar specific styles
+aside {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); // shadow-lg equivalent
+  
+  // Ensure sidebar doesn't overlap content on desktop when open
+  @media (min-width: 768px) {
+    position: relative;
+  }
+  
+  // Mobile styles
+  @media (max-width: 767px) {
+    position: fixed;
+    z-index: 50;
+  }
+}
+
+// Disabled state
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+// Active state for collapsable items
+button.active {
+  background-color: hsl(var(--a)); // accent color
+  color: hsl(var(--ac)); // accent-content color
+}
+

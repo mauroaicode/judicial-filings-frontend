@@ -1,0 +1,32 @@
+<!-- Background Image -->
+<div class="absolute inset-0 w-full h-full">
+  <img
+    [src]="imageSrc()"
+    alt="Background"
+    class="w-full h-full object-cover"
+  />
+  <div class="absolute inset-0 bg-neutral/50"></div>
+</div>
+
+<div class="relative z-20 flex flex-col justify-center items-center p-12 w-full h-full">
+  <div class="max-w-md justify-center">
+    <!-- Security Title -->
+    <h2 class="text-3xl font-bold text-primary-content mb-6">
+      {{ titleKey() | transloco }}
+    </h2>
+
+    <!-- Security Tips -->
+    <div class="space-y-4">
+      <p class="text-primary-content text-sm leading-relaxed">
+        {{ tip1Key() | transloco }}
+      </p>
+      <p class="text-primary-content text-sm leading-relaxed">
+        {{ tip2Key() | transloco }}
+      </p>
+      <p class="text-primary-content text-sm leading-relaxed">
+        {{ tip3Key() | transloco }}
+      </p>
+    </div>
+  </div>
+</div>
+

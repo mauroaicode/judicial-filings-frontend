@@ -1,0 +1,221 @@
+<!-- Sidebar Overlay (Mobile) -->
+@if (isMobile()) {
+  <div
+    class="fixed inset-0 z-40 bg-base-content/50 transition-opacity"
+    [class.opacity-0]="!isOpen()"
+    [class.pointer-events-none]="!isOpen()"
+    [class.opacity-100]="isOpen()"
+    (click)="closeSidebar()"
+  ></div>
+}
+
+<!-- Sidebar -->
+<aside
+  class="fixed left-0 top-0 z-40 h-screen bg-neutral text-neutral-content transition-all duration-300 ease-in-out shadow-lg"
+  [class.-translate-x-full]="!isOpen() && isMobile()"
+  [class.translate-x-0]="isOpen() || !isMobile()"
+  [class.w-64]="isOpen()"
+  [class.w-16]="!isOpen() && !isMobile()"
+>
+  <div class="flex h-full flex-col overflow-hidden">
+    <!-- Sidebar Header -->
+    <div
+      class="flex h-16 items-center text-center border-b border-neutral/20 transition-all"
+      [class.justify-between]="isOpen()"
+      [class.justify-center]="!isOpen()"
+      [class.px-4]="isOpen()"
+      [class.px-0]="!isOpen()"
+    >
+      @if (isOpen()) {
+        <h2 class="text-lg font-semibold">{{ menuTitle }}</h2>
+      }
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm flex items-center justify-center"
+        (click)="toggleSidebar()"
+        [attr.aria-label]="'navigation.toggleSidebar' | transloco"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          @if (isOpen()) {
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          } @else {
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          }
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Items -->
+    <nav class="flex-1 overflow-y-auto transition-all"
+         [class.p-4]="isOpen()"
+         [class.p-2]="!isOpen()">
+      <ul class="space-y-1">
+        @for (item of navigation().default; track item.id) {
+          @if (item.type === 'divider') {
+            <li class="my-2 border-t border-neutral/20"></li>
+          } @else if (item.type === 'group') {
+            <li class="px-2 py-1 text-xs font-semibold uppercase text-base-content/70">
+              {{ item.title | transloco }}
+            </li>
+          } @else if (item.type === 'collapsable' && item.children) {
+            <li>
+              <button
+                type="button"
+                class="w-full"
+                [class.active]="isItemActive(item)"
+                [class.disabled]="item.disabled"
+                (click)="toggleItem(item)"
+              >
+                <div
+                  class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
+                  [class.gap-3]="isOpen()"
+                  [class.px-3]="isOpen()"
+                  [class.justify-center]="!isOpen()"
+                  [class.px-2]="!isOpen()"
+                  [class.bg-accent]="isItemActive(item)"
+                  [class.text-accent-content]="isItemActive(item)"
+                >
+                  @if (item.icon) {
+                    <span class="flex-shrink-0 flex items-center justify-center">
+                      <!-- Icon placeholder - will be replaced with actual icon component -->
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16"
+                        />
+                      </svg>
+                    </span>
+                  }
+                  <span class="flex-1 font-semibold" [class.hidden]="!isOpen()">{{ item.title | transloco }}</span>
+                  @if (isOpen()) {
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 transition-transform"
+                      [class.rotate-90]="isItemExpanded(item.id)"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  }
+                </div>
+              </button>
+              <!-- Submenu -->
+              @if (isItemExpanded(item.id) && isOpen()) {
+                <ul class="ml-4 mt-1 space-y-1 border-l border-neutral/20 pl-2">
+                  @for (child of item.children; track child.id) {
+                    <li>
+                      <a
+                        [routerLink]="child.link"
+                        routerLinkActive="bg-accent text-accent-content"
+                        [routerLinkActiveOptions]="{ exact: false }"
+                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-neutral-focus font-medium"
+                        (click)="closeSidebar()"
+                      >
+                        @if (child.icon) {
+                          <span class="flex-shrink-0">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"
+                              />
+                            </svg>
+                          </span>
+                        }
+                        <span>{{ child.title | transloco }}</span>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          } @else {
+            <!-- Basic Item -->
+            <li>
+              <a
+                [routerLink]="item.link"
+                routerLinkActive="bg-accent text-accent-content"
+                [routerLinkActiveOptions]="{ exact: false }"
+                [class.disabled]="item.disabled"
+                class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
+                [class.gap-3]="isOpen()"
+                [class.px-3]="isOpen()"
+                [class.justify-center]="!isOpen()"
+                [class.px-2]="!isOpen()"
+                (click)="navigateTo(item)"
+              >
+                @if (item.icon) {
+                  <span class="flex-shrink-0 flex items-center justify-center">
+                    <!-- Icon placeholder -->
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  </span>
+                }
+                <span class="flex-1 font-semibold" [class.hidden]="!isOpen()">{{ item.title | transloco }}</span>
+                @if (item.badge && isOpen()) {
+                  <span
+                    class="badge badge-sm"
+                    [class]="item.badge.classes || 'badge-primary'"
+                  >
+                    {{ item.badge.title }}
+                  </span>
+                }
+              </a>
+            </li>
+          }
+        }
+      </ul>
+    </nav>
+  </div>
+</aside>
+
