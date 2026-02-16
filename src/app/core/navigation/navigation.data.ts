@@ -19,6 +19,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'processes',
     link: '/admin/processes',
   },
+  {
+    id: 'organizations',
+    title: 'navigation.clients',
+    type: 'basic',
+    icon: 'clients',
+    link: '/admin/organizations',
+  },
   // More items will be added here as needed
 ];
 

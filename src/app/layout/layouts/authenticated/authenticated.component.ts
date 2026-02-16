@@ -79,6 +79,8 @@ export class AuthenticatedLayoutComponent {
         this.pageTitle.set('navigation.dashboard');
       } else if (path.includes('/processes')) {
         this.pageTitle.set('processes.title');
+      } else if (path.includes('/organizations')) {
+        this.pageTitle.set('clients.title');
       } else {
         this.pageTitle.set('');
       }

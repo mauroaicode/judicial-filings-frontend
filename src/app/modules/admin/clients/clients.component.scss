@@ -1,0 +1,99 @@
+// Filters grid: columnas con proporciones iguales en todos los breakpoints
+.clients-filters-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .clients-filter-date {
+    @media (min-width: 1280px) {
+      grid-column: span 1;
+    }
+  }
+}
+
+// Table - header, hover y pagination
+.clients-table-head {
+  background-color: #161326;
+  color: #ffffff;
+
+  th {
+    color: #ffffff;
+  }
+}
+
+.clients-table {
+  overflow-x: auto;
+  overflow-y: visible;
+
+  tbody tr.clients-table-row-hover {
+    transition: background-color 0.15s ease;
+    cursor: default;
+
+    &:hover td {
+      background-color: hsl(var(--b3) / 0.85) !important;
+    }
+  }
+}
+
+.clients-pagination {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: 640px) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @media (max-width: 639px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  &__results {
+    font-size: 0.875rem;
+    color: hsl(var(--bc) / 0.7);
+    white-space: nowrap;
+    @media (min-width: 640px) {
+      justify-self: start;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    @media (min-width: 640px) {
+      justify-self: center;
+    }
+  }
+
+  &__per-page {
+    display: flex;
+    justify-content: flex-start;
+    @media (min-width: 640px) {
+      justify-self: end;
+    }
+  }
+}
+
+:host {
+  display: block;
+  width: 100%;
+}

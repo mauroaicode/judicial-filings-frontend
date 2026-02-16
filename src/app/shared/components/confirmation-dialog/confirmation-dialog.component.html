@@ -1,0 +1,15 @@
+<dialog class="modal" [class.modal-open]="open()">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg text-base-content">{{ title() }}</h3>
+    <p class="py-4 text-base-content/80">{{ message() }}</p>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" (click)="onCancel()">
+        {{ cancelLabel() }}
+      </button>
+      <button type="button" [class]="'btn ' + confirmClass()" (click)="onConfirm()">
+        {{ confirmLabel() }}
+      </button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop" (click)="onCancel()"></form>
+</dialog>

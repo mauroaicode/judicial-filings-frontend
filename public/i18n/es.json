@@ -69,6 +69,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "processes": "Procesos",
+    "clients": "Organizaciones",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -162,6 +163,65 @@
     "of": "de",
     "results": "resultados",
     "perPage": "por página"
+  },
+  "clients": {
+    "title": "Organizaciones",
+    "description": "Listado de organizaciones registradas en el sistema",
+    "filters": {
+      "title": "Filtros de Búsqueda",
+      "name": "Nombre",
+      "namePlaceholder": "Nombre de la organización",
+      "type": "Tipo",
+      "typePlaceholder": "Todos los tipos",
+      "status": "Estado",
+      "statusPlaceholder": "Todos los estados",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "Ej: contacto@empresa.com",
+      "createdAtRange": "Rango de Fecha de Creación",
+      "createdAtRangePlaceholder": "Seleccionar rango de fechas",
+      "reset": "Limpiar Filtros",
+      "search": "Buscar"
+    },
+    "table": {
+      "empty": "No hay organizaciones registradas",
+      "index": "#",
+      "name": "Nombre",
+      "type": "Tipo",
+      "identification": "Identificación",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "contactPerson": "Persona de contacto",
+      "status": "Estado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "createdAt": "Fecha de Creación"
+    },
+    "create": {
+      "button": "Agregar organización",
+      "modalTitle": "Nueva organización",
+      "selectType": "Seleccione el tipo de organización",
+      "creatingType": "Creando:",
+      "companyName": "Nombre empresa",
+      "companyNamePlaceholder": "Ej: Empresa ABC Ltda.",
+      "fullName": "Nombre completo",
+      "fullNamePlaceholder": "Ej: Juan Pérez García",
+      "contactPersonPlaceholder": "Ej: María García",
+      "identificationPlaceholder": "Ej: 76.123.456-7",
+      "addressPlaceholder": "Ej: Av. Principal 123",
+      "phonePlaceholder": "Ej: 2234567890",
+      "emailPlaceholder": "Ej: legal@empresa.com",
+      "submit": "Crear organización",
+      "submitting": "Creando...",
+      "confirmTitle": "Crear organización",
+      "confirmMessage": "¿Está seguro de crear esta organización?",
+      "confirmButton": "Crear",
+      "toastSuccess": "Organización creada correctamente"
+    }
+  },
+  "common": {
+    "back": "Atrás",
+    "cancel": "Cancelar"
   }
 }
 

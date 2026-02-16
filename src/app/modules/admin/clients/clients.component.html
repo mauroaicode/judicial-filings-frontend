@@ -1,0 +1,412 @@
+<div class="w-full space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+        {{ 'clients.title' | transloco }}
+      </h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        {{ 'clients.description' | transloco }}
+      </p>
+    </div>
+    <div class="flex shrink-0">
+      <button type="button" class="btn btn-primary btn-sm" (click)="openCreateModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        {{ 'clients.create.button' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-lg mb-4">{{ 'clients.filters.title' | transloco }}</h2>
+      <form [formGroup]="filterForm" class="clients-filters-grid" autocomplete="off">
+        <div class="form-control min-w-0">
+          <label class="label">
+            <span class="label-text">{{ 'clients.filters.name' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="name"
+            class="input input-bordered input-sm w-full min-w-0"
+            [placeholder]="'clients.filters.namePlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="form-control min-w-0">
+          <label class="label">
+            <span class="label-text">{{ 'clients.filters.type' | transloco }}</span>
+          </label>
+          <select formControlName="type" class="select select-bordered select-sm w-full min-w-0">
+            <option value="">{{ 'clients.filters.typePlaceholder' | transloco }}</option>
+            @for (opt of typeOptions(); track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-control min-w-0">
+          <label class="label">
+            <span class="label-text">{{ 'clients.filters.status' | transloco }}</span>
+          </label>
+          <select formControlName="is_active" class="select select-bordered select-sm w-full min-w-0">
+            <option value="">{{ 'clients.filters.statusPlaceholder' | transloco }}</option>
+            @for (opt of statusOptions(); track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-control min-w-0">
+          <label class="label">
+            <span class="label-text">{{ 'clients.filters.email' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="email"
+            class="input input-bordered input-sm w-full min-w-0"
+            [placeholder]="'clients.filters.emailPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="form-control min-w-0 clients-filter-date">
+          <app-date-range-picker
+            [label]="'clients.filters.createdAtRange' | transloco"
+            [placeholder]="'clients.filters.createdAtRangePlaceholder' | transloco"
+            [size]="'sm'"
+            formControlName="created_at_range"
+          ></app-date-range-picker>
+        </div>
+      </form>
+
+      <div class="flex flex-wrap items-center justify-end gap-2 mt-4">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="onResetFilters()">
+          {{ 'clients.filters.reset' | transloco }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="onSearch()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {{ 'clients.filters.search' | transloco }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (organizations().length === 0) {
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-12 w-12 text-base-content/30 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          <p class="text-base-content/70">{{ 'clients.table.empty' | transloco }}</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto w-full clients-table">
+          <table class="table table-zebra" style="min-width: 900px;">
+            <thead class="clients-table-head">
+              <tr>
+                <th class="text-center" style="width: 60px;">{{ 'clients.table.index' | transloco }}</th>
+                <th class="text-left">{{ 'clients.table.name' | transloco }}</th>
+                <th class="text-left" style="width: 140px;">{{ 'clients.table.type' | transloco }}</th>
+                <th class="text-left" style="width: 140px;">{{ 'clients.table.identification' | transloco }}</th>
+                <th class="text-left">{{ 'clients.table.address' | transloco }}</th>
+                <th class="text-left" style="width: 140px;">{{ 'clients.table.phone' | transloco }}</th>
+                <th class="text-left" style="width: 200px;">{{ 'clients.table.email' | transloco }}</th>
+                <th class="text-left" style="width: 160px;">{{ 'clients.table.contactPerson' | transloco }}</th>
+                <th class="text-center" style="width: 100px;">{{ 'clients.table.status' | transloco }}</th>
+                <th class="text-center" style="width: 120px;">{{ 'clients.table.createdAt' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (org of organizations(); track org.id) {
+                <tr class="clients-table-row clients-table-row-hover">
+                  <td class="text-center align-middle">{{ org.index }}</td>
+                  <td class="align-middle font-medium text-base-content">{{ org.name }}</td>
+                  <td class="align-middle text-base-content/90">{{ getTypeLabel(org.type) }}</td>
+                  <td class="align-middle text-base-content/90">{{ org.identification ?? '–' }}</td>
+                  <td class="align-middle text-base-content/90 max-w-[200px] truncate" [title]="org.address ?? ''">{{ org.address ?? '–' }}</td>
+                  <td class="align-middle text-base-content/90">{{ org.phone ?? '–' }}</td>
+                  <td class="align-middle text-base-content/90">{{ org.email ?? '–' }}</td>
+                  <td class="align-middle text-base-content/90">{{ org.contact_person ?? '–' }}</td>
+                  <td class="text-center align-middle">
+                    <span
+                      class="badge whitespace-nowrap"
+                      [class.badge-success]="org.is_active"
+                      [class.badge-neutral]="!org.is_active"
+                    >
+                      {{ org.is_active ? ('clients.table.active' | transloco) : ('clients.table.inactive' | transloco) }}
+                    </span>
+                  </td>
+                  <td class="text-center align-middle whitespace-nowrap">{{ formatDate(org.created_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (pagination(); as paginationInfo) {
+          <div class="clients-pagination border-t border-base-300 bg-base-100">
+            <div class="clients-pagination__results">
+              {{ 'table.showing' | transloco }}
+              <span class="font-semibold">{{ getShowingRange().from }}</span>
+              {{ 'table.to' | transloco }}
+              <span class="font-semibold">{{ getShowingRange().to }}</span>
+              {{ 'table.of' | transloco }}
+              <span class="font-semibold">{{ paginationInfo.total }}</span>
+              {{ 'table.results' | transloco }}
+            </div>
+            <div class="clients-pagination__controls join">
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >««</button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >«</button>
+              @for (page of getPageNumbers(); track page) {
+                <button
+                  class="join-item btn btn-sm"
+                  [class.btn-active]="page === paginationInfo.current_page"
+                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
+                >
+                  {{ page }}
+                </button>
+              }
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >»</button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >»»</button>
+            </div>
+            <div class="clients-pagination__per-page">
+              <select
+                class="select select-bordered select-sm"
+                [value]="paginationInfo.per_page"
+                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+                    {{ size }} {{ 'table.perPage' | transloco }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Modal crear organización -->
+  <dialog class="modal" [class.modal-open]="createModalOpen()">
+    <div class="modal-box max-w-lg">
+      <h3 class="font-bold text-lg text-base-content mb-4">
+        {{ 'clients.create.modalTitle' | transloco }}
+      </h3>
+
+      @if (createStep() === 0) {
+        <p class="text-base-content/80 mb-4">{{ 'clients.create.selectType' | transloco }}</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          @for (opt of typeOptions(); track opt.value) {
+            <button
+              type="button"
+              class="btn btn-outline flex-1"
+              (click)="selectCreateType(opt.value)"
+            >
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (createStep() === 1) {
+        <form [formGroup]="createForm" class="space-y-4" (ngSubmit)="onSubmitCreate()">
+          <p class="text-sm text-base-content/80 mb-2">
+            {{ 'clients.create.creatingType' | transloco }}
+            <span class="font-semibold text-secondary">{{ getTypeLabel(createForm.get('organizationType')?.value) }}</span>
+          </p>
+          @if (isJuridical()) {
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">{{ 'clients.create.companyName' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                formControlName="name"
+                class="input input-bordered input-sm w-full"
+                [placeholder]="'clients.create.companyNamePlaceholder' | transloco"
+                autocomplete="off"
+              />
+            </div>
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">{{ 'clients.table.contactPerson' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                formControlName="contact_person"
+                class="input input-bordered input-sm w-full"
+                [placeholder]="'clients.create.contactPersonPlaceholder' | transloco"
+                autocomplete="off"
+              />
+            </div>
+          } @else {
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">{{ 'clients.create.fullName' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                formControlName="fullName"
+                class="input input-bordered input-sm w-full"
+                [placeholder]="'clients.create.fullNamePlaceholder' | transloco"
+                autocomplete="off"
+              />
+            </div>
+          }
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'clients.table.identification' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              formControlName="identification"
+              class="input input-bordered input-sm w-full"
+              [placeholder]="'clients.create.identificationPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'clients.table.address' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              formControlName="address"
+              class="input input-bordered input-sm w-full"
+              [placeholder]="'clients.create.addressPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'clients.table.phone' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              formControlName="phone"
+              class="input input-bordered input-sm w-full"
+              [placeholder]="'clients.create.phonePlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'clients.table.email' | transloco }}</span>
+            </label>
+            <input
+              type="email"
+              formControlName="email"
+              class="input input-bordered input-sm w-full"
+              [placeholder]="'clients.create.emailPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="modal-action pt-4">
+            <button type="button" class="btn btn-ghost" (click)="backToCreateType()">
+              {{ 'common.back' | transloco }}
+            </button>
+            <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">
+              {{ 'common.cancel' | transloco }}
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="createSubmitting() || !buildCreatePayload()"
+            >
+              @if (createSubmitting()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                {{ 'clients.create.submitting' | transloco }}
+              } @else {
+                {{ 'clients.create.submit' | transloco }}
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+    <form method="dialog" class="modal-backdrop" (click)="closeCreateModal()"></form>
+  </dialog>
+
+  <!-- Confirmación antes de crear -->
+  <app-confirmation-dialog
+    [open]="confirmCreateOpen()"
+    [title]="getConfirmCreateTitle()"
+    [message]="getConfirmCreateMessage()"
+    [confirmLabel]="'clients.create.confirmButton' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    confirmClass="btn-primary"
+    (confirm)="onConfirmCreate()"
+    (cancel)="onCancelConfirmCreate()"
+  />
+
+  <!-- Toast éxito (DaisyUI, auto-dismiss) -->
+  @if (successToastMessage()) {
+    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+      <div class="alert alert-success shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ successToastMessage() }}</span>
+      </div>
+    </div>
+  }
+</div>

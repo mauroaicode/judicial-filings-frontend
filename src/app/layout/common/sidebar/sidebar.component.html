@@ -168,7 +168,7 @@
               }
             </li>
           } @else {
-            <!-- Basic Item -->
+            <!-- Basic Item: igual que frontend - routerLinkActive marca el activo, click solo cierra sidebar en móvil -->
             <li>
               <a
                 [routerLink]="item.link"
@@ -180,7 +180,7 @@
                 [class.px-3]="isOpen()"
                 [class.justify-center]="!isOpen()"
                 [class.px-2]="!isOpen()"
-                (click)="navigateTo(item)"
+                (click)="onNavItemClick(item)"
               >
                 @if (item.icon) {
                   <span class="flex-shrink-0 flex items-center justify-center">

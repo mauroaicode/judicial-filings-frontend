@@ -115,7 +115,7 @@ export class SidebarComponent {
   }
 
   /**
-   * Check if item is active
+   * Check if item is active (para ítems collapsable; los básicos usan routerLinkActive)
    */
   isItemActive(item: NavigationItem): boolean {
     if (!item.link) return false;
@@ -128,24 +128,17 @@ export class SidebarComponent {
   }
 
   /**
-   * Navigate to item link
+   * Al hacer click en un ítem: en móvil cerrar sidebar; la navegación la hace el routerLink del <a>
    */
-  navigateTo(item: NavigationItem): void {
+  onNavItemClick(item: NavigationItem): void {
     if (item.disabled || !item.link) return;
-
-    // If collapsable, toggle instead of navigate
     if (item.type === 'collapsable' && item.children) {
       this.toggleItem(item);
       return;
     }
-
-    // Navigate to link
-    this._router.navigate([item.link]).then(() => {
-      // Close sidebar on mobile after navigation
-      if (this.isMobile()) {
-        this.closeSidebar();
-      }
-    });
+    if (this.isMobile()) {
+      this.closeSidebar();
+    }
   }
 
   /**

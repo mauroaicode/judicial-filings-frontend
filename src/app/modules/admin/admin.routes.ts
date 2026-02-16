@@ -13,6 +13,12 @@ export default [
     loadChildren: () =>
       import('./processes/processes.routes').then((m) => m.default),
   },
+  // Organizations
+  {
+    path: 'organizations',
+    loadChildren: () =>
+      import('./clients/clients.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

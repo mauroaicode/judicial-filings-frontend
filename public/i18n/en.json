@@ -69,6 +69,8 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "processes": "Processes",
+    "clients": "Organizations",
     "toggleSidebar": "Toggle sidebar"
   },
   "header": {
@@ -83,6 +85,72 @@
   },
   "dashboard": {
     "title": "Dashboard"
+  },
+  "table": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "perPage": "per page"
+  },
+  "clients": {
+    "title": "Organizations",
+    "description": "List of organizations registered in the system",
+    "filters": {
+      "title": "Search Filters",
+      "name": "Name",
+      "namePlaceholder": "Organization name",
+      "type": "Type",
+      "typePlaceholder": "All types",
+      "status": "Status",
+      "statusPlaceholder": "All statuses",
+      "email": "Email",
+      "emailPlaceholder": "E.g. contact@company.com",
+      "createdAtRange": "Created At Date Range",
+      "createdAtRangePlaceholder": "Select date range",
+      "reset": "Clear Filters",
+      "search": "Search"
+    },
+    "table": {
+      "empty": "No organizations registered",
+      "index": "#",
+      "name": "Name",
+      "type": "Type",
+      "identification": "Identification",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "contactPerson": "Contact Person",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "createdAt": "Created At"
+    },
+    "create": {
+      "button": "Add organization",
+      "modalTitle": "New organization",
+      "selectType": "Select the type of organization",
+      "creatingType": "Creating:",
+      "companyName": "Company name",
+      "companyNamePlaceholder": "E.g. ABC Corp.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "E.g. John Doe",
+      "contactPersonPlaceholder": "E.g. Jane Smith",
+      "identificationPlaceholder": "E.g. 76.123.456-7",
+      "addressPlaceholder": "E.g. 123 Main St",
+      "phonePlaceholder": "E.g. 2234567890",
+      "emailPlaceholder": "E.g. legal@company.com",
+      "submit": "Create organization",
+      "submitting": "Creating...",
+      "confirmTitle": "Create organization",
+      "confirmMessage": "Are you sure you want to create this organization?",
+      "confirmButton": "Create",
+      "toastSuccess": "Organization created successfully"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel"
   }
 }
 
