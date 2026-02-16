@@ -77,6 +77,8 @@ export class AuthenticatedLayoutComponent {
       const path = this._router.url;
       if (path.includes('/dashboard')) {
         this.pageTitle.set('navigation.dashboard');
+      } else if (path.includes('/processes')) {
+        this.pageTitle.set('processes.title');
       } else {
         this.pageTitle.set('');
       }

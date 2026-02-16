@@ -89,7 +89,7 @@
         class="btn btn-ghost btn-circle avatar"
         [attr.aria-label]="'header.userMenu' | transloco"
       >
-        <div class="w-10 rounded-full bg-accent text-accent-content flex items-center justify-center">
+        <div class="w-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center">
           @if (currentUser(); as user) {
             <span class="text-sm font-semibold">
               {{ (user.name && user.name.length > 0) ? user.name.charAt(0).toUpperCase() : 'U' }}

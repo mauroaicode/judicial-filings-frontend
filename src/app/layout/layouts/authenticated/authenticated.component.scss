@@ -3,12 +3,30 @@
   display: flex;
   width: 100%;
   min-height: 100vh;
+  position: relative;
 }
 
-// Adjust main content margin when sidebar is open on desktop
-@media (min-width: 768px) {
-  .flex.flex-1.flex-col {
-    margin-left: 0; // Sidebar is fixed, content flows naturally
+// Main content area - ensure it has proper margin when sidebar is fixed
+.flex.flex-1.flex-col {
+  // Margin will be controlled by conditional classes ml-64 and ml-16
+  transition: margin-left 0.3s ease-in-out;
+  
+  @media (min-width: 768px) {
+    // Sidebar is fixed, so content needs margin
+    // Classes ml-64 (256px) and ml-16 (64px) are applied conditionally
+    // Ensure these classes take precedence
+    &.ml-64 {
+      margin-left: 16rem !important; // 256px
+    }
+    
+    &.ml-16 {
+      margin-left: 4rem !important; // 64px
+    }
+  }
+  
+  @media (max-width: 767px) {
+    // On mobile, sidebar overlays, so no margin needed
+    margin-left: 0 !important;
   }
 }
 

@@ -7,6 +7,12 @@ export default [
     loadChildren: () =>
       import('./dashboard/dashboard.routes').then((m) => m.default),
   },
+  // Processes
+  {
+    path: 'processes',
+    loadChildren: () =>
+      import('./processes/processes.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

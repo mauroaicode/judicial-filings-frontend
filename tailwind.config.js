@@ -44,7 +44,7 @@ module.exports = {
           // Override with custom colors
           primary: COLORS.primary,
           'primary-content': COLORS.textOnDark,
-          secondary: COLORS.orchid,
+          secondary: '#FF9800', // Orange color from DaisyUI
           'secondary-content': COLORS.textOnDark,
           accent: COLORS.yellowGreen,
           'accent-content': COLORS.textOnDark,

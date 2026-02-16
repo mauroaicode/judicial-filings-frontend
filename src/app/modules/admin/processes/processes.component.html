@@ -1,0 +1,678 @@
+<div class="w-full space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+        {{ 'processes.title' | transloco }}
+      </h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        {{ 'processes.description' | transloco }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-lg mb-4">{{ 'processes.filters.title' | transloco }}</h2>
+      <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off">
+        <!-- Row 1: Process Number, Court, Process Class, Plaintiff -->
+        <!-- Process Number Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.processNumber' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            name="process_number"
+            formControlName="process_number"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.processNumberPlaceholder' | transloco"
+            autocomplete="one-time-code"
+            data-form-type="other"
+            inputmode="numeric"
+          />
+        </div>
+
+        <!-- Court Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.court' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="court"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.courtPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Process Class Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.processClass' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="process_class"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.processClassPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Plaintiff Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.plaintiff' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="plaintiff"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.plaintiffPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Row 2: Defendant, Organization, Status, Has Multiple Instances -->
+        <!-- Defendant Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.defendant' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="defendant"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.defendantPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Organization Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.organization' | transloco }}</span>
+          </label>
+          <input
+            type="text"
+            formControlName="organization"
+            class="input input-bordered input-sm"
+            [placeholder]="'processes.filters.organizationPlaceholder' | transloco"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.status' | transloco }}</span>
+          </label>
+          <select
+            formControlName="status"
+            class="select select-bordered select-sm w-full"
+          >
+            <option value="">{{ 'processes.filters.statusPlaceholder' | transloco }}</option>
+            <option value="active">{{ 'processes.filters.statusActive' | transloco }}</option>
+            <option value="inactive">{{ 'processes.filters.statusInactive' | transloco }}</option>
+          </select>
+        </div>
+
+        <!-- Has Multiple Instances Filter -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.hasMultipleInstances' | transloco }}</span>
+          </label>
+          <select
+            formControlName="has_multiple_instances"
+            class="select select-bordered select-sm w-full"
+          >
+            <option [value]="null">{{ 'processes.filters.all' | transloco }}</option>
+            <option [value]="true">{{ 'processes.filters.yes' | transloco }}</option>
+            <option [value]="false">{{ 'processes.filters.no' | transloco }}</option>
+          </select>
+        </div>
+
+        <!-- Row 3: Process Date Range (Radicación), Created At Range, Last API Update Range -->
+        <!-- Process Date Range Filter (Fecha de Radicación) -->
+        <div class="form-control">
+          <app-date-range-picker
+            [label]="'processes.filters.processDateRange' | transloco"
+            [placeholder]="'processes.filters.processDateRangePlaceholder' | transloco"
+            [size]="'sm'"
+            formControlName="process_date_range"
+          ></app-date-range-picker>
+        </div>
+
+        <!-- Created At Range Filter (Fecha de Creación del Registro) -->
+        <div class="form-control">
+          <app-date-range-picker
+            [label]="'processes.filters.createdAtRange' | transloco"
+            [placeholder]="'processes.filters.createdAtRangePlaceholder' | transloco"
+            [size]="'sm'"
+            formControlName="created_at_range"
+          ></app-date-range-picker>
+        </div>
+
+        <!-- Last API Update Range Filter -->
+        <div class="form-control">
+          <app-date-range-picker
+            [label]="'processes.filters.lastApiUpdateRange' | transloco"
+            [placeholder]="'processes.filters.lastApiUpdateRangePlaceholder' | transloco"
+            [size]="'sm'"
+            formControlName="last_api_update_range"
+          ></app-date-range-picker>
+        </div>
+      </form>
+
+      <!-- Filter Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-success btn-sm"
+            (click)="openImportModal()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            {{ 'processes.import.button' | transloco }}
+          </button>
+        </div>
+        <div class="card-actions justify-end">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            (click)="onResetFilters()"
+          >
+            {{ 'processes.filters.reset' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            (click)="onSearch()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {{ 'processes.filters.search' | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Excel Modal -->
+  <dialog class="modal" [class.modal-open]="isImportModalOpen()">
+    <div class="modal-box max-w-2xl w-full">
+      <h3 class="font-bold text-lg text-base-content mb-4">
+        {{ 'processes.import.title' | transloco }}
+      </h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        {{ 'processes.import.description' | transloco }}
+      </p>
+
+      @if (!importResult()) {
+        <app-file-drop-zone
+          [accept]="'.xlsx'"
+          [maxSizeMb]="10"
+          [disabled]="importSubmitting()"
+          [value]="importFile()"
+          (fileChange)="onImportFileSelected($event)"
+        ></app-file-drop-zone>
+
+        <div class="modal-action mt-6">
+          <form method="dialog">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              [disabled]="importSubmitting()"
+              (click)="closeImportModal()"
+            >
+              {{ 'processes.import.cancel' | transloco }}
+            </button>
+          </form>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!importFile() || importSubmitting()"
+            (click)="onSubmitImport()"
+          >
+            @if (importSubmitting()) {
+              <span class="loading loading-spinner loading-sm"></span>
+              {{ 'processes.import.submitting' | transloco }}
+            } @else {
+              {{ 'processes.import.submit' | transloco }}
+            }
+          </button>
+        </div>
+      } @else {
+        @let result = importResult()!;
+        @let stats = result.stats;
+
+        @if (result.success && stats.succeeded > 0) {
+          <div class="alert alert-success mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="font-semibold">{{ result.message }}</p>
+              <p class="text-sm mt-1">
+                {{ 'processes.import.stats.succeeded' | transloco }}: <strong>{{ stats.succeeded }}</strong>
+                @if (stats.failed > 0) {
+                  · {{ 'processes.import.stats.failed' | transloco }}: <strong>{{ stats.failed }}</strong>
+                }
+              </p>
+            </div>
+          </div>
+        }
+
+        @if (!result.success || stats.failed > 0 || hasImportErrors()) {
+          <div class="alert alert-error mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="font-semibold">{{ result.message }}</p>
+              @if (stats) {
+                <p class="text-sm mt-1">
+                  {{ 'processes.import.stats.succeeded' | transloco }}: <strong>{{ stats.succeeded }}</strong>
+                  · {{ 'processes.import.stats.failed' | transloco }}: <strong>{{ stats.failed }}</strong>
+                  · {{ 'processes.import.stats.total' | transloco }}: <strong>{{ stats.total }}</strong>
+                </p>
+              }
+            </div>
+          </div>
+        }
+
+        @if (hasImportErrors()) {
+          <div class="bg-base-200 rounded-lg p-4 mb-4 max-h-60 overflow-y-auto">
+            <h4 class="font-semibold text-base-content mb-2">{{ 'processes.import.validationErrors' | transloco }}</h4>
+            <ul class="list-disc list-inside space-y-1 text-sm text-base-content/90">
+              @for (err of getImportErrors(); track err.rule + (err.details?.process_number ?? '')) {
+                <li>
+                  <span class="font-medium">{{ err.message }}</span>
+                  @if (err.details?.process_number) {
+                    <span class="text-base-content/70">({{ err.details?.process_number }})</span>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="modal-action">
+          <button type="button" class="btn btn-primary" (click)="closeImportModal()">
+            {{ 'processes.import.close' | transloco }}
+          </button>
+        </div>
+      }
+    </div>
+    <form method="dialog" class="modal-backdrop" (click)="closeImportModal()">
+      <button type="button">{{ 'processes.import.close' | transloco }}</button>
+    </form>
+  </dialog>
+
+  <!-- Data Table (custom: expandible instances + tooltips plaintiff/defendant/organization) -->
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (processes().length === 0) {
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-12 w-12 text-base-content/30 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+            />
+          </svg>
+          <p class="text-base-content/70">{{ 'processes.table.empty' | transloco }}</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto w-full process-list-table">
+          <table class="table table-zebra" style="min-width: 1000px;">
+            <thead style="background-color: #161326; color: #ffffff;">
+              <tr>
+                <th style="width: 48px;" class="text-center"></th>
+                @for (column of columns; track column.key) {
+                  <th
+                    [class.sticky-col-radicado]="column.key === 'process_number'"
+                    [class.text-left]="!column.align || column.align === 'left'"
+                    [class.text-center]="column.align === 'center'"
+                    [class.text-right]="column.align === 'right'"
+                    [style.width]="column.width"
+                  >
+                    {{ column.label | transloco }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (process of processes(); track process.id) {
+                <!-- Fila principal del proceso -->
+                <tr
+                  class="cursor-pointer group process-table-main-row"
+                  [class.process-row-hovered]="hoveredRowId() === process.id"
+                  [class.rounded-b-none]="isExpanded(process) && process.instances?.length"
+                  [class.border-b-0]="isExpanded(process) && process.instances?.length"
+                  [class.bg-base-200/30]="isExpanded(process) && process.instances?.length"
+                  (mouseenter)="hoveredRowId.set(process.id)"
+                  (mouseleave)="hoveredRowId.set(null)"
+                  (click)="toggleExpand(process)"
+                >
+                  <td class="text-center align-middle p-2">
+                    @if (process.has_multiple_instances && process.instances && process.instances.length > 1) {
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs btn-square"
+                        (click)="toggleExpand(process); $event.stopPropagation()"
+                        [attr.aria-expanded]="isExpanded(process)"
+                        [attr.aria-label]="isExpanded(process) ? 'Colapsar' : 'Expandir'"
+                      >
+                        @if (isExpanded(process)) {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        }
+                      </button>
+                    } @else {
+                      <span class="opacity-0 group-hover:opacity-30">–</span>
+                    }
+                  </td>
+                  <td class="text-center align-middle">{{ process.index }}</td>
+                  <td class="whitespace-nowrap align-middle sticky-col-radicado">
+                    <span class="sticky-cell-bg" aria-hidden="true"></span>
+                    <span class="sticky-cell-txt">{{ process.process_number }}</span>
+                  </td>
+                  <td class="align-middle">{{ process.court }}</td>
+                  <td class="align-middle">{{ process.process_class }}</td>
+                  <td class="text-center align-middle">
+                    <span
+                      class="badge whitespace-nowrap"
+                      [class.badge-success]="process.status_label === 'Activo'"
+                      [class.badge-warning]="process.status_label === 'Pendiente'"
+                      [class.badge-error]="process.status_label === 'Cerrado'"
+                    >
+                      {{ process.status_label }}
+                    </span>
+                  </td>
+                  <td class="align-middle">
+                    @let plaintiffDisplay = getPartyDisplay(process.plaintiffs ?? (process.plaintiff ? [process.plaintiff] : []));
+                    @if (plaintiffDisplay.mainText || plaintiffDisplay.extraCount > 0) {
+                      <span>
+                        {{ plaintiffDisplay.mainText }}
+                        @if (plaintiffDisplay.extraCount > 0) {
+                          <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                            <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                              @for (name of plaintiffDisplay.fullList; track name; let i = $index) {
+                                <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                              }
+                            </div>
+                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                              (+{{ plaintiffDisplay.extraCount }})
+                            </span>
+                          </span>
+                        }
+                      </span>
+                    } @else {
+                      <span class="text-base-content/50">–</span>
+                    }
+                  </td>
+                  <td class="align-middle">
+                    @let defendantDisplay = getPartyDisplay(process.defendants ?? (process.defendant ? [process.defendant] : []));
+                    @if (defendantDisplay.mainText || defendantDisplay.extraCount > 0) {
+                      <span>
+                        {{ defendantDisplay.mainText }}
+                        @if (defendantDisplay.extraCount > 0) {
+                          <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                            <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                              @for (name of defendantDisplay.fullList; track name; let i = $index) {
+                                <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                              }
+                            </div>
+                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                              (+{{ defendantDisplay.extraCount }})
+                            </span>
+                          </span>
+                        }
+                      </span>
+                    } @else {
+                      <span class="text-base-content/50">–</span>
+                    }
+                  </td>
+                  <td class="align-middle">
+                    @let orgDisplay = getPartyDisplay(process.organizations ?? (process.organization ? [process.organization] : []));
+                    @if (orgDisplay.mainText || orgDisplay.extraCount > 0) {
+                      <span>
+                        {{ orgDisplay.mainText }}
+                        @if (orgDisplay.extraCount > 0) {
+                          <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                            <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                              @for (name of orgDisplay.fullList; track name; let i = $index) {
+                                <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                              }
+                            </div>
+                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                              (+{{ orgDisplay.extraCount }})
+                            </span>
+                          </span>
+                        }
+                      </span>
+                    } @else {
+                      <span class="text-base-content/50">–</span>
+                    }
+                  </td>
+                  <td class="text-center align-middle">{{ process.has_multiple_instances ? 'Sí' : 'No' }}</td>
+                  <td class="text-center align-middle whitespace-nowrap">{{ formatProcessDate(process.created_at) }}</td>
+                  <td class="text-center align-middle whitespace-nowrap">{{ formatProcessDate(process.last_activity_date) }}</td>
+                </tr>
+                <!-- Filas de instancias (cuando está expandido) -->
+                @if (isExpanded(process) && process.instances && process.instances.length > 0) {
+                  @for (instance of process.instances; track instance.id) {
+                    <tr
+                      class="cursor-pointer process-table-instance-row border-l-4 border-secondary"
+                      [class.process-row-hovered]="hoveredRowId() === instance.id"
+                      (mouseenter)="hoveredRowId.set(instance.id)"
+                      (mouseleave)="hoveredRowId.set(null)"
+                    >
+                      <td class="text-center align-middle p-2 pl-4">
+                        <span class="text-secondary/70 text-xs" aria-hidden="true">↳</span>
+                      </td>
+                      <td class="text-center align-middle text-base-content/70">{{ instance.index }}</td>
+                      <td class="whitespace-nowrap align-middle text-base-content/80 sticky-col-radicado">
+                        <span class="sticky-cell-bg" aria-hidden="true"></span>
+                        <span class="sticky-cell-txt">{{ instance.process_number }}</span>
+                      </td>
+                      <td class="align-middle text-base-content/80">{{ instance.court }}</td>
+                      <td class="align-middle text-base-content/80">{{ instance.process_class }}</td>
+                      <td class="text-center align-middle">
+                        <span
+                          class="badge badge-sm whitespace-nowrap"
+                          [class.badge-success]="instance.status_label === 'Activo'"
+                          [class.badge-warning]="instance.status_label === 'Pendiente'"
+                          [class.badge-error]="instance.status_label === 'Cerrado'"
+                        >
+                          {{ instance.status_label }}
+                        </span>
+                      </td>
+                      <td class="align-middle">
+                        @let instPlaint = getPartyDisplay(instance.plaintiffs ?? (instance.plaintiff ? [instance.plaintiff] : []));
+                        @if (instPlaint.mainText || instPlaint.extraCount > 0) {
+                          <span>
+                            {{ instPlaint.mainText }}
+                            @if (instPlaint.extraCount > 0) {
+                              <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of instPlaint.fullList; track name; let i = $index) {
+                                    <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                  (+{{ instPlaint.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="text-base-content/50">–</span>
+                        }
+                      </td>
+                      <td class="align-middle">
+                        @let instDef = getPartyDisplay(instance.defendants ?? (instance.defendant ? [instance.defendant] : []));
+                        @if (instDef.mainText || instDef.extraCount > 0) {
+                          <span>
+                            {{ instDef.mainText }}
+                            @if (instDef.extraCount > 0) {
+                              <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of instDef.fullList; track name; let i = $index) {
+                                    <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                  (+{{ instDef.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="text-base-content/50">–</span>
+                        }
+                      </td>
+                      <td class="align-middle">
+                        @let instOrg = getPartyDisplay(instance.organizations ?? (instance.organization ? [instance.organization] : []));
+                        @if (instOrg.mainText || instOrg.extraCount > 0) {
+                          <span>
+                            {{ instOrg.mainText }}
+                            @if (instOrg.extraCount > 0) {
+                              <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of instOrg.fullList; track name; let i = $index) {
+                                    <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                  (+{{ instOrg.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="text-base-content/50">–</span>
+                        }
+                      </td>
+                      <td class="text-center align-middle text-base-content/70">–</td>
+                      <td class="text-center align-middle whitespace-nowrap text-base-content/70">{{ formatProcessDate(instance.created_at) }}</td>
+                      <td class="text-center align-middle whitespace-nowrap text-base-content/70">{{ formatProcessDate(instance.last_activity_date) }}</td>
+                    </tr>
+                  }
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination: izquierda = resultados, centro = numeración, derecha = por página -->
+        @if (pagination(); as paginationInfo) {
+          <div class="processes-pagination border-t border-base-300 bg-base-100">
+            <div class="processes-pagination__results">
+              {{ 'table.showing' | transloco }}
+              <span class="font-semibold">{{ getShowingRange().from }}</span>
+              {{ 'table.to' | transloco }}
+              <span class="font-semibold">{{ getShowingRange().to }}</span>
+              {{ 'table.of' | transloco }}
+              <span class="font-semibold">{{ paginationInfo.total }}</span>
+              {{ 'table.results' | transloco }}
+            </div>
+            <div class="processes-pagination__controls join">
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >««</button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >«</button>
+              @for (page of getPageNumbers(); track page) {
+                <button
+                  class="join-item btn btn-sm"
+                  [class.btn-active]="page === paginationInfo.current_page"
+                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
+                >
+                  {{ page }}
+                </button>
+              }
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >»</button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >»»</button>
+            </div>
+            <div class="processes-pagination__per-page">
+              <select
+                class="select select-bordered select-sm"
+                [value]="paginationInfo.per_page"
+                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+                    {{ size }} {{ 'table.perPage' | transloco }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

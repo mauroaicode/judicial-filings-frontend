@@ -1,10 +1,10 @@
 {
     "folders": [
         {
-            "path": "../judicial-filings-fronted-admin"
+            "path": "../judicial-filings-frontend"
         },
         {
-            "path": "."
+            "path": "../judicial-filings-fronted-admin"
         }
     ]
 }

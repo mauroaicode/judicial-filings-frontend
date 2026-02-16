@@ -68,6 +68,7 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "processes": "Procesos",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -82,6 +83,85 @@
   },
   "dashboard": {
     "title": "Dashboard"
+  },
+  "processes": {
+    "title": "Procesos Judiciales",
+    "description": "Consulta y gestiona todos los procesos judiciales",
+    "filters": {
+      "title": "Filtros de Búsqueda",
+      "processNumber": "Número de Radicado",
+      "processNumberPlaceholder": "Ej: 76001333301320170009301",
+      "court": "Despacho",
+      "courtPlaceholder": "Ej: 006",
+      "processClass": "Clase de Proceso",
+      "processClassPlaceholder": "Ej: Ejecutivo",
+      "plaintiff": "Demandante",
+      "plaintiffPlaceholder": "Ej: JUAN PEREZ",
+      "defendant": "Demandado",
+      "defendantPlaceholder": "Ej: EMPRESA ABC",
+      "organization": "Organización",
+      "organizationPlaceholder": "Ej: cocacola",
+      "status": "Estado",
+      "statusPlaceholder": "Seleccionar estado",
+      "statusActive": "Activo",
+      "statusInactive": "Inactivo",
+      "hasMultipleInstances": "Múltiples Instancias",
+      "processDateRange": "Rango de Fecha de Radicación",
+      "processDateRangePlaceholder": "Seleccionar rango de fechas",
+      "createdAtRange": "Rango de Fecha de Creación",
+      "createdAtRangePlaceholder": "Seleccionar rango de fechas",
+      "lastApiUpdateRange": "Rango de Última Actualización Rama Judicial",
+      "lastApiUpdateRangePlaceholder": "Seleccionar rango de fechas",
+      "all": "Todos",
+      "yes": "Sí",
+      "no": "No",
+      "reset": "Limpiar Filtros",
+      "search": "Buscar"
+    },
+    "table": {
+      "empty": "No hay procesos disponibles",
+      "index": "#",
+      "processNumber": "Número de Radicación",
+      "court": "Despacho",
+      "processClass": "Clase de Proceso",
+      "status": "Estado",
+      "plaintiff": "Demandante (s)",
+      "defendant": "Demandados (s)",
+      "organization": "Organización",
+      "multipleInstances": "Múltiples instancias",
+      "createdAt": "Fecha de Creación",
+      "lastActivityDate": "Fecha Ultima Actuación"
+    },
+    "import": {
+      "button": "Importar Excel",
+      "title": "Importar procesos desde Excel",
+      "description": "Arrastre un archivo .xlsx aquí o haga clic para seleccionar. El archivo debe cumplir el formato requerido para importar procesos judiciales.",
+      "dropzoneTitle": "Arrastre aquí su archivo Excel (.xlsx)",
+      "dropzoneSubtitle": "o haga clic para seleccionar (máx. 10 MB)",
+      "removeFile": "Quitar archivo",
+      "cancel": "Cancelar",
+      "submit": "Importar",
+      "submitting": "Importando...",
+      "close": "Cerrar",
+      "validationErrors": "Errores de validación",
+      "stats": {
+        "succeeded": "Importados correctamente",
+        "failed": "Fallidos",
+        "total": "Total"
+      },
+      "errors": {
+        "invalidFormat": "Solo se permiten archivos Excel (.xlsx).",
+        "fileTooBig": "El archivo supera el tamaño máximo permitido (10 MB).",
+        "generic": "Error al importar. Intente de nuevo."
+      }
+    }
+  },
+  "table": {
+    "showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "perPage": "por página"
   }
 }
 

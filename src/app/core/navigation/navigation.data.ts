@@ -12,6 +12,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'dashboard',
     link: '/admin/dashboard',
   },
+  {
+    id: 'processes',
+    title: 'navigation.processes',
+    type: 'basic',
+    icon: 'processes',
+    link: '/admin/processes',
+  },
   // More items will be added here as needed
 ];
 

@@ -1,0 +1,81 @@
+<input
+  #fileInput
+  type="file"
+  [accept]="accept()"
+  class="hidden"
+  (change)="onFileSelected($event)"
+/>
+
+<div
+  class="file-drop-zone rounded-lg border-2 border-dashed transition-colors"
+  [class.border-black]="!errorMessage()"
+  [class.border-error]="!!errorMessage()"
+  [class.bg-base-200]="isDragging()"
+  [class.opacity-60]="disabled()"
+  [class.cursor-not-allowed]="disabled()"
+  [class.cursor-pointer]="!disabled()"
+  (click)="openFilePicker()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  @if (selectedFile(); as file) {
+    <div class="flex flex-col items-center justify-center gap-2 py-6 px-4">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-12 w-12 text-success"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="font-semibold text-base-content truncate max-w-full" [title]="file.name">
+        {{ file.name }}
+      </p>
+      <p class="text-sm text-base-content/70">
+        {{ (file.size / 1024).toFixed(1) }} KB
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm"
+        (click)="clearFile(); $event.stopPropagation()"
+      >
+        {{ 'processes.import.removeFile' | transloco }}
+      </button>
+    </div>
+  } @else {
+    <div class="flex flex-col items-center justify-center gap-2 py-8 px-4">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-14 w-14 text-base-content/40"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+        />
+      </svg>
+      <p class="text-center font-medium text-base-content">
+        {{ 'processes.import.dropzoneTitle' | transloco }}
+      </p>
+      <p class="text-center text-sm text-base-content/70">
+        {{ 'processes.import.dropzoneSubtitle' | transloco }}
+      </p>
+      @if (errorMessage()) {
+        <p class="text-sm text-error">
+          {{ errorMessage() | transloco }}
+        </p>
+      }
+    </div>
+  }
+</div>

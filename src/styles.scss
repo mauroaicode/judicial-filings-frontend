@@ -1,3 +1,6 @@
+/* Import flatpickr styles */
+@import 'flatpickr/dist/flatpickr.css';
+
 /* Global styles - Only essential resets */
 * {
   box-sizing: border-box;
@@ -61,4 +64,199 @@ body {
 .checkbox-primary:checked {
   background-color: hsl(var(--p));
   border-color: hsl(var(--p));
+}
+
+/* Flatpickr Date Range Picker Styles */
+app-date-range-picker .flatpickr-calendar,
+.flatpickr-calendar {
+  border: 1px solid hsl(var(--b3)) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  font-family: inherit !important;
+  z-index: 9999 !important;
+  font-size: 0.875rem !important;
+}
+
+app-date-range-picker .flatpickr-months,
+.flatpickr-months {
+  background: hsl(var(--n)) !important;
+  color: hsl(var(--nc)) !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+app-date-range-picker .flatpickr-month,
+.flatpickr-month {
+  color: hsl(var(--nc)) !important;
+  font-size: 0.875rem !important;
+}
+
+app-date-range-picker .flatpickr-current-month .flatpickr-monthDropdown-months,
+app-date-range-picker .flatpickr-current-month .numInputWrapper,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month .numInputWrapper {
+  color: hsl(var(--nc)) !important;
+  font-size: 0.875rem !important;
+  input {
+    color: hsl(var(--nc)) !important;
+    background: transparent !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+app-date-range-picker .flatpickr-weekdays,
+.flatpickr-weekdays {
+  background: hsl(var(--b2)) !important;
+  padding: 0.375rem 0 !important;
+}
+
+app-date-range-picker .flatpickr-weekday,
+.flatpickr-weekday {
+  color: hsl(var(--bc)) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.6875rem !important;
+}
+
+app-date-range-picker .flatpickr-days,
+.flatpickr-days {
+  padding: 0.375rem !important;
+}
+
+// Override flatpickr default styles for selected dates - MUST use !important
+app-date-range-picker .flatpickr-day.selected,
+app-date-range-picker .flatpickr-day.startRange,
+app-date-range-picker .flatpickr-day.endRange,
+app-date-range-picker .flatpickr-day.selected.startRange,
+app-date-range-picker .flatpickr-day.selected.endRange,
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.startRange,
+.flatpickr-day.selected.endRange {
+  background: #161326 !important;
+  color: #ffffff !important;
+  border-color: #161326 !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+app-date-range-picker .flatpickr-day,
+.flatpickr-day {
+  border-radius: 0.375rem !important;
+  color: hsl(var(--bc)) !important;
+  border: none !important;
+  font-weight: 400 !important;
+  font-size: 0.8125rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+
+  &:hover {
+    background: hsl(var(--n)) !important;
+    color: hsl(var(--nc)) !important;
+    border-color: hsl(var(--n)) !important;
+  }
+
+  &.inRange {
+    background: rgba(22, 19, 38, 0.1) !important;
+    color: #161326 !important;
+    border-color: transparent !important;
+    box-shadow: -5px 0 0 rgba(22, 19, 38, 0.1), 5px 0 0 rgba(22, 19, 38, 0.1) !important;
+  }
+
+  &.flatpickr-disabled {
+    color: hsl(var(--bc) / 0.3) !important;
+    cursor: not-allowed !important;
+  }
+
+  &.today {
+    border-color: #161326 !important;
+    font-weight: 600 !important;
+  }
+}
+
+app-date-range-picker .flatpickr-prev-month,
+app-date-range-picker .flatpickr-next-month,
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  color: hsl(var(--nc)) !important;
+  border-radius: 0.375rem !important;
+  padding: 0.25rem !important;
+  height: 1.75rem !important;
+  width: 1.75rem !important;
+
+  &:hover {
+    background: hsl(var(--n) / 0.8) !important;
+    color: hsl(var(--nc)) !important;
+  }
+
+  svg {
+    fill: currentColor !important;
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+}
+
+app-date-range-picker .flatpickr-time,
+.flatpickr-time {
+  border-top: 1px solid hsl(var(--b3)) !important;
+  padding: 0.5rem !important;
+}
+
+/* Pagination tabla procesos (processes): botones y select */
+.processes-pagination .processes-pagination__controls.join {
+  border-radius: 0.375rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.processes-pagination .processes-pagination__controls.join .join-item {
+  min-width: 2.25rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid hsl(var(--b3));
+  background-color: hsl(var(--b1));
+  color: hsl(var(--bc));
+  border-radius: 0;
+}
+.processes-pagination .processes-pagination__controls.join .join-item:first-child {
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+.processes-pagination .processes-pagination__controls.join .join-item:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+.processes-pagination .processes-pagination__controls.join .join-item:not(:first-child) {
+  border-left-width: 0;
+}
+.processes-pagination .processes-pagination__controls.join .join-item:hover:not(:disabled):not(.btn-active) {
+  background-color: hsl(var(--b2));
+  color: hsl(var(--bc));
+}
+.processes-pagination .processes-pagination__controls.join .join-item:disabled,
+.processes-pagination .processes-pagination__controls.join .join-item.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.processes-pagination .processes-pagination__controls.join .join-item.btn-active {
+  background-color: #161326;
+  border-color: #161326;
+  color: #fff;
+}
+.processes-pagination .processes-pagination__per-page .select {
+  min-height: 2rem;
+  padding: 0.25rem 2rem 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid hsl(var(--b3));
+  border-radius: 0.375rem;
+  background-color: hsl(var(--b1));
+  color: hsl(var(--bc));
+}
+.processes-pagination .processes-pagination__per-page .select:focus {
+  outline: none;
+  border-color: #161326;
+  box-shadow: 0 0 0 2px rgba(22, 19, 38, 0.15);
 }

@@ -11,13 +11,13 @@
 
 <!-- Sidebar -->
 <aside
-  class="fixed left-0 top-0 z-40 h-screen bg-neutral text-neutral-content transition-all duration-300 ease-in-out shadow-lg"
+  class="fixed left-0 top-0 z-40 h-screen max-h-screen bg-neutral text-neutral-content transition-all duration-300 ease-in-out shadow-lg overflow-hidden"
   [class.-translate-x-full]="!isOpen() && isMobile()"
   [class.translate-x-0]="isOpen() || !isMobile()"
   [class.w-64]="isOpen()"
   [class.w-16]="!isOpen() && !isMobile()"
 >
-  <div class="flex h-full flex-col overflow-hidden">
+  <div class="flex h-full max-h-screen flex-col overflow-hidden">
     <!-- Sidebar Header -->
     <div
       class="flex h-16 items-center text-center border-b border-neutral/20 transition-all"
@@ -88,8 +88,8 @@
                   [class.px-3]="isOpen()"
                   [class.justify-center]="!isOpen()"
                   [class.px-2]="!isOpen()"
-                  [class.bg-accent]="isItemActive(item)"
-                  [class.text-accent-content]="isItemActive(item)"
+                  [class.bg-secondary]="isItemActive(item)"
+                  [class.text-secondary-content]="isItemActive(item)"
                 >
                   @if (item.icon) {
                     <span class="flex-shrink-0 flex items-center justify-center">
@@ -137,7 +137,7 @@
                     <li>
                       <a
                         [routerLink]="child.link"
-                        routerLinkActive="bg-accent text-accent-content"
+                        routerLinkActive="bg-secondary text-secondary-content"
                         [routerLinkActiveOptions]="{ exact: false }"
                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-neutral-focus font-medium"
                         (click)="closeSidebar()"
@@ -172,7 +172,7 @@
             <li>
               <a
                 [routerLink]="item.link"
-                routerLinkActive="bg-accent text-accent-content"
+                routerLinkActive="bg-secondary text-secondary-content"
                 [routerLinkActiveOptions]="{ exact: false }"
                 [class.disabled]="item.disabled"
                 class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
@@ -205,7 +205,7 @@
                 @if (item.badge && isOpen()) {
                   <span
                     class="badge badge-sm"
-                    [class]="item.badge.classes || 'badge-primary'"
+                    [class]="item.badge.classes || 'badge-secondary'"
                   >
                     {{ item.badge.title }}
                   </span>

@@ -1,0 +1,179 @@
+@if (loading()) {
+  <div class="flex items-center justify-center py-12">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+} @else if (data().length === 0) {
+  <div class="flex flex-col items-center justify-center py-12 text-center">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-12 w-12 text-base-content/30 mb-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+      />
+    </svg>
+    <p class="text-base-content/70">{{ emptyMessage() }}</p>
+  </div>
+} @else {
+  <div class="overflow-x-auto w-full" style="position: relative; overflow-x: auto; overflow-y: visible;">
+    <table class="table table-zebra" style="min-width: 1000px; border-collapse: separate !important; border-spacing: 0 !important; position: relative;">
+      <!-- Table Header -->
+      <thead [attr.style]="'background-color: #161326 !important; color: #ffffff !important;'">
+        <tr>
+          @for (column of columns(); track column.key) {
+            <th
+              [class.text-left]="!column.align || column.align === 'left'"
+              [class.text-center]="column.align === 'center'"
+              [class.text-right]="column.align === 'right'"
+              [class.sticky-header]="column.key === 'process_number'"
+              [attr.style]="column.key === 'process_number' ? getStickyHeaderStyle() : getHeaderCellStyle()"
+              [style.width]="column.key !== 'process_number' ? column.width : null"
+            >
+              {{ column.label | transloco }}
+            </th>
+          }
+        </tr>
+      </thead>
+      <!-- Table Body -->
+      <tbody>
+        @for (row of data(); track row.id) {
+          <tr
+            class="cursor-pointer group"
+            (click)="onRowClick(row)"
+          >
+            @for (column of columns(); track column.key) {
+              <td
+                [class.text-left]="!column.align || column.align === 'left'"
+                [class.text-center]="column.align === 'center'"
+                [class.text-right]="column.align === 'right'"
+                [class.sticky-cell]="column.key === 'process_number'"
+                [class.whitespace-nowrap]="column.key === 'process_number'"
+                [class.group-hover:bg-[rgba(255,152,0,0.2)]]="column.key === 'process_number'"
+                [attr.style]="column.key === 'process_number' ? getStickyCellStyle() : null"
+              >
+                @if (column.key === 'status_label') {
+                  <span
+                    class="badge whitespace-nowrap"
+                    [class.badge-success]="row.status_label === 'Activo'"
+                    [class.badge-warning]="row.status_label === 'Pendiente'"
+                    [class.badge-error]="row.status_label === 'Cerrado'"
+                  >
+                    {{ row.status_label }}
+                  </span>
+                } @else if (column.key === 'last_activity_date') {
+                  @if (row[column.key]) {
+                    {{ formatDate(row[column.key]) }}
+                  } @else {
+                    <span class="text-base-content/50">-</span>
+                  }
+                } @else if ((column.key === 'process_date' || column.key === 'created_at') && row[column.key]) {
+                  {{ formatDate(row[column.key]) }}
+                } @else if (column.key === 'plaintiff' || column.key === 'defendant' || column.key === 'organization') {
+                  @if (row[column.key]) {
+                    {{ getCellValue(row, column) }}
+                  } @else {
+                    <span class="text-base-content/50">-</span>
+                  }
+                } @else if (column.key === 'process_number') {
+                  <span class="whitespace-nowrap inline-block relative z-10" [title]="getCellValue(row, column)" style="max-width: 100%; overflow: visible;">
+                    {{ getCellValue(row, column) }}
+                  </span>
+                } @else {
+                  {{ getCellValue(row, column) }}
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (pagination(); as paginationInfo) {
+    <div class="pagination-container">
+      <!-- Results info -->
+      <div class="pagination-results-info">
+        @let range = getShowingRange();
+        {{ 'table.showing' | transloco }}
+        <span class="font-semibold">{{ range.from }}</span>
+        {{ 'table.to' | transloco }}
+        <span class="font-semibold">{{ range.to }}</span>
+        {{ 'table.of' | transloco }}
+        <span class="font-semibold">{{ paginationInfo.total }}</span>
+        {{ 'table.results' | transloco }}
+      </div>
+
+      <!-- Pagination controls -->
+      <div class="pagination-controls join">
+        <!-- First page -->
+        <button
+          class="join-item btn btn-sm"
+          [class.btn-disabled]="paginationInfo.current_page === 1"
+          (click)="onPageChange(1, paginationInfo.per_page)"
+          [disabled]="paginationInfo.current_page === 1"
+        >
+          ««
+        </button>
+        <!-- Previous page -->
+        <button
+          class="join-item btn btn-sm"
+          [class.btn-disabled]="paginationInfo.current_page === 1"
+          (click)="onPageChange(paginationInfo.current_page - 1, paginationInfo.per_page)"
+          [disabled]="paginationInfo.current_page === 1"
+        >
+          «
+        </button>
+        <!-- Page numbers -->
+        @for (page of getPageNumbers(); track page) {
+          <button
+            class="join-item btn btn-sm"
+            [class.btn-active]="page === paginationInfo.current_page"
+            (click)="onPageChange(page, paginationInfo.per_page)"
+          >
+            {{ page }}
+          </button>
+        }
+        <!-- Next page -->
+        <button
+          class="join-item btn btn-sm"
+          [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+          (click)="onPageChange(paginationInfo.current_page + 1, paginationInfo.per_page)"
+          [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+        >
+          »
+        </button>
+        <!-- Last page -->
+        <button
+          class="join-item btn btn-sm"
+          [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+          (click)="onPageChange(paginationInfo.last_page, paginationInfo.per_page)"
+          [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+        >
+          »»
+        </button>
+      </div>
+
+      <!-- Page size selector -->
+      <div class="pagination-page-size">
+        <select
+          class="select select-bordered select-sm"
+          [value]="paginationInfo.per_page"
+          (change)="onPageChange(1, +$any($event.target).value)"
+        >
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+              {{ size }} {{ 'table.perPage' | transloco }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+  }
+}
