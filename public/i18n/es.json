@@ -136,6 +136,8 @@
     "import": {
       "button": "Importar Excel",
       "title": "Importar procesos desde Excel",
+      "organizationLabel": "Organización",
+      "organizationPlaceholder": "Seleccione la organización",
       "description": "Arrastre un archivo .xlsx aquí o haga clic para seleccionar. El archivo debe cumplir el formato requerido para importar procesos judiciales.",
       "dropzoneTitle": "Arrastre aquí su archivo Excel (.xlsx)",
       "dropzoneSubtitle": "o haga clic para seleccionar (máx. 10 MB)",
@@ -216,7 +218,9 @@
       "confirmTitle": "Crear organización",
       "confirmMessage": "¿Está seguro de crear esta organización?",
       "confirmButton": "Crear",
-      "toastSuccess": "Organización creada correctamente"
+      "toastSuccess": "Organización creada correctamente",
+      "validationErrorsTitle": "Errores de validación",
+      "errorGeneric": "No se pudo crear la organización. Revise los datos e intente de nuevo."
     }
   },
   "common": {

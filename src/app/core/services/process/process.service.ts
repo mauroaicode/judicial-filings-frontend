@@ -7,7 +7,7 @@ import {
   ProcessFilter,
   ProcessResponse,
   ProcessResponseMeta,
-  ProcessImportResponse,
+  ProcessImportBatchResponse,
 } from '@app/core/models/process/process.model';
 
 @Injectable({
@@ -100,15 +100,18 @@ export class ProcessService {
   }
 
   /**
-   * Import processes from Excel file (xlsx)
+   * Import processes from Excel file (xlsx) for a given organization.
+   * Import runs in background; user receives a report by email.
    *
    * @param file - Excel file (.xlsx)
-   * @returns Observable with import response (success or error with stats)
+   * @param organizationId - Organization UUID to assign the imported processes to
+   * @returns Observable with message and batch_id
    */
-  importProcesses(file: File): Observable<ProcessImportResponse> {
+  importProcesses(file: File, organizationId: string): Observable<ProcessImportBatchResponse> {
     const url = `${environment.apiBaseUrl}/processes/import`;
     const formData = new FormData();
     formData.append('file', file, file.name);
-    return this._http.post<ProcessImportResponse>(url, formData);
+    formData.append('organization_id', organizationId);
+    return this._http.post<ProcessImportBatchResponse>(url, formData);
   }
 }

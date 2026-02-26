@@ -10,14 +10,15 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ProcessService } from '@app/core/services/process/process.service';
+import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
   Process,
   ProcessInstance,
   ProcessFilter,
   ProcessResponseMeta,
-  ProcessImportResponse,
-  ProcessImportError,
+  ProcessImportBatchResponse,
 } from '@app/core/models/process/process.model';
+import { Organization } from '@app/core/models/organization/organization.model';
 import { DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/file-drop-zone.component';
@@ -39,6 +40,7 @@ import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/fil
 })
 export class ProcessesComponent {
   private _processService = inject(ProcessService);
+  private _organizationService = inject(OrganizationService);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
   private _fb = inject(FormBuilder);
@@ -56,8 +58,13 @@ export class ProcessesComponent {
   // Import modal state
   public isImportModalOpen = signal<boolean>(false);
   public importSubmitting = signal<boolean>(false);
-  public importResult = signal<ProcessImportResponse | null>(null);
+  public importResult = signal<ProcessImportBatchResponse | null>(null);
   public importFile = signal<File | null>(null);
+  /** Selected organization for import (required) */
+  public importOrganizationId = signal<string>('');
+  /** Organizations list for import select */
+  public importOrganizations = signal<Organization[]>([]);
+  public importOrganizationsLoading = signal<boolean>(false);
 
   // Filter form
   public filterForm: FormGroup = this._fb.group({
@@ -468,12 +475,30 @@ export class ProcessesComponent {
   }
 
   /**
-   * Open import Excel modal
+   * Open import Excel modal and load organizations for the select
    */
   openImportModal(): void {
     this.importFile.set(null);
     this.importResult.set(null);
+    this.importOrganizationId.set('');
     this.isImportModalOpen.set(true);
+    this._loadImportOrganizations();
+  }
+
+  /**
+   * Load organizations for the import modal select (all, no pagination limit for dropdown)
+   */
+  private _loadImportOrganizations(): void {
+    this.importOrganizationsLoading.set(true);
+    this._organizationService.getOrganizations({ per_page: 500 }).subscribe({
+      next: (response) => {
+        this.importOrganizations.set(response.data);
+        this.importOrganizationsLoading.set(false);
+      },
+      error: () => {
+        this.importOrganizationsLoading.set(false);
+      },
+    });
   }
 
   /**
@@ -483,6 +508,7 @@ export class ProcessesComponent {
     this.isImportModalOpen.set(false);
     this.importFile.set(null);
     this.importResult.set(null);
+    this.importOrganizationId.set('');
     this.importSubmitting.set(false);
   }
 
@@ -494,71 +520,26 @@ export class ProcessesComponent {
   }
 
   /**
-   * Submit import (upload file)
+   * Submit import (upload file + organization_id). API runs import in background and sends report by email.
    */
   onSubmitImport(): void {
     const file = this.importFile();
-    if (!file) return;
+    const organizationId = this.importOrganizationId()?.trim();
+    if (!file || !organizationId) return;
 
     this.importSubmitting.set(true);
     this.importResult.set(null);
 
-    this._processService.importProcesses(file).subscribe({
+    this._processService.importProcesses(file, organizationId).subscribe({
       next: (response) => {
         this.importResult.set(response);
         this.importSubmitting.set(false);
-        if (response.success && response.stats.succeeded > 0) {
-          this.loadProcesses(1, this.pagination()?.per_page || 20);
-        }
       },
       error: (err) => {
-        const body = err.error;
-        if (body && typeof body.success === 'boolean' && body.stats) {
-          this.importResult.set(body as ProcessImportResponse);
-        } else {
-          this.importResult.set({
-            success: false,
-            message: body?.message || this._transloco.translate('processes.import.errors.generic'),
-            stats: {
-              validated: false,
-              succeeded: 0,
-              failed: 0,
-              total: 0,
-              errors: [],
-              validation_errors: [],
-            },
-          });
-        }
+        const message = err.error?.message || this._transloco.translate('processes.import.errors.generic');
+        this.importResult.set({ message, batch_id: '' });
         this.importSubmitting.set(false);
       },
     });
-  }
-
-  /**
-   * Get validation/error list from import result
-   */
-  getImportErrors(): ProcessImportError[] {
-    const result = this.importResult();
-    if (!result?.stats) return [];
-    const stats = result.stats;
-    return stats.validation_errors ?? stats.errors ?? [];
-  }
-
-  /**
-   * Check if import was successful (validated and has succeeded count)
-   */
-  isImportSuccess(): boolean {
-    const result = this.importResult();
-    return result?.success === true && (result.stats?.succeeded ?? 0) > 0;
-  }
-
-  /**
-   * Check if import had validation errors
-   */
-  hasImportErrors(): boolean {
-    const result = this.importResult();
-    if (!result?.stats) return false;
-    const errors = result.stats.validation_errors ?? result.stats.errors ?? [];
-    return errors.length > 0;
   }
 }

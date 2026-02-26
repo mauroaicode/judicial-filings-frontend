@@ -237,6 +237,28 @@
       </p>
 
       @if (!importResult()) {
+        <!-- Organización destino de la importación -->
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">{{ 'processes.import.organizationLabel' | transloco }}</span>
+          </label>
+          @if (importOrganizationsLoading()) {
+            <span class="loading loading-spinner loading-sm"></span>
+          } @else {
+            <select
+              class="select select-bordered w-full"
+              [value]="importOrganizationId()"
+              (change)="importOrganizationId.set($any($event.target).value)"
+              [disabled]="importSubmitting()"
+            >
+              <option value="">{{ 'processes.import.organizationPlaceholder' | transloco }}</option>
+              @for (org of importOrganizations(); track org.id) {
+                <option [value]="org.id">{{ org.name }}</option>
+              }
+            </select>
+          }
+        </div>
+
         <app-file-drop-zone
           [accept]="'.xlsx'"
           [maxSizeMb]="10"
@@ -259,7 +281,7 @@
           <button
             type="button"
             class="btn btn-primary"
-            [disabled]="!importFile() || importSubmitting()"
+            [disabled]="!importFile() || !importOrganizationId() || importSubmitting()"
             (click)="onSubmitImport()"
           >
             @if (importSubmitting()) {
@@ -271,60 +293,23 @@
           </button>
         </div>
       } @else {
-        @let result = importResult()!;
-        @let stats = result.stats;
-
-        @if (result.success && stats.succeeded > 0) {
-          <div class="alert alert-success mb-4">
+        @let res = importResult()!;
+        <div
+          class="alert mb-4"
+          [class.alert-success]="res.batch_id"
+          [class.alert-error]="!res.batch_id"
+        >
+          @if (res.batch_id) {
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div>
-              <p class="font-semibold">{{ result.message }}</p>
-              <p class="text-sm mt-1">
-                {{ 'processes.import.stats.succeeded' | transloco }}: <strong>{{ stats.succeeded }}</strong>
-                @if (stats.failed > 0) {
-                  · {{ 'processes.import.stats.failed' | transloco }}: <strong>{{ stats.failed }}</strong>
-                }
-              </p>
-            </div>
-          </div>
-        }
-
-        @if (!result.success || stats.failed > 0 || hasImportErrors()) {
-          <div class="alert alert-error mb-4">
+          } @else {
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div>
-              <p class="font-semibold">{{ result.message }}</p>
-              @if (stats) {
-                <p class="text-sm mt-1">
-                  {{ 'processes.import.stats.succeeded' | transloco }}: <strong>{{ stats.succeeded }}</strong>
-                  · {{ 'processes.import.stats.failed' | transloco }}: <strong>{{ stats.failed }}</strong>
-                  · {{ 'processes.import.stats.total' | transloco }}: <strong>{{ stats.total }}</strong>
-                </p>
-              }
-            </div>
-          </div>
-        }
-
-        @if (hasImportErrors()) {
-          <div class="bg-base-200 rounded-lg p-4 mb-4 max-h-60 overflow-y-auto">
-            <h4 class="font-semibold text-base-content mb-2">{{ 'processes.import.validationErrors' | transloco }}</h4>
-            <ul class="list-disc list-inside space-y-1 text-sm text-base-content/90">
-              @for (err of getImportErrors(); track err.rule + (err.details?.process_number ?? '')) {
-                <li>
-                  <span class="font-medium">{{ err.message }}</span>
-                  @if (err.details?.process_number) {
-                    <span class="text-base-content/70">({{ err.details?.process_number }})</span>
-                  }
-                </li>
-              }
-            </ul>
-          </div>
-        }
-
+          }
+          <span>{{ res.message }}</span>
+        </div>
         <div class="modal-action">
           <button type="button" class="btn btn-primary" (click)="closeImportModal()">
             {{ 'processes.import.close' | transloco }}

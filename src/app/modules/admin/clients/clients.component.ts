@@ -61,6 +61,8 @@ export class ClientsComponent {
   public confirmCreateOpen = signal<boolean>(false);
   /** Toast de éxito tras crear */
   public successToastMessage = signal<string | null>(null);
+  /** Mensajes de error de validación (422) al crear */
+  public createValidationErrors = signal<string[]>([]);
   private _toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public filterForm: FormGroup = this._fb.group({
@@ -259,6 +261,7 @@ export class ClientsComponent {
 
   openCreateModal(): void {
     this.createStep.set(0);
+    this.createValidationErrors.set([]);
     this.createForm.reset({
       organizationType: '',
       name: '',
@@ -277,6 +280,7 @@ export class ClientsComponent {
     this.createStep.set(0);
     this.confirmCreateOpen.set(false);
     this.createSubmitting.set(false);
+    this.createValidationErrors.set([]);
   }
 
   selectCreateType(type: string): void {
@@ -333,6 +337,7 @@ export class ClientsComponent {
 
     this.confirmCreateOpen.set(false);
     this.createSubmitting.set(true);
+    this.createValidationErrors.set([]);
 
     this._organizationService.createOrganization(payload).subscribe({
       next: () => {
@@ -341,10 +346,51 @@ export class ClientsComponent {
         this.showSuccessToast(this._transloco.translate('clients.create.toastSuccess'));
         this.loadOrganizations(1, this.pagination()?.per_page ?? 20);
       },
-      error: () => {
+      error: (err) => {
         this.createSubmitting.set(false);
+        const messages = this._parseValidationErrors(err);
+        this.createValidationErrors.set(messages);
       },
     });
+  }
+
+  /**
+   * Extrae mensajes de validación de una respuesta 422 (Laravel u otro backend).
+   * Soporta: { messages: string[] } | { errors: { [field]: string[] } } | campos en raíz (ej. phone: ["..."])
+   */
+  private _parseValidationErrors(err: { status?: number; error?: unknown }): string[] {
+    const body = err?.error;
+    if (!body || typeof body !== 'object') {
+      return [this._transloco.translate('clients.create.errorGeneric')];
+    }
+
+    const list: string[] = [];
+
+    if (Array.isArray((body as { messages?: string[] }).messages)) {
+      list.push(...(body as { messages: string[] }).messages);
+    }
+
+    const errors = (body as { errors?: Record<string, string[]> }).errors;
+    if (errors && typeof errors === 'object') {
+      for (const key of Object.keys(errors)) {
+        const arr = errors[key];
+        if (Array.isArray(arr)) {
+          list.push(...arr);
+        }
+      }
+    }
+
+    // Campos en la raíz (ej. phone: ["El teléfono debe..."])
+    for (const key of Object.keys(body)) {
+      if (key === 'message' || key === 'messages' || key === 'errors' || key === 'code') continue;
+      const value = (body as Record<string, unknown>)[key];
+      if (Array.isArray(value)) {
+        list.push(...(value as string[]));
+      }
+    }
+
+    const unique = [...new Set(list)];
+    return unique.length > 0 ? unique : [this._transloco.translate('clients.create.errorGeneric')];
   }
 
   onCancelConfirmCreate(): void {

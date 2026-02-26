@@ -160,3 +160,11 @@ export interface ProcessImportErrorResponse {
 }
 
 export type ProcessImportResponse = ProcessImportSuccessResponse | ProcessImportErrorResponse;
+
+/**
+ * Process import batch response (async import - report by email)
+ */
+export interface ProcessImportBatchResponse {
+  message: string;
+  batch_id: string;
+}
