@@ -13,6 +13,7 @@ export interface User {
   phone: string;
   address: string;
   status: string;
+  organization_id?: number;
   roles: Role[];
   requires_password_change: boolean;
 }

@@ -226,6 +226,13 @@
   "common": {
     "back": "Atrás",
     "cancel": "Cancelar"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "unread": "sin leer",
+    "noNotificationsTitle": "¡Todo al día!",
+    "noNotifications": "No tienes notificaciones",
+    "viewAll": "Ver todas las notificaciones",
+    "clickToViewDetails": "Haz clic para ver más detalles"
   }
 }
-

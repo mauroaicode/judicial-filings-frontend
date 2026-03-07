@@ -14,11 +14,12 @@ import { filter } from 'rxjs';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SidebarComponent } from '@app/layout/common/sidebar/sidebar.component';
 import { HeaderComponent } from '@app/layout/common/header/header.component';
+import { NotificationsComponent } from '@app/layout/common/notifications/notifications.component';
 
 @Component({
   selector: 'app-authenticated-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, HeaderComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, HeaderComponent, NotificationsComponent],
   templateUrl: './authenticated.component.html',
   styleUrls: ['./authenticated.component.scss'],
   encapsulation: ViewEncapsulation.None,
