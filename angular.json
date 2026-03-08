@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "medical-ethics-tribunal-fronted": {
+    "judicial-filings-admin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -59,10 +59,10 @@
           "builder": "@ngx-env/builder:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "medical-ethics-tribunal-fronted:build:production"
+              "buildTarget": "judicial-filings-admin:build:production"
             },
             "development": {
-              "buildTarget": "medical-ethics-tribunal-fronted:build:development"
+              "buildTarget": "judicial-filings-admin:build:development"
             }
           },
           "defaultConfiguration": "development"
