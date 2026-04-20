@@ -63,6 +63,14 @@ export class ClientsComponent {
   public successToastMessage = signal<string | null>(null);
   /** Mensajes de error de validación (422) al crear */
   public createValidationErrors = signal<string[]>([]);
+  /** Organización recién creada (para mostrar credenciales si se generó contraseña) */
+  public createdOrganization = signal<Organization | null>(null);
+  /** Modal de éxito/credenciales abierto */
+  public successCredentialsOpen = signal<boolean>(false);
+  /** Organización para toggle de notificaciones */
+  public notifyingOrg = signal<Organization | null>(null);
+  /** Modal confirmación notificaciones */
+  public confirmNotificationOpen = signal<boolean>(false);
   private _toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public filterForm: FormGroup = this._fb.group({
@@ -83,6 +91,7 @@ export class ClientsComponent {
     phone: [''],
     email: [''],
     contact_person: [''],
+    generate_password: [false],
   });
 
   pageSizeOptions = [10, 20, 25, 50, 100];
@@ -271,7 +280,10 @@ export class ClientsComponent {
       phone: '',
       email: '',
       contact_person: '',
+      generate_password: false,
     });
+    this.createdOrganization.set(null);
+    this.successCredentialsOpen.set(false);
     this.createModalOpen.set(true);
   }
 
@@ -310,6 +322,7 @@ export class ClientsComponent {
         address: v.address?.trim() || undefined,
         phone: v.phone?.trim() || undefined,
         email: v.email?.trim() || undefined,
+        generate_password: v.generate_password || false,
       };
     }
     const name = (v.name ?? '').trim();
@@ -322,6 +335,7 @@ export class ClientsComponent {
       address: v.address?.trim() || undefined,
       phone: v.phone?.trim() || undefined,
       email: v.email?.trim() || undefined,
+      generate_password: v.generate_password || false,
     };
   }
 
@@ -340,10 +354,18 @@ export class ClientsComponent {
     this.createValidationErrors.set([]);
 
     this._organizationService.createOrganization(payload).subscribe({
-      next: () => {
+      next: (org) => {
         this.createSubmitting.set(false);
         this.closeCreateModal();
-        this.showSuccessToast(this._transloco.translate('clients.create.toastSuccess'));
+
+        if (payload.generate_password && org.password) {
+          // Mostrar modal de credenciales
+          this.createdOrganization.set(org);
+          this.successCredentialsOpen.set(true);
+        } else {
+          this.showSuccessToast(this._transloco.translate('clients.create.toastSuccess'));
+        }
+
         this.loadOrganizations(1, this.pagination()?.per_page ?? 20);
       },
       error: (err) => {
@@ -352,6 +374,64 @@ export class ClientsComponent {
         this.createValidationErrors.set(messages);
       },
     });
+  }
+
+  copyToClipboard(text: string | null | undefined): void {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      // Opcional: mostrar un pequeño feedback visual
+    });
+  }
+
+  closeSuccessCredentials(): void {
+    this.successCredentialsOpen.set(false);
+    this.createdOrganization.set(null);
+  }
+
+  onToggleNotifications(org: Organization): void {
+    this.notifyingOrg.set(org);
+    this.confirmNotificationOpen.set(true);
+  }
+
+  onCancelNotificationToggle(): void {
+    this.confirmNotificationOpen.set(false);
+    this.notifyingOrg.set(null);
+    // Recargar para restaurar el switch si fue cancelado
+    this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+  }
+
+  onConfirmNotificationToggle(): void {
+    const org = this.notifyingOrg();
+    if (!org) return;
+
+    this.confirmNotificationOpen.set(false);
+    const newStatus = !org.is_receiving_notifications;
+
+    this._organizationService.updateNotificationStatus(org.id, newStatus).subscribe({
+      next: () => {
+        this.showSuccessToast(this._transloco.translate('clients.notifications.toastSuccess'));
+        this.notifyingOrg.set(null);
+        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+      },
+      error: () => {
+        this.notifyingOrg.set(null);
+        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+      },
+    });
+  }
+
+  getConfirmNotificationTitle(): string {
+    const org = this.notifyingOrg();
+    if (!org) return '';
+    const key = org.is_receiving_notifications ? 'clients.notifications.confirmDeactivateTitle' : 'clients.notifications.confirmActivateTitle';
+    return this._transloco.translate(key);
+  }
+
+  getConfirmNotificationMessage(): string {
+    const org = this.notifyingOrg();
+    if (!org) return '';
+    const key = org.is_receiving_notifications ? 'clients.notifications.confirmDeactivateMessage' : 'clients.notifications.confirmActivateMessage';
+    return this._transloco.translate(key, { name: org.name });
   }
 
   /**

@@ -195,6 +195,7 @@
       "email": "Correo electrónico",
       "contactPerson": "Persona de contacto",
       "status": "Estado",
+      "notifications": "Notificaciones",
       "active": "Activo",
       "inactive": "Inactivo",
       "createdAt": "Fecha de Creación"
@@ -220,7 +221,23 @@
       "confirmButton": "Crear",
       "toastSuccess": "Organización creada correctamente",
       "validationErrorsTitle": "Errores de validación",
-      "errorGeneric": "No se pudo crear la organización. Revise los datos e intente de nuevo."
+      "errorGeneric": "No se pudo crear la organización. Revise los datos e intente de nuevo.",
+      "generatePassword": "Generar contraseña",
+      "generatePasswordDescription": "Se generará una contraseña automáticamente para el acceso del cliente.",
+      "successModalTitle": "¡Organización Creada!",
+      "successModalSubtitle": "La organización ha sido registrada exitosamente. Utilice las siguientes credenciales para el inicio de sesión:",
+      "userLabel": "Usuario / Identificación",
+      "passwordLabel": "Contraseña generada",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "close": "Cerrar y continuar"
+    },
+    "notifications": {
+      "toastSuccess": "Estado de notificaciones actualizado",
+      "confirmActivateTitle": "Activar notificaciones",
+      "confirmDeactivateTitle": "Desactivar notificaciones",
+      "confirmActivateMessage": "¿Desea activar las notificaciones para la organización \"{{name}}\"?",
+      "confirmDeactivateMessage": "¿Desea desactivar las notificaciones para la organización \"{{name}}\"?"
     }
   },
   "common": {

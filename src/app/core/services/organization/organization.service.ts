@@ -88,4 +88,12 @@ export class OrganizationService {
     const url = `${environment.apiBaseUrl}/organizations`;
     return this._http.post<Organization>(url, payload);
   }
+
+  /**
+   * Update notification status for an organization
+   */
+  updateNotificationStatus(organizationId: string, isActive: boolean): Observable<void> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/notifications-status`;
+    return this._http.post<void>(url, { is_active: isActive });
+  }
 }

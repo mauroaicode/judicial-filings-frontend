@@ -147,6 +147,7 @@
                 <th class="text-left" style="width: 140px;">{{ 'clients.table.phone' | transloco }}</th>
                 <th class="text-left" style="width: 200px;">{{ 'clients.table.email' | transloco }}</th>
                 <th class="text-left" style="width: 160px;">{{ 'clients.table.contactPerson' | transloco }}</th>
+                <th class="text-center" style="width: 120px;">{{ 'clients.table.notifications' | transloco }}</th>
                 <th class="text-center" style="width: 100px;">{{ 'clients.table.status' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.createdAt' | transloco }}</th>
               </tr>
@@ -162,6 +163,14 @@
                   <td class="align-middle text-base-content/90">{{ org.phone ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.email ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.contact_person ?? '–' }}</td>
+                  <td class="text-center align-middle">
+                    <input
+                      type="checkbox"
+                      class="toggle toggle-secondary toggle-sm"
+                      [checked]="org.is_receiving_notifications"
+                      (click)="$event.preventDefault(); onToggleNotifications(org)"
+                    />
+                  </td>
                   <td class="text-center align-middle">
                     <span
                       class="badge whitespace-nowrap"
@@ -375,6 +384,16 @@
             />
           </div>
 
+          <div class="form-control bg-base-200/50 p-4 rounded-lg border border-base-300 transition-all hover:bg-base-200">
+            <label class="label cursor-pointer justify-between gap-4">
+              <div class="flex flex-col">
+                <span class="label-text font-bold text-secondary">{{ 'clients.create.generatePassword' | transloco }}</span>
+                <span class="text-xs text-base-content/60">{{ 'clients.create.generatePasswordDescription' | transloco }}</span>
+              </div>
+              <input type="checkbox" formControlName="generate_password" class="toggle toggle-secondary" />
+            </label>
+          </div>
+
           <div class="modal-action pt-4">
             <button type="button" class="btn btn-ghost" (click)="backToCreateType()">
               {{ 'common.back' | transloco }}
@@ -411,6 +430,97 @@
     confirmClass="btn-primary"
     (confirm)="onConfirmCreate()"
     (cancel)="onCancelConfirmCreate()"
+  />
+
+  <!-- Modal Éxito / Credenciales -->
+  <dialog class="modal" [class.modal-open]="successCredentialsOpen()">
+    <div class="modal-box max-w-md border-t-4 border-secondary shadow-2xl">
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="font-black text-2xl text-base-content">
+          {{ 'clients.create.successModalTitle' | transloco }}
+        </h3>
+        <p class="mt-2 text-sm text-base-content/70">
+          {{ 'clients.create.successModalSubtitle' | transloco }}
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Usuario / ID -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text font-semibold text-base-content/60">
+              {{ 'clients.create.userLabel' | transloco }}
+            </span>
+          </label>
+          <div class="join w-full">
+            <input
+              type="text"
+              [value]="createdOrganization()?.identification"
+              class="join-item input input-bordered w-full bg-base-200 font-mono text-sm focus:outline-none"
+              readonly
+            />
+            <button
+              class="join-item btn btn-neutral px-4"
+              (click)="copyToClipboard(createdOrganization()?.identification)"
+              [title]="'clients.create.copy' | transloco"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text font-semibold text-base-content/60">
+              {{ 'clients.create.passwordLabel' | transloco }}
+            </span>
+          </label>
+          <div class="join w-full">
+            <input
+              type="text"
+              [value]="createdOrganization()?.password"
+              class="join-item input input-bordered w-full bg-base-200 font-mono font-bold text-base-content focus:outline-none"
+              readonly
+            />
+            <button
+              class="join-item btn btn-neutral px-4"
+              (click)="copyToClipboard(createdOrganization()?.password)"
+              [title]="'clients.create.copy' | transloco"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-action mt-8">
+        <button class="btn btn-neutral btn-block font-bold" (click)="closeSuccessCredentials()">
+          {{ 'clients.create.close' | transloco }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Confirmación toggle notificaciones -->
+  <app-confirmation-dialog
+    [open]="confirmNotificationOpen()"
+    [title]="getConfirmNotificationTitle()"
+    [message]="getConfirmNotificationMessage()"
+    [confirmLabel]="'generics.confirm' | transloco"
+    [cancelLabel]="'generics.cancel' | transloco"
+    confirmClass="btn-neutral"
+    (confirm)="onConfirmNotificationToggle()"
+    (cancel)="onCancelNotificationToggle()"
   />
 
   <!-- Toast éxito (DaisyUI, auto-dismiss) -->

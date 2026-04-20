@@ -15,6 +15,8 @@ export interface Organization {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  password?: string; // Generated password returned by backend
+  is_receiving_notifications: boolean;
 }
 
 /**
@@ -97,4 +99,5 @@ export interface CreateOrganizationPayload {
   phone?: string | null;
   email?: string | null;
   contact_person?: string | null;
+  generate_password?: boolean;
 }

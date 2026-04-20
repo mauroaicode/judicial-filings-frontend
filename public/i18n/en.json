@@ -122,6 +122,7 @@
             "email": "Email",
             "contactPerson": "Contact Person",
             "status": "Status",
+            "notifications": "Notifications",
             "active": "Active",
             "inactive": "Inactive",
             "createdAt": "Created At"
@@ -147,7 +148,23 @@
             "confirmButton": "Create",
             "toastSuccess": "Organization created successfully",
             "validationErrorsTitle": "Validation errors",
-            "errorGeneric": "Could not create organization. Please check the data and try again."
+            "errorGeneric": "Could not create organization. Please check the data and try again.",
+            "generatePassword": "Generate password",
+            "generatePasswordDescription": "A password will be automatically generated for client access.",
+            "successModalTitle": "Organization Created!",
+            "successModalSubtitle": "The organization has been successfully registered. Use the following credentials for logging in:",
+            "userLabel": "User / Identification",
+            "passwordLabel": "Generated password",
+            "copy": "Copy",
+            "copied": "Copied!",
+            "close": "Close and continue"
+        },
+        "notifications": {
+            "toastSuccess": "Notification status updated",
+            "confirmActivateTitle": "Activate notifications",
+            "confirmDeactivateTitle": "Deactivate notifications",
+            "confirmActivateMessage": "Do you want to activate notifications for organization \"{{name}}\"?",
+            "confirmDeactivateMessage": "Do you want to deactivate notifications for organization \"{{name}}\"?"
         }
     },
     "common": {
