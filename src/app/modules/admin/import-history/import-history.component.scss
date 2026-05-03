@@ -1,0 +1,122 @@
+// Paginación: misma rejilla que gestión de procesos (texto | números | por página)
+.import-history-pagination {
+  margin-top: 0;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: 640px) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @media (max-width: 639px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  &__results {
+    font-size: 0.875rem;
+    color: hsl(var(--bc) / 0.7);
+    white-space: nowrap;
+    @media (min-width: 640px) {
+      justify-self: start;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    @media (min-width: 640px) {
+      justify-self: center;
+    }
+  }
+
+  &__per-page {
+    display: flex;
+    justify-content: flex-start;
+    @media (min-width: 640px) {
+      justify-self: end;
+    }
+  }
+}
+
+.import-history-table thead {
+  background-color: #24163e;
+}
+
+.import-history-table thead th {
+  color: #fff;
+  font-weight: 700;
+}
+
+.import-history-row:not(.import-history-row-highlight) {
+  transition: background-color 0.2s ease;
+}
+
+/*
+ * Highlight deep link (?import=): tono ámbar (warning) distinto al hover lila (#f3f0f9).
+ * Importante: no usar background !important aquí — gana sobre @keyframes y el fade no funciona.
+ */
+/*
+ * Fondo en todas las celdas; la franja (box-shadow inset) solo en la primera —
+ * antes estaba en cada td y repetía líneas verticales entre columnas.
+ */
+.import-history-table.table-zebra tbody tr.import-history-row.import-history-row-highlight > td:not(:first-child) {
+  animation: import-row-fade-highlight-bg 24s ease-out forwards;
+}
+
+.import-history-table.table-zebra tbody tr.import-history-row.import-history-row-highlight > td:first-child {
+  animation: import-row-fade-highlight-bg 24s ease-out forwards, import-row-fade-highlight-bar 24s ease-out forwards;
+}
+
+.import-history-table tbody tr.import-history-row:not(.import-history-row-highlight):hover > td,
+.import-history-table tbody tr.import-history-row:not(.import-history-row-highlight).import-history-row-hover > td {
+  background-color: #f3f0f9 !important;
+}
+
+/* Modal errores importación */
+.import-errors-modal.modal {
+  z-index: 10050;
+}
+
+.import-errors-modal .modal-box {
+  z-index: 10051;
+}
+
+/* Copiado al portapapeles: por encima del backdrop del modal (véase .import-errors-modal) */
+.import-history-copy-toast {
+  z-index: 10100 !important;
+}
+
+@keyframes import-row-fade-highlight-bg {
+  0% {
+    background-color: color-mix(in srgb, var(--color-warning) 52%, var(--color-base-100));
+  }
+  35% {
+    background-color: color-mix(in srgb, var(--color-warning) 28%, var(--color-base-100));
+  }
+  70% {
+    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes import-row-fade-highlight-bar {
+  0% {
+    box-shadow: inset 4px 0 0 var(--color-warning);
+  }
+  35% {
+    box-shadow: inset 4px 0 0 color-mix(in srgb, var(--color-warning) 85%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: none;
+  }
+}

@@ -1,4 +1,14 @@
-// Processes component - tabla con expandible instancias y tooltips (color primary/sencodar)
+// Processes component - tabla con expandible instancias y tooltips
+
+// KPI cards
+.kpi-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+}
 
 // Tooltip de sujetos procesales: por encima de la tabla
 .process-list-tooltip .tooltip-content {
@@ -9,19 +19,37 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
-// Hover en filas (principales e instancias) - tono secondary (naranja)
+// Estado: esquinas sutiles (misma familia por herencia de body / --font-sans en tailwind.css)
+.process-list-table .process-status-badge {
+  border-radius: 0.375rem !important;
+  font-family: inherit;
+  text-transform: uppercase;
+  font-size: 0.6875rem; // ~11px, un punto por debajo del badge por defecto
+  line-height: 1.25;
+}
+
+// Hover en filas — tono primary suave (púrpura muy claro)
 .process-list-table tbody tr.process-row-hovered,
 .process-list-table tbody tr.process-row-hovered td {
-  background-color: #ffe6cc !important; // tono secondary #FF9800 suave
+  background-color: #F3F0F9 !important; // primaryLight muted hover
 }
 
 .process-list-table {
   overflow-x: auto !important;
-  overflow-y: visible !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   position: relative;
   isolation: isolate;
   transform: translateZ(0);
+
+  /* En lg el alto lo limita flex del card; antes usábamos solo scroll de página */
+  max-height: min(70vh, 720px);
+
+  @media (min-width: 1024px) {
+    max-height: none;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
 
   & > table {
     position: relative;
@@ -31,25 +59,39 @@
     transform: translateZ(0);
   }
 
+  /* Header fijo en scroll vertical (> z-index celdas body sticky horizontal) */
+  thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 600 !important;
+    background-color: #4b2a7d !important;
+    background: #4b2a7d !important;
+    color: #fff !important;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+  }
+
   thead th.sticky-col-radicado {
     position: sticky !important;
     left: 0 !important;
-    z-index: 1000 !important;
-    background: #161326 !important;
-    background-color: #161326 !important;
+    top: 0 !important;
+    z-index: 610 !important;
+    background: #4B2A7D !important;
+    background-color: #4B2A7D !important;
     color: #fff !important;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
-    width: 240px !important;
+    box-shadow:
+      2px 0 4px rgba(0, 0, 0, 0.1),
+      0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+    min-width: 324px !important;
+    max-width: 324px !important;
+    width: 324px !important;
     isolation: isolate !important;
     backface-visibility: hidden !important;
     transform: translateZ(0) !important;
   }
 
   $sticky-base: #ffffff;
-  $sticky-zebra: #f8f9fa;
-  $sticky-instance: #fff3e0; // tono secondary suave para instancias
+  $sticky-zebra: #F4F5F9;      // Admin base-200 cool blue-gray
+  $sticky-instance: #F3F0F9;   // primaryLight — very subtle purple tint for instances
 
   tbody td.sticky-col-radicado {
     position: sticky !important;
@@ -58,12 +100,13 @@
     background-color: $sticky-base !important;
     background: $sticky-base !important;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
-    width: 240px !important;
-    white-space: nowrap !important;
+    min-width: 324px !important;
+    max-width: 324px !important;
+    width: 324px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    vertical-align: middle !important;
     isolation: isolate !important;
-    contain: paint !important;
     backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     & .sticky-cell-bg {
@@ -76,6 +119,8 @@
     & .sticky-cell-txt {
       position: relative !important;
       z-index: 1;
+      overflow: visible !important;
+      max-width: 100%;
     }
     &::before {
       content: '';
@@ -116,21 +161,25 @@
   tbody tr.process-row-hovered td.sticky-col-radicado,
   tbody tr.process-row-hovered td.sticky-col-radicado::before,
   tbody tr.process-row-hovered td.sticky-col-radicado .sticky-cell-bg {
-    background-color: #ffe6cc !important;
-    background: #ffe6cc !important;
+    background-color: #F3F0F9 !important;
+    background: #F3F0F9 !important;
   }
 }
 
-// Filas de instancias: fondo suave secondary (naranja)
+// Filas de instancias: fondo primaryLight (púrpura muy claro, enterprise)
 .process-list-table tbody tr.process-table-instance-row {
-  background-color: #fff3e0 !important;
+  background-color: #F3F0F9 !important;
 }
 .process-list-table tbody tr.process-table-instance-row td {
-  background-color: #fff3e0 !important;
+  background-color: #F3F0F9 !important;
 }
 
 // Pagination: izquierda = resultados, centro = numeración, derecha = "por página"
 // Clases propias para no depender de :host (encapsulation None)
+.processes-table-card .processes-pagination {
+  margin-top: 0;
+}
+
 .processes-pagination {
   margin-top: 1.5rem;
   padding: 1rem;
@@ -175,6 +224,11 @@
       justify-self: end;
     }
   }
+}
+
+// Confirmación de import Excel: debe verse por encima del bottom sheet (.modal DaisyUI ~9999)
+.import-excel-confirmation dialog.modal.modal-open {
+  z-index: 11000 !important;
 }
 
 :host {

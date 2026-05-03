@@ -1,11 +1,14 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
+  Injector,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -17,11 +20,19 @@ import {
   ProcessFilter,
   ProcessResponseMeta,
   ProcessImportBatchResponse,
+  ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
 import { Organization } from '@app/core/models/organization/organization.model';
 import { DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/file-drop-zone.component';
+import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
+import { SearchableSelectComponent } from '@app/shared/components/searchable-select/searchable-select.component';
+import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogDetailRow,
+} from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-processes',
@@ -32,6 +43,10 @@ import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/fil
     TranslocoPipe,
     DateRangePickerComponent,
     FileDropZoneComponent,
+    BottomSheetModalComponent,
+    SearchableSelectComponent,
+    ProcessNumberPipe,
+    ConfirmationDialogComponent,
   ],
   templateUrl: './processes.component.html',
   styleUrls: ['./processes.component.scss'],
@@ -39,21 +54,35 @@ import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/fil
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProcessesComponent {
+  readonly filtersSectionDomId = 'processes-search-filters';
+
   private _processService = inject(ProcessService);
   private _organizationService = inject(OrganizationService);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
   private _fb = inject(FormBuilder);
   private _transloco = inject(TranslocoService);
+  private _document = inject(DOCUMENT);
+  private _injector = inject(Injector);
+
+  /** Toast DaisyUI (`toast-end toast-bottom`): mensaje tras copiar radicado (como cliente, sin librería npm). */
+  public copyRadicadoToast = signal<{ message: string; kind: 'success' | 'error' } | null>(null);
+  private _copiedRadicadoToastTimer: ReturnType<typeof setTimeout> | undefined;
 
   // State
   public processes = signal<Process[]>([]);
   public loading = signal<boolean>(false);
   public pagination = signal<ProcessResponseMeta | null>(null);
+  public dashboardStats = signal<ProcessDashboardStats | null>(null);
+  public dashboardStatsLoading = signal<boolean>(false);
+  public showFilters = signal<boolean>(false);
   /** IDs de procesos con fila expandida (múltiples instancias) */
   public expandedProcessIds = signal<Set<string>>(new Set());
   /** ID de fila bajo hover (para resaltar) */
   public hoveredRowId = signal<string | null>(null);
+
+  /** Menú del FAB móvil (+): muestra acciones (p. ej. Importar Excel) */
+  public mobileFabMenuOpen = signal<boolean>(false);
 
   // Import modal state
   public isImportModalOpen = signal<boolean>(false);
@@ -62,9 +91,16 @@ export class ProcessesComponent {
   public importFile = signal<File | null>(null);
   /** Selected organization for import (required) */
   public importOrganizationId = signal<string>('');
+  /** Diálogo de confirmación antes de enviar archivo al API */
+  public importConfirmOpen = signal<boolean>(false);
   /** Organizations list for import select */
   public importOrganizations = signal<Organization[]>([]);
   public importOrganizationsLoading = signal<boolean>(false);
+
+  /** Opciones para el combobox de importación (id + nombre) */
+  public importOrganizationOptions = computed(() =>
+    this.importOrganizations().map((o) => ({ id: o.id, label: o.name }))
+  );
 
   // Filter form
   public filterForm: FormGroup = this._fb.group({
@@ -92,7 +128,7 @@ export class ProcessesComponent {
     {
       key: 'process_number',
       label: 'processes.table.processNumber',
-      width: '240px',
+      width: '324px',
       align: 'left',
       sortable: true,
     },
@@ -150,7 +186,52 @@ export class ProcessesComponent {
 
   constructor() {
     this._loadFiltersFromQueryParams();
+    this.loadDashboardStats();
     this.loadProcesses();
+  }
+
+  /**
+   * Load KPI dashboard stats for top cards
+   */
+  loadDashboardStats(): void {
+    this.dashboardStatsLoading.set(true);
+    this._processService.getDashboardStats().subscribe({
+      next: (stats) => {
+        this.dashboardStats.set(stats);
+        this.dashboardStatsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading dashboard stats:', error);
+        this.dashboardStats.set(null);
+        this.dashboardStatsLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Percentage helper with zero-safe divisor
+   */
+  getPercentage(value: number, total: number): number {
+    if (!total || total <= 0) return 0;
+    return Math.round((value / total) * 100);
+  }
+
+  /**
+   * Outdated ratio over total processes
+   */
+  getOutdatedRatio(stats: ProcessDashboardStats | null): number {
+    if (!stats || !stats.total_processes) return 0;
+    return stats.outdated_processes / stats.total_processes;
+  }
+
+  /**
+   * Tone class for sync health card based on outdated ratio
+   */
+  getSyncHealthTone(stats: ProcessDashboardStats | null): 'healthy' | 'warning' | 'critical' {
+    const ratio = this.getOutdatedRatio(stats);
+    if (ratio >= 0.7) return 'critical';
+    if (ratio >= 0.35) return 'warning';
+    return 'healthy';
   }
 
   /**
@@ -286,7 +367,7 @@ export class ProcessesComponent {
   /**
    * Load processes with current filters
    */
-  loadProcesses(page: number = 1, perPage: number = 20): void {
+  loadProcesses(page: number = 1, perPage: number = 10): void {
     this.loading.set(true);
 
     const formValue = this.filterForm.value;
@@ -347,7 +428,26 @@ export class ProcessesComponent {
    * Handle search
    */
   onSearch(): void {
-    this.loadProcesses(1, this.pagination()?.per_page || 20);
+    this.loadProcesses(1, this.pagination()?.per_page || 10);
+  }
+
+  toggleFilters(): void {
+    const wasOpen = this.showFilters();
+    this.showFilters.update((value) => !value);
+
+    // Al abrir el panel (@if muestra el bloque después del ciclo siguiente)
+    if (wasOpen) {
+      return;
+    }
+
+    afterNextRender(
+      () => {
+        this._document
+          .getElementById(this.filtersSectionDomId)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+      { injector: this._injector },
+    );
   }
 
   /**
@@ -374,7 +474,7 @@ export class ProcessesComponent {
       queryParams: {},
       replaceUrl: true,
     });
-    this.loadProcesses(1, this.pagination()?.per_page || 20);
+    this.loadProcesses(1, this.pagination()?.per_page || 10);
   }
 
   /** Opciones de tamaño de página para la paginación */
@@ -440,6 +540,40 @@ export class ProcessesComponent {
     return s;
   }
 
+  /** Portapapeles: solo dígitos (sin guiones). Cierra mensaje anterior si se vuelve a copiar rápido. */
+  copyProcessRadicado(raw: string | null | undefined, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const clean = (raw ?? '').replace(/\D/g, '');
+    if (!clean) return;
+
+    if (this._copiedRadicadoToastTimer) {
+      clearTimeout(this._copiedRadicadoToastTimer);
+      this._copiedRadicadoToastTimer = undefined;
+    }
+
+    const dismiss = (): void => {
+      this.copyRadicadoToast.set(null);
+      this._copiedRadicadoToastTimer = undefined;
+    };
+
+    navigator.clipboard.writeText(clean).then(() => {
+      this.copyRadicadoToast.set({
+        message: this._transloco.translate('processes.copy.toastSuccess'),
+        kind: 'success',
+      });
+      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
+    }).catch(() => {
+      this.copyRadicadoToast.set({
+        message: this._transloco.translate('processes.copy.toastError'),
+        kind: 'error',
+      });
+      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
+    });
+  }
+
   /** Números de página a mostrar en la paginación */
   getPageNumbers(): number[] {
     const pagination = this.pagination();
@@ -474,6 +608,22 @@ export class ProcessesComponent {
     }
   }
 
+  toggleMobileFabMenu(): void {
+    this.mobileFabMenuOpen.update((open) => !open);
+  }
+
+  closeMobileFabMenu(): void {
+    this.mobileFabMenuOpen.set(false);
+  }
+
+  /**
+   * Desde el FAB móvil: cierra el menú del + y abre el bottom sheet de importación.
+   */
+  openImportFromMobileFab(): void {
+    this.closeMobileFabMenu();
+    this.openImportModal();
+  }
+
   /**
    * Open import Excel modal and load organizations for the select
    */
@@ -502,10 +652,12 @@ export class ProcessesComponent {
   }
 
   /**
-   * Close import Excel modal
+   * Close import Excel modal (y el menú del FAB móvil, si estuviera abierto)
    */
   closeImportModal(): void {
     this.isImportModalOpen.set(false);
+    this.closeMobileFabMenu();
+    this.importConfirmOpen.set(false);
     this.importFile.set(null);
     this.importResult.set(null);
     this.importOrganizationId.set('');
@@ -519,10 +671,73 @@ export class ProcessesComponent {
     this.importFile.set(file);
   }
 
+  getImportConfirmTitle(): string {
+    return this._transloco.translate('processes.import.confirmTitle');
+  }
+
+  getImportConfirmLead(): string {
+    if (!this.importConfirmOpen()) {
+      return '';
+    }
+    return this._transloco.translate('processes.import.confirmMessage');
+  }
+
+  getImportConfirmFootnote(): string {
+    if (!this.importConfirmOpen()) {
+      return '';
+    }
+    return this._transloco.translate('processes.import.confirmFootnote');
+  }
+
+  getImportConfirmDetailRows(): ConfirmationDialogDetailRow[] {
+    if (!this.importConfirmOpen()) {
+      return [];
+    }
+    const file = this.importFile();
+    const organizationId = this.importOrganizationId()?.trim();
+    if (!file || !organizationId) {
+      return [];
+    }
+    const organizationName = this._importOrganizationDisplayName(organizationId);
+    return [
+      { label: this._transloco.translate('processes.import.confirmFileLabel'), value: file.name },
+      {
+        label: this._transloco.translate('processes.import.confirmOrganizationLabel'),
+        value: organizationName,
+      },
+    ];
+  }
+
   /**
-   * Submit import (upload file + organization_id). API runs import in background and sends report by email.
+   * Abre el paso de confirmación (nombre de archivo + organización).
    */
-  onSubmitImport(): void {
+  openImportConfirmDialog(): void {
+    const file = this.importFile();
+    const organizationId = this.importOrganizationId()?.trim();
+    if (!file || !organizationId) return;
+
+    this.importConfirmOpen.set(true);
+  }
+
+  onCancelImportConfirm(): void {
+    this.importConfirmOpen.set(false);
+  }
+
+  /**
+   * Tras confirmar: sube archivo + organization_id (importación en segundo plano + reporte por email).
+   */
+  onConfirmImportSubmit(): void {
+    this.importConfirmOpen.set(false);
+    this.executeImportSubmit();
+  }
+
+  private _importOrganizationDisplayName(organizationId: string): string {
+    const org = this.importOrganizations().find((o) => o.id === organizationId);
+    const name = org?.name?.trim();
+    return name || organizationId;
+  }
+
+  private executeImportSubmit(): void {
     const file = this.importFile();
     const organizationId = this.importOrganizationId()?.trim();
     if (!file || !organizationId) return;

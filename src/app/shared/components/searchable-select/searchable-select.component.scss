@@ -1,0 +1,9 @@
+/* Con el panel abierto, subir el contexto de apilamiento para que el desplegable quede sobre el resto del modal (p. ej. dropzone). */
+.app-searchable-select--open {
+  z-index: 60;
+  isolation: isolate;
+}
+
+.app-searchable-select__panel {
+  box-sizing: border-box;
+}

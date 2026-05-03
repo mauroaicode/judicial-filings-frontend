@@ -219,7 +219,7 @@ export class DataTableComponent {
    * Get sticky header style
    */
   getStickyHeaderStyle(): string {
-    return 'position: -webkit-sticky !important; position: sticky !important; left: 0 !important; z-index: 1000 !important; background-color: #161326 !important; background: #161326 !important; color: #ffffff !important; min-width: 240px !important; max-width: 240px !important; width: 240px !important; box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important; will-change: transform !important;';
+    return 'position: -webkit-sticky !important; position: sticky !important; left: 0 !important; z-index: 1000 !important; background-color: #4B2A7D !important; background: #4B2A7D !important; color: #ffffff !important; min-width: 240px !important; max-width: 240px !important; width: 240px !important; box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important; will-change: transform !important;';
   }
 
   /**

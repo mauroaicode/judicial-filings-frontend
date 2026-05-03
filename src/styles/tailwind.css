@@ -1,3 +1,64 @@
 @import "tailwindcss";
-@plugin "daisyui";
+
+@plugin "daisyui" {
+  themes: light;
+}
+
+@theme {
+  /* Misma pila sans que `body` en styles.scss y que judicial-filings-frontend (evita discrepancia ui-sans vs -apple-system) */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  /* Admin Brand Colors — same identity as client, enterprise-grade treatment */
+  --color-brand-primary: #4B2A7D;
+  --color-brand-primary-dark: #371B58;
+  --color-brand-primary-light: #F3F0F9;
+
+  --color-brand-secondary: #7C57B7;
+
+  --color-brand-accent: #FBB03B;
+  --color-brand-accent-content: #1F2937;
+
+  /* Admin uses Emerald green (same as client) */
+  --color-brand-success: #059669;
+  --color-brand-success-content: #ffffff;
+
+  /* Admin dark neutral — slightly different hue from client (#24163E) for differentiation */
+  --color-brand-neutral: #1E1B3A;
+  --color-brand-neutral-content: #ffffff;
+
+  /* Admin base: subtle cool blue-gray (differentiates from client's pure white) */
+  --color-brand-base-100: #ffffff;
+  --color-brand-base-200: #F4F5F9;
+  --color-brand-base-300: #E8EAF2;
+}
+
+/* Override DaisyUI CSS variables to enforce brand consistently */
+:root,
+[data-theme] {
+  --color-primary: var(--color-brand-primary) !important;
+  --color-primary-content: #ffffff !important;
+
+  --color-secondary: var(--color-brand-secondary) !important;
+  --color-secondary-content: #ffffff !important;
+
+  --color-accent: var(--color-brand-accent) !important;
+  --color-accent-content: var(--color-brand-accent-content) !important;
+
+  /* Admin uses its own dark navy for the sidebar/neutral elements */
+  --color-neutral: var(--color-brand-neutral) !important;
+  --color-neutral-content: var(--color-brand-neutral-content) !important;
+
+  /* Admin base backgrounds get the cool blue-gray tint */
+  --color-base-200: var(--color-brand-base-200) !important;
+  --color-base-300: var(--color-brand-base-300) !important;
+
+  --color-success: var(--color-brand-success) !important;
+  --color-success-content: var(--color-brand-success-content) !important;
+
+  /* Info uses secondary purple to stay brand-consistent */
+  --color-info: var(--color-brand-secondary) !important;
+  --color-info-content: #ffffff !important;
+}
 

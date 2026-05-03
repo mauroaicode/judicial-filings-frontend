@@ -70,6 +70,7 @@
     "dashboard": "Dashboard",
     "processes": "Procesos",
     "clients": "Organizaciones",
+    "importHistory": "Historial importaciones",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -88,7 +89,36 @@
   "processes": {
     "title": "Procesos Judiciales",
     "description": "Consulta y gestiona todos los procesos judiciales",
+    "kpi": {
+      "loading": "Cargando métricas del sistema...",
+      "operational": {
+        "title": "Radicados y cobertura",
+        "subtitle": "Procesos judiciales únicos (un conteo por radicado)",
+        "active": "Activos",
+        "withoutWatching": "Sin vigilancia",
+        "withoutWatchingHint": "Radicados sin ninguna organización con monitoreo activo (huérfanos operativos)."
+      },
+      "critical": {
+        "title": "Alerta Crítica",
+        "subtitle": "Riesgo legal inminente"
+      },
+      "early": {
+        "title": "Alerta Temprana",
+        "subtitle": "Procesos para seguimiento cercano"
+      },
+      "instances": {
+        "title": "Doble Instancia",
+        "subtitle": "Casos en tránsito de instancia"
+      },
+      "health": {
+        "title": "Salud Técnica de Sincronización",
+        "subtitle": "Procesos sin actualización en más de 48 horas",
+        "outdated": "Desactualizados",
+        "ratio": "Impacto"
+      }
+    },
     "filters": {
+      "fabAria": "Abrir o cerrar filtros de búsqueda",
       "title": "Filtros de Búsqueda",
       "processNumber": "Número de Radicado",
       "processNumberPlaceholder": "Ej: 76001333301320170009301",
@@ -119,6 +149,11 @@
       "reset": "Limpiar Filtros",
       "search": "Buscar"
     },
+    "copy": {
+      "tooltip": "Copiar",
+      "toastSuccess": "Radicado copiado",
+      "toastError": "No se pudo copiar"
+    },
     "table": {
       "empty": "No hay procesos disponibles",
       "index": "#",
@@ -134,10 +169,17 @@
       "lastActivityDate": "Fecha Ultima Actuación"
     },
     "import": {
+      "fabMainAria": "Abrir o cerrar acciones rápidas",
+      "fabMenuBackdropAria": "Cerrar menú de acciones",
+      "fabImportAria": "Importar procesos desde Excel",
+      "importProcesses": "Importar procesos",
+      "sheetHint": "Selecciona organización y archivo .xlsx para importar.",
       "button": "Importar Excel",
       "title": "Importar procesos desde Excel",
       "organizationLabel": "Organización",
       "organizationPlaceholder": "Seleccione la organización",
+      "organizationSearch": "Buscar organización…",
+      "organizationNoMatches": "No hay coincidencias",
       "description": "Arrastre un archivo .xlsx aquí o haga clic para seleccionar. El archivo debe cumplir el formato requerido para importar procesos judiciales.",
       "dropzoneTitle": "Arrastre aquí su archivo Excel (.xlsx)",
       "dropzoneSubtitle": "o haga clic para seleccionar (máx. 10 MB)",
@@ -146,6 +188,12 @@
       "submit": "Importar",
       "submitting": "Importando...",
       "close": "Cerrar",
+      "confirmTitle": "Confirmar importación",
+      "confirmMessage": "Va a iniciar una importación en segundo plano con los datos que aparecen abajo. Compruebe que el archivo y la organización (cliente) son los correctos.",
+      "confirmFileLabel": "Archivo Excel",
+      "confirmOrganizationLabel": "Organización / cliente",
+      "confirmFootnote": "Al confirmar, el sistema procesará el archivo en segundo plano. Recibirá un aviso o reporte cuando la importación haya terminado.",
+      "confirmSubmit": "Sí, importar",
       "validationErrors": "Errores de validación",
       "stats": {
         "succeeded": "Importados correctamente",
@@ -170,6 +218,7 @@
     "title": "Organizaciones",
     "description": "Listado de organizaciones registradas en el sistema",
     "filters": {
+      "fabAria": "Abrir o cerrar filtros de búsqueda",
       "title": "Filtros de Búsqueda",
       "name": "Nombre",
       "namePlaceholder": "Nombre de la organización",
@@ -240,16 +289,88 @@
       "confirmDeactivateMessage": "¿Desea desactivar las notificaciones para la organización \"{{name}}\"?"
     }
   },
+  "historialImportaciones": {
+    "title": "Historial de Importaciones",
+    "description": "Consulta el resultado de cada carga masiva de radicados.",
+    "filters": {
+      "fabAria": "Abrir o cerrar filtros de búsqueda",
+      "title": "Filtros de Búsqueda",
+      "organization": "Organización",
+      "organizationPlaceholder": "Coincidencia parcial en el nombre",
+      "fileName": "Archivo",
+      "fileNamePlaceholder": "Coincidencia parcial en el nombre del archivo",
+      "status": "Estado del lote",
+      "statusAll": "Todos",
+      "statusProcessing": "En proceso",
+      "statusCompleted": "Completado",
+      "statusFailed": "Fallido",
+      "hasErrors": "Errores registrados",
+      "hasErrorsAll": "Todos",
+      "hasErrorsYes": "Con errores",
+      "hasErrorsNo": "Sin errores",
+      "search": "Filtrar",
+      "reset": "Limpiar Filtros"
+    },
+    "empty": "No hay importaciones registradas por el momento.",
+    "copied": "Copiado al portapapeles",
+    "stats": {
+      "imports": "Importaciones",
+      "total": "Total procesados",
+      "success": "Exitosos",
+      "failed": "Fallidos"
+    },
+    "table": {
+      "file": "Archivo / Lote",
+      "organization": "Organización",
+      "status": "Estado",
+      "total": "Total",
+      "success": "Exitosos",
+      "failed": "Fallidos",
+      "multipleInstances": "Múltiples instancias",
+      "createdAt": "Creado",
+      "completedAt": "Finalizado",
+      "showProcesses": "Ver Procesos",
+      "hideProcesses": "Ocultar procesos",
+      "viewErrors": "Ver errores"
+    },
+    "processesTitle": "Radicados de la importación ({{count}})",
+    "status": {
+      "unknown": "Sin estado"
+    },
+    "errorsModal": {
+      "title": "Errores de la importación",
+      "organizationLabel": "Organización",
+      "importDate": "Fecha de importación",
+      "statTotal": "Total",
+      "statSuccess": "Exitosos",
+      "statFailed": "Fallidos",
+      "statStatus": "Estado",
+      "statMultipleInstances": "Múltiples instancias",
+      "statExcelRows": "Filas en Excel",
+      "statExcelRowsHint": "Igual que el total del lote si el servidor no envía las filas del Excel.",
+      "processLabel": "Radicado",
+      "reasonLabel": "Detalle del error",
+      "technicalBadge": "Técnico / SQL",
+      "businessBadge": "Validación",
+      "close": "Cerrar"
+    }
+  },
   "common": {
     "back": "Atrás",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "actions": "Acciones"
   },
   "notifications": {
     "title": "Notificaciones",
     "unread": "sin leer",
+    "new": "sin abrir",
     "noNotificationsTitle": "¡Todo al día!",
     "noNotifications": "No tienes notificaciones",
     "viewAll": "Ver todas las notificaciones",
-    "clickToViewDetails": "Haz clic para ver más detalles"
+    "clickToViewDetails": "Haz clic para ver más detalles",
+    "tabs": {
+      "all": "Todas",
+      "unread": "No leídas"
+    }
   }
 }

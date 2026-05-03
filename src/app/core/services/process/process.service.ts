@@ -8,6 +8,7 @@ import {
   ProcessResponse,
   ProcessResponseMeta,
   ProcessImportBatchResponse,
+  ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
 
 @Injectable({
@@ -113,5 +114,13 @@ export class ProcessService {
     formData.append('file', file, file.name);
     formData.append('organization_id', organizationId);
     return this._http.post<ProcessImportBatchResponse>(url, formData);
+  }
+
+  /**
+   * Get dashboard stats for process KPI cards
+   */
+  getDashboardStats(): Observable<ProcessDashboardStats> {
+    const url = `${environment.apiBaseUrl}/dashboard/stats`;
+    return this._http.get<ProcessDashboardStats>(url);
   }
 }

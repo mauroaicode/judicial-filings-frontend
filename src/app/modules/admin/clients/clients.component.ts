@@ -1,11 +1,13 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   inject,
+  Injector,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -36,11 +38,18 @@ import { ConfirmationDialogComponent } from '@app/shared/components/confirmation
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClientsComponent {
+  readonly filtersSectionDomId = 'clients-search-filters';
+
   private _organizationService = inject(OrganizationService);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
   private _fb = inject(FormBuilder);
   private _transloco = inject(TranslocoService);
+  private _document = inject(DOCUMENT);
+  private _injector = inject(Injector);
+
+  /** Panel de filtros cerrado por defecto (mismo criterio que procesos / historial) */
+  public showFilters = signal<boolean>(false);
 
   public organizations = signal<Organization[]>([]);
   public loading = signal<boolean>(false);
@@ -102,6 +111,20 @@ export class ClientsComponent {
     this.loadOrganizations();
   }
 
+  toggleFilters(): void {
+    const wasOpen = this.showFilters();
+    this.showFilters.update((value) => !value);
+    if (wasOpen) {
+      return;
+    }
+    afterNextRender(
+      () => {
+        this._document.getElementById(this.filtersSectionDomId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+      { injector: this._injector },
+    );
+  }
+
   private _loadSelectOptions(): void {
     this._organizationService.getOrganizationTypes().subscribe({
       next: (res) => this.typeOptions.set(res.data ?? []),
@@ -157,7 +180,7 @@ export class ClientsComponent {
     });
   }
 
-  loadOrganizations(page: number = 1, perPage: number = 20): void {
+  loadOrganizations(page: number = 1, perPage: number = 10): void {
     this.loading.set(true);
 
     const formValue = this.filterForm.value;
@@ -201,7 +224,7 @@ export class ClientsComponent {
   }
 
   onSearch(): void {
-    this.loadOrganizations(1, this.pagination()?.per_page ?? 20);
+    this.loadOrganizations(1, this.pagination()?.per_page ?? 10);
   }
 
   onResetFilters(): void {
@@ -217,7 +240,7 @@ export class ClientsComponent {
       queryParams: {},
       replaceUrl: true,
     });
-    this.loadOrganizations(1, this.pagination()?.per_page ?? 20);
+    this.loadOrganizations(1, this.pagination()?.per_page ?? 10);
   }
 
   onPageChangeFromTable(page: number, perPage: number): void {
@@ -366,7 +389,7 @@ export class ClientsComponent {
           this.showSuccessToast(this._transloco.translate('clients.create.toastSuccess'));
         }
 
-        this.loadOrganizations(1, this.pagination()?.per_page ?? 20);
+        this.loadOrganizations(1, this.pagination()?.per_page ?? 10);
       },
       error: (err) => {
         this.createSubmitting.set(false);
@@ -397,7 +420,7 @@ export class ClientsComponent {
     this.confirmNotificationOpen.set(false);
     this.notifyingOrg.set(null);
     // Recargar para restaurar el switch si fue cancelado
-    this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+    this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 10);
   }
 
   onConfirmNotificationToggle(): void {
@@ -411,11 +434,11 @@ export class ClientsComponent {
       next: () => {
         this.showSuccessToast(this._transloco.translate('clients.notifications.toastSuccess'));
         this.notifyingOrg.set(null);
-        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 10);
       },
       error: () => {
         this.notifyingOrg.set(null);
-        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 20);
+        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 10);
       },
     });
   }

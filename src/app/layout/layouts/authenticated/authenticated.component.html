@@ -9,11 +9,7 @@
     [class.ml-16]="!sidebar?.isOpen() && !sidebar?.isMobile()"
   >
     <!-- Header -->
-    <app-header
-      [pageTitle]="pageTitle()"
-      [sidebar]="sidebar"
-      (toggleSidebar)="onToggleSidebar()"
-    ></app-header>
+    <app-header [pageTitle]="pageTitle()" (toggleSidebar)="onToggleSidebar()"></app-header>
 
     <!-- Page Content -->
     <main class="flex-1 overflow-y-auto p-4 md:p-6 min-h-0">

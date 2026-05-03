@@ -1,0 +1,570 @@
+<div class="w-full space-y-6 pb-24 lg:pb-0">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+        {{ 'historialImportaciones.title' | transloco }}
+      </h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        {{ 'historialImportaciones.description' | transloco }}
+      </p>
+    </div>
+    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
+        [ngClass]="
+          showFilters()
+            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
+        "
+        (click)="toggleFilters()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        <span class="font-bold">{{ 'historialImportaciones.filters.title' | transloco }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="lg:hidden fixed bottom-6 right-4 z-[60] flex flex-col gap-3 items-end" role="group">
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
+      [ngClass]="
+        showFilters() ? 'bg-primary text-primary-content border-primary' : 'bg-base-100 text-primary border-primary/20'
+      "
+      (click)="toggleFilters()"
+      [attr.aria-label]="'historialImportaciones.filters.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <article class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
+          {{ 'historialImportaciones.stats.imports' | transloco }}
+        </p>
+        <p class="text-xl font-semibold tabular-nums text-primary">{{ summary().imports }}</p>
+      </div>
+    </article>
+    <article class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
+          {{ 'historialImportaciones.stats.total' | transloco }}
+        </p>
+        <p class="text-xl font-semibold tabular-nums text-info">{{ summary().total }}</p>
+      </div>
+    </article>
+    <article class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
+          {{ 'historialImportaciones.stats.success' | transloco }}
+        </p>
+        <p class="text-xl font-semibold tabular-nums text-success">{{ summary().success }}</p>
+      </div>
+    </article>
+    <article class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
+          {{ 'historialImportaciones.stats.failed' | transloco }}
+        </p>
+        <p class="text-xl font-semibold tabular-nums text-error">{{ summary().failed }}</p>
+      </div>
+    </article>
+  </section>
+
+  @if (showFilters()) {
+    <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">{{ 'historialImportaciones.filters.title' | transloco }}</h2>
+        <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'historialImportaciones.filters.organization' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              formControlName="organization"
+              [placeholder]="'historialImportaciones.filters.organizationPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'historialImportaciones.filters.fileName' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              formControlName="file_name"
+              [placeholder]="'historialImportaciones.filters.fileNamePlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'historialImportaciones.filters.status' | transloco }}</span>
+            </label>
+            <select class="select select-bordered select-sm w-full" formControlName="status">
+              <option value="">{{ 'historialImportaciones.filters.statusAll' | transloco }}</option>
+              <option value="processing">{{ 'historialImportaciones.filters.statusProcessing' | transloco }}</option>
+              <option value="completed">{{ 'historialImportaciones.filters.statusCompleted' | transloco }}</option>
+              <option value="failed">{{ 'historialImportaciones.filters.statusFailed' | transloco }}</option>
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'historialImportaciones.filters.hasErrors' | transloco }}</span>
+            </label>
+            <select class="select select-bordered select-sm w-full" formControlName="has_errors">
+              <option value="all">{{ 'historialImportaciones.filters.hasErrorsAll' | transloco }}</option>
+              <option value="yes">{{ 'historialImportaciones.filters.hasErrorsYes' | transloco }}</option>
+              <option value="no">{{ 'historialImportaciones.filters.hasErrorsNo' | transloco }}</option>
+            </select>
+          </div>
+          <div class="form-control">
+            <app-date-range-picker
+              [label]="'processes.filters.createdAtRange' | transloco"
+              [placeholder]="'processes.filters.createdAtRangePlaceholder' | transloco"
+              [size]="'sm'"
+              formControlName="created_at_range"
+            ></app-date-range-picker>
+          </div>
+        </form>
+        <div class="card-actions mt-4 justify-end gap-4">
+          <button
+            type="button"
+            class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+            (click)="resetFilters()"
+          >
+            {{ 'historialImportaciones.filters.reset' | transloco }}
+          </button>
+          <button type="button" class="btn-standard-search" (click)="applyFilters()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {{ 'historialImportaciones.filters.search' | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-16">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      }
+
+      @if (!loading() && importItems().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <p class="text-base-content/60">{{ 'historialImportaciones.empty' | transloco }}</p>
+        </div>
+      }
+
+      @if (!loading() && importItems().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="table table-zebra import-history-table">
+            <thead>
+              <tr>
+                <th>{{ 'historialImportaciones.table.file' | transloco }}</th>
+                <th>{{ 'historialImportaciones.table.organization' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.status' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.total' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.success' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.failed' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.multipleInstances' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.createdAt' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.completedAt' | transloco }}</th>
+                <th class="text-right min-w-[11rem]">{{ 'common.actions' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of importItems(); track item.id) {
+                <tr
+                  class="import-history-row"
+                  [attr.data-import-id]="item.id"
+                  [class.import-history-row-hover]="hoveredRowId() === item.id"
+                  [class.import-history-row-highlight]="highlightedImportId() === item.id"
+                  (mouseenter)="hoveredRowId.set(item.id)"
+                  (mouseleave)="hoveredRowId.set(null)"
+                >
+                  <td class="max-w-[280px]">
+                    <div class="font-medium text-base-content truncate">{{ getDisplayName(item) }}</div>
+                  </td>
+                  <td class="max-w-[200px]">
+                    <div class="text-sm text-base-content/90 truncate" [title]="item.organization_name || ''">
+                      {{ item.organization_name || '–' }}
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <span
+                      class="badge font-medium uppercase text-[11px] leading-tight tracking-normal whitespace-nowrap"
+                      [ngClass]="getStatusClass(item.status)"
+                    >
+                      {{ item.status_label || ('historialImportaciones.status.unknown' | transloco) }}
+                    </span>
+                  </td>
+                  <td class="text-center tabular-nums text-sm font-medium text-base-content">
+                    {{ item.total_count ?? item.actions_count ?? 0 }}
+                  </td>
+                  <td class="text-center tabular-nums text-sm font-semibold text-success">
+                    {{ item.success_count ?? 0 }}
+                  </td>
+                  <td class="text-center tabular-nums text-sm font-semibold text-error">
+                    {{ item.failed_count ?? 0 }}
+                  </td>
+                  <td class="text-center tabular-nums text-sm font-medium text-base-content">
+                    {{ item.multiple_instances_count ?? 0 }}
+                  </td>
+                  <td class="text-center text-sm font-normal text-base-content">{{ item.created_at || item.date || '–' }}</td>
+                  <td class="text-center text-sm font-normal text-base-content">{{ item.completed_at || '–' }}</td>
+                  <td class="text-right">
+                    <div class="flex flex-col items-stretch gap-1.5 sm:flex-row sm:justify-end sm:flex-wrap">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline btn-primary px-3 py-1.5 leading-tight h-auto min-h-0"
+                        [disabled]="!(item.enqueued_process_numbers?.length)"
+                        (click)="toggleExpand(item.id)"
+                      >
+                        {{
+                          isExpanded(item.id)
+                            ? ('historialImportaciones.table.hideProcesses' | transloco)
+                            : ('historialImportaciones.table.showProcesses' | transloco)
+                        }}
+                      </button>
+                      @if (errorsCount(item) > 0) {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-error text-error-content px-3 py-1.5 leading-tight h-auto min-h-0 font-medium shadow-none border-0 hover:brightness-95"
+                          (click)="openErrorsModal(item, $event)"
+                        >
+                          {{ 'historialImportaciones.table.viewErrors' | transloco }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+
+                @if (isExpanded(item.id)) {
+                  <tr class="bg-primary/5">
+                    <td colspan="10">
+                      <div class="p-4 space-y-3">
+                        <p class="text-xs font-bold uppercase tracking-widest text-base-content/50">
+                          {{
+                            'historialImportaciones.processesTitle'
+                              | transloco: { count: item.enqueued_process_numbers?.length || 0 }
+                          }}
+                        </p>
+                        <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                          @for (processNumber of item.enqueued_process_numbers || []; track processNumber) {
+                            <div
+                              class="flex items-center justify-between gap-2 rounded-xl border border-primary/15 bg-base-100 px-3 py-2"
+                            >
+                              <span class="font-semibold text-primary text-sm">{{ processNumber | processNumber }}</span>
+                              <span class="tooltip tooltip-left" [attr.data-tip]="'processes.copy.tooltip' | transloco">
+                                <button
+                                  type="button"
+                                  class="btn btn-ghost btn-xs btn-circle text-primary/50 hover:text-primary"
+                                  (click)="copyToClipboard(processNumber, $event)"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3"
+                                    />
+                                  </svg>
+                                </button>
+                              </span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (pagination(); as paginationInfo) {
+          <div class="import-history-pagination border-t border-base-300 bg-base-100 shrink-0">
+            <div class="import-history-pagination__results">
+              {{ 'table.showing' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.from }}</span>
+              {{ 'table.to' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.to }}</span>
+              {{ 'table.of' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.total }}</span>
+              {{ 'table.results' | transloco }}
+            </div>
+            <div class="import-history-pagination__controls join">
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                [disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
+              >
+                ««
+              </button>
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                [disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
+              >
+                «
+              </button>
+              @for (page of getPageNumbers(); track page) {
+                <button
+                  type="button"
+                  class="join-item btn btn-sm"
+                  [class.btn-active]="page === paginationInfo.current_page"
+                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
+                >
+                  {{ page }}
+                </button>
+              }
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
+              >
+                »
+              </button>
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
+              >
+                »»
+              </button>
+            </div>
+            <div class="import-history-pagination__per-page">
+              <select
+                class="select select-bordered select-sm"
+                [value]="paginationInfo.per_page"
+                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+                    {{ size }} {{ 'table.perPage' | transloco }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  @if (copiedMessage()) {
+    <div class="toast toast-end toast-bottom import-history-copy-toast pointer-events-none">
+      <div class="alert alert-success shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>{{ copiedMessage() | transloco }}</span>
+      </div>
+    </div>
+  }
+
+  @if (errorsModalItem(); as errItem) {
+    <dialog class="modal import-errors-modal" [class.modal-open]="true" [attr.aria-modal]="true">
+      <div class="modal-box max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+        <div class="shrink-0 border-b border-base-200 bg-base-100 px-5 pt-5 pb-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <h3 class="font-semibold text-lg text-base-content leading-tight">
+              {{ 'historialImportaciones.errorsModal.title' | transloco }}
+            </h3>
+            <span
+              class="badge shrink-0 font-semibold uppercase text-[11px] leading-tight tracking-normal whitespace-nowrap"
+              [ngClass]="getStatusClass(errItem.status)"
+            >
+              {{ errItem.status_label || ('historialImportaciones.status.unknown' | transloco) }}
+            </span>
+          </div>
+          <p class="mt-1 font-medium text-base text-primary line-clamp-2">{{ errItem.file_name }}</p>
+
+          <div class="mt-3 flex flex-col gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-base-content/45">
+              {{ 'historialImportaciones.errorsModal.organizationLabel' | transloco }}
+            </span>
+            <span class="text-sm font-normal text-base-content">{{ errItem.organization_name || '—' }}</span>
+          </div>
+
+          <div class="mt-3 flex flex-col gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-base-content/45">
+              {{ 'historialImportaciones.errorsModal.importDate' | transloco }}
+            </span>
+            <span class="text-sm font-normal text-base-content">{{ errItem.created_at || errItem.date || '–' }}</span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <div class="rounded-xl border border-info/30 bg-info/10 px-3 py-2.5">
+              <span class="block text-[10px] font-bold uppercase tracking-wide text-info/90">
+                {{ 'historialImportaciones.errorsModal.statExcelRows' | transloco }}
+              </span>
+              <span class="mt-0.5 block text-xl font-semibold tabular-nums leading-none text-info">
+                {{ importModalExcelRowsCount(errItem) }}
+              </span>
+              @if (importModalShowsExcelRowsFallbackHint(errItem)) {
+                <span class="mt-1 block text-[10px] font-normal leading-snug text-base-content/55">{{
+                  'historialImportaciones.errorsModal.statExcelRowsHint' | transloco
+                }}</span>
+              }
+            </div>
+            <div class="rounded-xl border border-success/25 bg-success/10 px-3 py-2.5">
+              <span class="block text-[10px] font-bold uppercase tracking-wide text-success/80">
+                {{ 'historialImportaciones.errorsModal.statSuccess' | transloco }}
+              </span>
+              <span class="mt-0.5 block text-xl font-semibold tabular-nums leading-none text-success">
+                {{ errItem.success_count ?? 0 }}
+              </span>
+            </div>
+            <div class="rounded-xl border border-error/25 bg-error/10 px-3 py-2.5">
+              <span class="block text-[10px] font-bold uppercase tracking-wide text-error/80">
+                {{ 'historialImportaciones.errorsModal.statFailed' | transloco }}
+              </span>
+              <span class="mt-0.5 block text-xl font-semibold tabular-nums leading-none text-error">
+                {{ errItem.failed_count ?? 0 }}
+              </span>
+            </div>
+            <div class="rounded-xl border border-primary/25 bg-primary/10 px-3 py-2.5">
+              <span class="block text-[10px] font-bold uppercase tracking-wide text-primary/80">
+                {{ 'historialImportaciones.errorsModal.statMultipleInstances' | transloco }}
+              </span>
+              <span class="mt-0.5 block text-xl font-semibold tabular-nums leading-none text-primary">
+                {{ errItem.multiple_instances_count ?? 0 }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-base-200/30">
+          @for (err of errItem.errors || []; track err.process_number + '-' + $index) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
+              <div class="flex flex-wrap items-center gap-2 gap-y-1 mb-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-base-content/45">
+                  {{ 'historialImportaciones.errorsModal.processLabel' | transloco }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-base-200/40 px-2 py-1">
+                  <span class="font-semibold text-primary text-sm tracking-tight">{{ err.process_number | processNumber }}</span>
+                  <span class="tooltip tooltip-bottom sm:tooltip-left" [attr.data-tip]="'processes.copy.tooltip' | transloco">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-xs btn-circle text-primary/50 hover:text-primary shrink-0"
+                      (click)="copyToClipboard(err.process_number, $event)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3.5 w-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3"
+                        />
+                      </svg>
+                    </button>
+                  </span>
+                </span>
+                @if (isTechnicalErrorReason(err.reason)) {
+                  <span class="badge badge-error badge-sm uppercase font-semibold tracking-wide text-error-content">
+                    {{ 'historialImportaciones.errorsModal.technicalBadge' | transloco }}
+                  </span>
+                }
+                @if (!isTechnicalErrorReason(err.reason)) {
+                  <span class="badge badge-ghost badge-sm uppercase font-medium text-base-content/70">
+                    {{ 'historialImportaciones.errorsModal.businessBadge' | transloco }}
+                  </span>
+                }
+              </div>
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50 mb-1">
+                {{ 'historialImportaciones.errorsModal.reasonLabel' | transloco }}
+              </p>
+              @if (isTechnicalErrorReason(err.reason)) {
+                <pre
+                  class="import-errors-modal__sql text-xs leading-relaxed whitespace-pre-wrap break-words rounded-lg bg-neutral text-neutral-content p-3 overflow-x-auto font-mono border border-error/35"
+                >{{ err.reason }}</pre>
+              }
+              @if (!isTechnicalErrorReason(err.reason)) {
+                <div
+                  class="text-sm text-base-content/90 leading-relaxed border-l-4 border-error/60 pl-3 py-1 bg-error/5 rounded-r-lg"
+                >
+                  {{ err.reason }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="shrink-0 border-t border-base-200 bg-base-100 px-5 py-4 flex justify-end">
+          <button type="button" class="btn btn-outline btn-primary min-w-[7rem]" (click)="closeErrorsModal()">
+            {{ 'historialImportaciones.errorsModal.close' | transloco }}
+          </button>
+        </div>
+      </div>
+      <form
+        method="dialog"
+        class="modal-backdrop bg-black/50"
+        [attr.aria-label]="'historialImportaciones.errorsModal.close' | transloco"
+        (click)="closeErrorsModal()"
+      ></form>
+    </dialog>
+  }
+</div>

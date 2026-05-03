@@ -1,4 +1,4 @@
-<div class="w-full space-y-6">
+<div class="w-full space-y-6 pb-24 lg:pb-0">
   <!-- Page Header -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
@@ -9,8 +9,28 @@
         {{ 'clients.description' | transloco }}
       </p>
     </div>
-    <div class="flex shrink-0">
-      <button type="button" class="btn btn-primary btn-sm" (click)="openCreateModal()">
+    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
+        [ngClass]="
+          showFilters()
+            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
+        "
+        (click)="toggleFilters()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        <span class="font-bold">{{ 'clients.filters.title' | transloco }}</span>
+      </button>
+      <button type="button" class="btn btn-primary btn-sm sm:btn-md" (click)="openCreateModal()">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -19,10 +39,32 @@
     </div>
   </div>
 
+  <div class="lg:hidden fixed bottom-6 right-4 z-[60] flex flex-col gap-3 items-end" role="group">
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
+      [ngClass]="
+        showFilters() ? 'bg-primary text-primary-content border-primary' : 'bg-base-100 text-primary border-primary/20'
+      "
+      (click)="toggleFilters()"
+      [attr.aria-label]="'clients.filters.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+        />
+      </svg>
+    </button>
+  </div>
+
   <!-- Filters -->
-  <div class="card bg-base-100 shadow-sm">
-    <div class="card-body">
-      <h2 class="card-title text-lg mb-4">{{ 'clients.filters.title' | transloco }}</h2>
+  @if (showFilters()) {
+    <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">{{ 'clients.filters.title' | transloco }}</h2>
       <form [formGroup]="filterForm" class="clients-filters-grid" autocomplete="off">
         <div class="form-control min-w-0">
           <label class="label">
@@ -107,7 +149,8 @@
         </button>
       </div>
     </div>
-  </div>
+    </div>
+  }
 
   <!-- Data Table -->
   <div class="card bg-base-100 shadow-sm">

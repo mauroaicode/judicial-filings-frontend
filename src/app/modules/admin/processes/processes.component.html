@@ -1,4 +1,27 @@
-<div class="w-full space-y-6">
+<div class="w-full space-y-6 pb-24 lg:pb-0">
+  @if (copyRadicadoToast(); as ct) {
+    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+      <div
+        class="alert shadow-lg border-none rounded-2xl font-bold pointer-events-none"
+        [class.alert-success]="ct.kind === 'success'"
+        [class.bg-success]="ct.kind === 'success'"
+        [class.text-success-content]="ct.kind === 'success'"
+        [class.alert-error]="ct.kind === 'error'"
+      >
+        @if (ct.kind === 'success') {
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+        @if (ct.kind === 'error') {
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+        <span>{{ ct.message }}</span>
+      </div>
+    </div>
+  }
   <!-- Page Header -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
@@ -9,10 +32,286 @@
         {{ 'processes.description' | transloco }}
       </p>
     </div>
+    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
+        [ngClass]="showFilters() ? 'bg-primary/10 text-primary border-primary/30 shadow-sm' : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'"
+        (click)="toggleFilters()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        <span class="font-bold">{{ 'processes.filters.title' | transloco }}</span>
+      </button>
+      <button type="button" class="btn btn-success btn-sm sm:btn-md btn-toolbar-tall" (click)="openImportModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        {{ 'processes.import.button' | transloco }}
+      </button>
+    </div>
   </div>
 
+  <!-- FAB móvil: + abre menú (Importar Excel); embudo filtros (sin backdrop: no debe verse scrim oscuro ni encima del overlay del sidebar) -->
+  <div class="lg:hidden fixed bottom-20 right-4 z-[60] flex flex-col gap-3 items-end" role="group" aria-label="Acciones rápidas">
+    @if (mobileFabMenuOpen()) {
+      <button
+        type="button"
+        class="btn btn-success min-h-[3rem] rounded-2xl border-0 px-5 font-bold normal-case whitespace-nowrap shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+        (click)="openImportFromMobileFab()"
+        [attr.aria-label]="'processes.import.fabImportAria' | transloco"
+      >
+        {{ 'processes.import.button' | transloco }}
+      </button>
+    }
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-primary bg-primary text-primary-content"
+      [attr.aria-expanded]="mobileFabMenuOpen()"
+      [attr.aria-label]="'processes.import.fabMainAria' | transloco"
+      (click)="toggleMobileFabMenu()"
+    >
+      @if (!mobileFabMenuOpen()) {
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      }
+      @if (mobileFabMenuOpen()) {
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      }
+    </button>
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
+      [ngClass]="showFilters() ? 'bg-primary text-primary-content border-primary' : 'bg-base-100 text-primary border-primary/20'"
+      (click)="closeMobileFabMenu(); toggleFilters()"
+      [attr.aria-label]="'processes.filters.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- KPI Cards -->
+  @if (dashboardStatsLoading()) {
+    <div class="card border-0 bg-base-100 shadow-md">
+      <div class="card-body py-10">
+        <div class="flex items-center justify-center gap-3">
+          <span class="loading loading-spinner loading-md text-primary"></span>
+          <span class="text-sm text-base-content/70">{{ 'processes.kpi.loading' | transloco }}</span>
+        </div>
+      </div>
+    </div>
+  } @else if (dashboardStats(); as stats) {
+    @let healthTone = getSyncHealthTone(stats);
+    <div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-12">
+      <!-- Volumen y estado operativo -->
+      <div
+        class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] md:col-span-2 xl:col-span-5 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-3 p-4 sm:gap-4 sm:p-6">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold tracking-wide uppercase text-primary/80">
+                {{ 'processes.kpi.operational.title' | transloco }}
+              </p>
+              <h3 class="mt-2 text-3xl font-bold text-primary sm:text-4xl">{{ stats.total_processes }}</h3>
+              <p class="mt-1 text-sm text-base-content/70">{{ 'processes.kpi.operational.subtitle' | transloco }}</p>
+            </div>
+            <div class="kpi-icon-box bg-primary/10 text-primary" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div class="h-2 w-full overflow-hidden rounded-full bg-base-300">
+            <div
+              class="h-full rounded-full bg-success transition-all duration-300"
+              [style.width.%]="getPercentage(stats.active_processes, stats.total_processes)"
+            ></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-success/12 p-3">
+              <p class="text-xs font-medium text-success/80">{{ 'processes.kpi.operational.active' | transloco }}</p>
+              <p class="mt-1 text-2xl font-bold text-success">{{ stats.active_processes }}</p>
+            </div>
+            <div
+              class="rounded-xl p-3"
+              [class.bg-base-200]="stats.orphan_processes === 0"
+              [class.bg-warning/12]="stats.orphan_processes > 0"
+              [attr.title]="'processes.kpi.operational.withoutWatchingHint' | transloco"
+            >
+              <p
+                class="text-xs font-medium"
+                [class.text-base-content/70]="stats.orphan_processes === 0"
+                [class.text-warning/90]="stats.orphan_processes > 0"
+              >
+                {{ 'processes.kpi.operational.withoutWatching' | transloco }}
+              </p>
+              <p
+                class="mt-1 text-2xl font-bold"
+                [class.text-base-content]="stats.orphan_processes === 0"
+                [class.text-warning]="stats.orphan_processes > 0"
+              >
+                {{ stats.orphan_processes }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerta crítica -->
+      <div
+        class="card overflow-hidden border-0 bg-error/[0.09] shadow-[0_8px_28px_-8px_rgba(220,38,38,0.22)] md:col-span-1 xl:col-span-2 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-2 p-4 sm:p-6">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-error"></span>
+              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+                {{ 'processes.kpi.critical.title' | transloco }}
+              </p>
+            </div>
+            <div class="kpi-icon-box bg-error/25 text-error shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+              </svg>
+            </div>
+          </div>
+          <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.critical_alert_processes }}</p>
+          <p class="text-xs text-base-content/60">{{ 'processes.kpi.critical.subtitle' | transloco }}</p>
+        </div>
+      </div>
+
+      <!-- Alerta temprana -->
+      <div
+        class="card overflow-hidden border-0 bg-warning/[0.11] shadow-[0_8px_28px_-8px_rgba(245,158,11,0.22)] md:col-span-1 xl:col-span-2 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-2 p-4 sm:p-6">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-warning"></span>
+              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+                {{ 'processes.kpi.early.title' | transloco }}
+              </p>
+            </div>
+            <div class="kpi-icon-box bg-warning/25 text-warning shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2m4-2a8 8 0 11-16 0 8 8 0 0116 0z" />
+              </svg>
+            </div>
+          </div>
+          <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.early_attention_processes }}</p>
+          <p class="text-xs text-base-content/60">{{ 'processes.kpi.early.subtitle' | transloco }}</p>
+        </div>
+      </div>
+
+      <!-- Doble instancia: secondary (morado marca) para distinguir sin romper semántica error/warning -->
+      <div
+        class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] md:col-span-2 xl:col-span-3 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-2 p-4 sm:p-6">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-secondary"></span>
+              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+                {{ 'processes.kpi.instances.title' | transloco }}
+              </p>
+            </div>
+            <div class="kpi-icon-box bg-base-200 text-secondary shrink-0" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.processes_with_multiple_instances }}</p>
+          <p class="text-xs text-base-content/60">{{ 'processes.kpi.instances.subtitle' | transloco }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salud técnica: sin franja superior; el tono solo en icono, título y % impacto -->
+    <div
+      class="card border-0 bg-base-100 rounded-2xl sm:rounded-3xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)]"
+    >
+      <div class="card-body flex flex-col gap-4 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-start gap-3">
+          <div
+            class="kpi-icon-box shrink-0"
+            [ngClass]="{
+              'bg-base-200 text-error': healthTone === 'critical',
+              'bg-base-200 text-warning': healthTone === 'warning',
+              'bg-base-200 text-success': healthTone === 'healthy'
+            }"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L8 21m8-4l1.75 4M4 13h16M5 13a7 7 0 1114 0M4 17h16" />
+            </svg>
+          </div>
+          <div>
+            <p
+              class="text-xs font-semibold tracking-wide uppercase"
+              [ngClass]="{
+                'text-error': healthTone === 'critical',
+                'text-warning': healthTone === 'warning',
+                'text-success': healthTone === 'healthy'
+              }"
+            >
+              {{ 'processes.kpi.health.title' | transloco }}
+            </p>
+            <p class="mt-1 text-sm text-base-content/70">{{ 'processes.kpi.health.subtitle' | transloco }}</p>
+          </div>
+        </div>
+        <div class="flex items-end gap-6 md:text-right">
+          <div>
+            <p class="text-xs text-base-content/60">{{ 'processes.kpi.health.outdated' | transloco }}</p>
+            <p class="text-3xl font-bold leading-none text-base-content sm:text-4xl">{{ stats.outdated_processes }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-base-content/60">{{ 'processes.kpi.health.ratio' | transloco }}</p>
+            <p
+              class="text-xl font-semibold sm:text-2xl"
+              [ngClass]="{
+                'text-error': healthTone === 'critical',
+                'text-warning': healthTone === 'warning',
+                'text-success': healthTone === 'healthy'
+              }"
+            >
+              {{ getPercentage(stats.outdated_processes, stats.total_processes) }}%
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Filters -->
-  <div class="card bg-base-100 shadow-sm">
+  @if (showFilters()) {
+  <div
+    class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6"
+    [attr.id]="filtersSectionDomId"
+  >
     <div class="card-body">
       <h2 class="card-title text-lg mb-4">{{ 'processes.filters.title' | transloco }}</h2>
       <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off">
@@ -168,95 +467,67 @@
       </form>
 
       <!-- Filter Actions -->
-      <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            class="btn btn-success btn-sm"
-            (click)="openImportModal()"
+      <div class="card-actions mt-4 justify-end gap-4">
+        <button
+          type="button"
+          class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+          (click)="onResetFilters()"
+        >
+          {{ 'processes.filters.reset' | transloco }}
+        </button>
+        <button type="button" class="btn-standard-search" (click)="onSearch()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            {{ 'processes.import.button' | transloco }}
-          </button>
-        </div>
-        <div class="card-actions justify-end">
-          <button
-            type="button"
-            class="btn btn-ghost btn-sm"
-            (click)="onResetFilters()"
-          >
-            {{ 'processes.filters.reset' | transloco }}
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary btn-sm"
-            (click)="onSearch()"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            {{ 'processes.filters.search' | transloco }}
-          </button>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {{ 'processes.filters.search' | transloco }}
+        </button>
       </div>
     </div>
   </div>
+  }
 
-  <!-- Import Excel Modal -->
-  <dialog class="modal" [class.modal-open]="isImportModalOpen()">
-    <div class="modal-box max-w-2xl w-full">
-      <h3 class="font-bold text-lg text-base-content mb-4">
+  <!-- Import Excel: usa bottom sheet modular (app-bottom-sheet-modal) -->
+  <app-bottom-sheet-modal
+    [open]="isImportModalOpen()"
+    [backdropAriaLabel]="'processes.import.close' | transloco"
+    (dismiss)="closeImportModal()"
+  >
+    <div class="bottom-sheet-body">
+      <h3 class="text-lg font-bold text-base-content">
         {{ 'processes.import.title' | transloco }}
       </h3>
-      <p class="text-sm text-base-content/70 mb-4">
+      <p class="mt-2 text-sm text-base-content/70">
         {{ 'processes.import.description' | transloco }}
+      </p>
+      <p class="mt-1 text-xs text-base-content/55 lg:hidden">
+        {{ 'processes.import.sheetHint' | transloco }}
       </p>
 
       @if (!importResult()) {
-        <!-- Organización destino de la importación -->
-        <div class="form-control mb-4">
+        <div class="form-control mb-4 mt-4">
           <label class="label">
             <span class="label-text">{{ 'processes.import.organizationLabel' | transloco }}</span>
           </label>
-          @if (importOrganizationsLoading()) {
-            <span class="loading loading-spinner loading-sm"></span>
-          } @else {
-            <select
-              class="select select-bordered w-full"
-              [value]="importOrganizationId()"
-              (change)="importOrganizationId.set($any($event.target).value)"
-              [disabled]="importSubmitting()"
-            >
-              <option value="">{{ 'processes.import.organizationPlaceholder' | transloco }}</option>
-              @for (org of importOrganizations(); track org.id) {
-                <option [value]="org.id">{{ org.name }}</option>
-              }
-            </select>
-          }
+          <app-searchable-select
+            [(value)]="importOrganizationId"
+            [options]="importOrganizationOptions()"
+            [placeholder]="'processes.import.organizationPlaceholder' | transloco"
+            [searchPlaceholder]="'processes.import.organizationSearch' | transloco"
+            [noResultsText]="'processes.import.organizationNoMatches' | transloco"
+            [disabled]="importSubmitting()"
+            [loading]="importOrganizationsLoading()"
+          ></app-searchable-select>
         </div>
 
         <app-file-drop-zone
@@ -266,36 +537,10 @@
           [value]="importFile()"
           (fileChange)="onImportFileSelected($event)"
         ></app-file-drop-zone>
-
-        <div class="modal-action mt-6">
-          <form method="dialog">
-            <button
-              type="button"
-              class="btn btn-ghost"
-              [disabled]="importSubmitting()"
-              (click)="closeImportModal()"
-            >
-              {{ 'processes.import.cancel' | transloco }}
-            </button>
-          </form>
-          <button
-            type="button"
-            class="btn btn-primary"
-            [disabled]="!importFile() || !importOrganizationId() || importSubmitting()"
-            (click)="onSubmitImport()"
-          >
-            @if (importSubmitting()) {
-              <span class="loading loading-spinner loading-sm"></span>
-              {{ 'processes.import.submitting' | transloco }}
-            } @else {
-              {{ 'processes.import.submit' | transloco }}
-            }
-          </button>
-        </div>
       } @else {
         @let res = importResult()!;
         <div
-          class="alert mb-4"
+          class="alert mt-4"
           [class.alert-success]="res.batch_id"
           [class.alert-error]="!res.batch_id"
         >
@@ -310,27 +555,71 @@
           }
           <span>{{ res.message }}</span>
         </div>
-        <div class="modal-action">
-          <button type="button" class="btn btn-primary" (click)="closeImportModal()">
-            {{ 'processes.import.close' | transloco }}
-          </button>
-        </div>
       }
     </div>
-    <form method="dialog" class="modal-backdrop" (click)="closeImportModal()">
-      <button type="button">{{ 'processes.import.close' | transloco }}</button>
-    </form>
-  </dialog>
 
-  <!-- Data Table (custom: expandible instances + tooltips plaintiff/defendant/organization) -->
-  <div class="card bg-base-100 shadow-sm">
-    <div class="card-body p-0">
+    @if (!importResult() && !importConfirmOpen()) {
+      <div
+        class="bottom-sheet-footer shrink-0 border-t border-base-200 bg-base-100 px-4 py-4 sm:px-6 lg:flex lg:justify-end lg:gap-2 lg:rounded-b-2xl lg:border-t-0 lg:pt-0 lg:shadow-none"
+      >
+        <button
+          type="button"
+          class="btn btn-ghost mb-2 w-full lg:mb-0 lg:w-auto"
+          [disabled]="importSubmitting()"
+          (click)="closeImportModal()"
+        >
+          {{ 'processes.import.cancel' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-toolbar-tall w-full min-h-[3rem] rounded-xl font-bold normal-case lg:min-h-0 lg:w-auto lg:px-8"
+          [disabled]="!importFile() || !importOrganizationId() || importSubmitting()"
+          (click)="openImportConfirmDialog()"
+        >
+          @if (importSubmitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            {{ 'processes.import.submitting' | transloco }}
+          } @else {
+            {{ 'processes.import.importProcesses' | transloco }}
+          }
+        </button>
+      </div>
+    }
+    @if (importResult()) {
+      <div class="bottom-sheet-footer shrink-0 border-t border-base-200 px-4 py-4 sm:px-6 lg:rounded-b-2xl">
+        <button type="button" class="btn btn-primary w-full lg:w-auto lg:float-right rounded-xl font-bold normal-case" (click)="closeImportModal()">
+          {{ 'processes.import.close' | transloco }}
+        </button>
+      </div>
+    }
+  </app-bottom-sheet-modal>
+
+  <div class="import-excel-confirmation">
+    <app-confirmation-dialog
+      [open]="importConfirmOpen()"
+      [title]="getImportConfirmTitle()"
+      [message]="getImportConfirmLead()"
+      [detailRows]="getImportConfirmDetailRows()"
+      [footnote]="getImportConfirmFootnote()"
+      [confirmLabel]="'processes.import.confirmSubmit' | transloco"
+      [cancelLabel]="'common.cancel' | transloco"
+      confirmClass="btn-primary"
+      (confirm)="onConfirmImportSubmit()"
+      (cancel)="onCancelImportConfirm()"
+    ></app-confirmation-dialog>
+  </div>
+
+  <!-- Data Table (custom: expandible instances + tooltips; scroll interno + header visible en lg) -->
+  <div
+    class="card bg-base-100 shadow-sm processes-table-card flex flex-col min-h-0 lg:max-h-[calc(100dvh-13rem)]"
+  >
+    <div class="card-body p-0 flex flex-1 flex-col min-h-0 lg:overflow-hidden">
       @if (loading()) {
-        <div class="flex items-center justify-center py-12">
+        <div class="flex flex-1 min-h-[12rem] items-center justify-center py-12">
           <span class="loading loading-spinner loading-lg text-primary"></span>
         </div>
       } @else if (processes().length === 0) {
-        <div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="flex flex-1 min-h-[12rem] flex-col items-center justify-center py-12 text-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-12 w-12 text-base-content/30 mb-4"
@@ -348,9 +637,10 @@
           <p class="text-base-content/70">{{ 'processes.table.empty' | transloco }}</p>
         </div>
       } @else {
-        <div class="overflow-x-auto w-full process-list-table">
+        <div class="flex flex-1 flex-col min-h-0 w-full lg:overflow-hidden">
+          <div class="process-list-table w-full flex-1 min-h-0 lg:min-h-0">
           <table class="table table-zebra" style="min-width: 1000px;">
-            <thead style="background-color: #161326; color: #ffffff;">
+            <thead style="background-color: #4B2A7D; color: #ffffff;">
               <tr>
                 <th style="width: 48px;" class="text-center"></th>
                 @for (column of columns; track column.key) {
@@ -403,18 +693,32 @@
                     }
                   </td>
                   <td class="text-center align-middle">{{ process.index }}</td>
-                  <td class="whitespace-nowrap align-middle sticky-col-radicado">
+                  <td class="sticky-col-radicado py-2.5">
                     <span class="sticky-cell-bg" aria-hidden="true"></span>
-                    <span class="sticky-cell-txt">{{ process.process_number }}</span>
+                    <div class="sticky-cell-txt flex min-w-0 flex-nowrap items-center gap-2">
+                      <span class="shrink-0 text-left font-bold text-base-content whitespace-nowrap">{{ process.process_number | processNumber }}</span>
+                      <span class="tooltip tooltip-right shrink-0" [attr.data-tip]="'processes.copy.tooltip' | transloco">
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs btn-circle text-base-content/20 hover:bg-primary/5 hover:text-primary"
+                          (click)="copyProcessRadicado(process.process_number, $event)"
+                          [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                          </svg>
+                        </button>
+                      </span>
+                    </div>
                   </td>
                   <td class="align-middle">{{ process.court }}</td>
                   <td class="align-middle">{{ process.process_class }}</td>
                   <td class="text-center align-middle">
                     <span
-                      class="badge whitespace-nowrap"
-                      [class.badge-success]="process.status_label === 'Activo'"
-                      [class.badge-warning]="process.status_label === 'Pendiente'"
-                      [class.badge-error]="process.status_label === 'Cerrado'"
+                      class="process-status-badge badge whitespace-nowrap uppercase font-semibold tracking-normal leading-tight"
+                      [class.badge-success]="(process.status_label || '').toLowerCase() === 'activo'"
+                      [class.badge-warning]="(process.status_label || '').toLowerCase() === 'pendiente'"
+                      [class.badge-error]="(process.status_label || '').toLowerCase() === 'cerrado'"
                     >
                       {{ process.status_label }}
                     </span>
@@ -431,7 +735,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ plaintiffDisplay.extraCount }})
                             </span>
                           </span>
@@ -453,7 +757,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ defendantDisplay.extraCount }})
                             </span>
                           </span>
@@ -475,7 +779,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ orgDisplay.extraCount }})
                             </span>
                           </span>
@@ -493,7 +797,7 @@
                 @if (isExpanded(process) && process.instances && process.instances.length > 0) {
                   @for (instance of process.instances; track instance.id) {
                     <tr
-                      class="cursor-pointer process-table-instance-row border-l-4 border-secondary"
+                      class="cursor-pointer group process-table-instance-row border-l-4 border-secondary"
                       [class.process-row-hovered]="hoveredRowId() === instance.id"
                       (mouseenter)="hoveredRowId.set(instance.id)"
                       (mouseleave)="hoveredRowId.set(null)"
@@ -502,18 +806,32 @@
                         <span class="text-secondary/70 text-xs" aria-hidden="true">↳</span>
                       </td>
                       <td class="text-center align-middle text-base-content/70">{{ instance.index }}</td>
-                      <td class="whitespace-nowrap align-middle text-base-content/80 sticky-col-radicado">
+                      <td class="sticky-col-radicado py-2.5 text-base-content/90">
                         <span class="sticky-cell-bg" aria-hidden="true"></span>
-                        <span class="sticky-cell-txt">{{ instance.process_number }}</span>
+                        <div class="sticky-cell-txt flex min-w-0 flex-nowrap items-center gap-2">
+                          <span class="shrink-0 text-left whitespace-nowrap text-base-content/90">{{ instance.process_number | processNumber }}</span>
+                          <span class="tooltip tooltip-right shrink-0" [attr.data-tip]="'processes.copy.tooltip' | transloco">
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-xs btn-circle text-base-content/20 hover:bg-primary/5 hover:text-primary"
+                              (click)="copyProcessRadicado(instance.process_number, $event)"
+                              [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                              </svg>
+                            </button>
+                          </span>
+                        </div>
                       </td>
                       <td class="align-middle text-base-content/80">{{ instance.court }}</td>
                       <td class="align-middle text-base-content/80">{{ instance.process_class }}</td>
                       <td class="text-center align-middle">
                         <span
-                          class="badge badge-sm whitespace-nowrap"
-                          [class.badge-success]="instance.status_label === 'Activo'"
-                          [class.badge-warning]="instance.status_label === 'Pendiente'"
-                          [class.badge-error]="instance.status_label === 'Cerrado'"
+                          class="process-status-badge badge badge-sm whitespace-nowrap uppercase font-semibold tracking-normal leading-tight"
+                          [class.badge-success]="(instance.status_label || '').toLowerCase() === 'activo'"
+                          [class.badge-warning]="(instance.status_label || '').toLowerCase() === 'pendiente'"
+                          [class.badge-error]="(instance.status_label || '').toLowerCase() === 'cerrado'"
                         >
                           {{ instance.status_label }}
                         </span>
@@ -530,7 +848,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instPlaint.extraCount }})
                                 </span>
                               </span>
@@ -552,7 +870,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instDef.extraCount }})
                                 </span>
                               </span>
@@ -574,7 +892,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-secondary font-medium cursor-pointer whitespace-nowrap underline decoration-secondary/50 decoration-dotted underline-offset-1">
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instOrg.extraCount }})
                                 </span>
                               </span>
@@ -593,11 +911,11 @@
               }
             </tbody>
           </table>
-        </div>
+          </div>
 
         <!-- Pagination: izquierda = resultados, centro = numeración, derecha = por página -->
         @if (pagination(); as paginationInfo) {
-          <div class="processes-pagination border-t border-base-300 bg-base-100">
+          <div class="processes-pagination border-t border-base-300 bg-base-100 shrink-0">
             <div class="processes-pagination__results">
               {{ 'table.showing' | transloco }}
               <span class="font-semibold">{{ getShowingRange().from }}</span>
@@ -657,6 +975,7 @@
             </div>
           </div>
         }
+        </div>
       }
     </div>
   </div>

@@ -1,1 +1,23 @@
-// Modal usa DaisyUI; estilos extra solo si se necesitan
+// Modal usa DaisyUI
+
+.confirmation-dialog-details__label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--bc) / 0.5);
+  margin-bottom: 0.25rem;
+}
+
+.confirmation-dialog-details__value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.confirmation-dialog-details__row--split {
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid hsl(var(--b3));
+}

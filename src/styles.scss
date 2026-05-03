@@ -15,28 +15,28 @@ body {
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-  sans-serif;
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom components - Using CSS directly to avoid @apply issues in Tailwind v4 */
 .btn-primary:not(:disabled) {
-  background-color: #161326;
-  border-color: #161326;
+  background-color: #4B2A7D;
+  border-color: #4B2A7D;
   color: #fff;
 }
 
 .btn-primary:not(:disabled):hover {
   background-color: #fff;
-  border-color: #161326;
-  color: #161326;
+  border-color: #4B2A7D;
+  color: #4B2A7D;
 }
 
 .btn-primary:disabled,
 .btn-primary[disabled] {
-  background-color: #A4A4A9;
-  border-color: #A4A4A9;
+  background-color: #9CA3AF;
+  border-color: #9CA3AF;
   color: #fff;
   opacity: 0.6;
   cursor: not-allowed;
@@ -44,8 +44,8 @@ body {
 
 .btn-primary:disabled:hover,
 .btn-primary[disabled]:hover {
-  background-color: #A4A4A9;
-  border-color: #A4A4A9;
+  background-color: #9CA3AF;
+  border-color: #9CA3AF;
   color: #fff;
 }
 
@@ -64,6 +64,122 @@ body {
 .checkbox-primary:checked {
   background-color: hsl(var(--p));
   border-color: hsl(var(--p));
+}
+
+/* --- STANDARDIZED FORM UI (admin) --- */
+/* Base global para que nuevos labels/inputs mantengan el look del cliente */
+.form-control .label .label-text,
+.label .label-text {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  color: hsl(var(--bc) / 0.52) !important;
+  line-height: 1.35 !important;
+}
+
+.input.input-bordered,
+.select.select-bordered {
+  height: 2.75rem !important;
+  min-height: 2.75rem !important;
+  border-radius: 0.75rem !important;
+  border-color: hsl(var(--bc) / 0.2) !important;
+  background-color: var(--color-base-100, #ffffff) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.input.input-bordered::placeholder {
+  font-weight: 500 !important;
+  opacity: 0.36 !important;
+}
+
+.input.input-bordered:focus,
+.select.select-bordered:focus {
+  border-color: #4B2A7D !important;
+  outline: 2px solid rgba(75, 42, 125, 0.2) !important;
+  outline-offset: 1px !important;
+}
+
+/* Clases utilitarias opcionales para nuevos formularios */
+.label-standard {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  color: hsl(var(--bc) / 0.52) !important;
+}
+
+.input-standard,
+.select-standard {
+  height: 2.75rem !important;
+  min-height: 2.75rem !important;
+  border-radius: 0.75rem !important;
+  border-color: hsl(var(--bc) / 0.2) !important;
+  background-color: var(--color-base-100, #ffffff) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+/* Botón Buscar (cliente: gestión de procesos) — misma talla que judicial-filings-frontend */
+.btn-standard-search {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 2.75rem !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  gap: 0.5rem !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  background-color: #4b2a7d !important;
+  border: 1px solid #4b2a7d !important;
+  color: #ffffff !important;
+}
+
+.btn-standard-search:hover:not(:disabled) {
+  background-color: #ffffff !important;
+  color: #4b2a7d !important;
+}
+
+.btn-standard-search:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: #a4a4a9 !important;
+  border-color: #a4a4a9 !important;
+}
+
+/* Importar Excel y otros CTAs secundarios: misma altura que línea cliente */
+.btn-toolbar-tall {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 2.75rem !important;
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  gap: 0.5rem !important;
+  text-transform: none !important;
+}
+
+@keyframes admin-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: admin-fade-in-up 0.35s ease-out both;
 }
 
 /* Flatpickr Date Range Picker Styles */
@@ -137,9 +253,9 @@ app-date-range-picker .flatpickr-day.selected.endRange,
 .flatpickr-day.endRange,
 .flatpickr-day.selected.startRange,
 .flatpickr-day.selected.endRange {
-  background: #161326 !important;
+  background: #4B2A7D !important;
   color: #ffffff !important;
-  border-color: #161326 !important;
+  border-color: #4B2A7D !important;
   font-weight: 600 !important;
   box-shadow: none !important;
 }
@@ -161,10 +277,10 @@ app-date-range-picker .flatpickr-day,
   }
 
   &.inRange {
-    background: rgba(22, 19, 38, 0.1) !important;
-    color: #161326 !important;
+    background: rgba(75, 42, 125, 0.1) !important;
+    color: #4B2A7D !important;
     border-color: transparent !important;
-    box-shadow: -5px 0 0 rgba(22, 19, 38, 0.1), 5px 0 0 rgba(22, 19, 38, 0.1) !important;
+    box-shadow: -5px 0 0 rgba(75, 42, 125, 0.1), 5px 0 0 rgba(75, 42, 125, 0.1) !important;
   }
 
   &.flatpickr-disabled {
@@ -173,7 +289,7 @@ app-date-range-picker .flatpickr-day,
   }
 
   &.today {
-    border-color: #161326 !important;
+    border-color: #4B2A7D !important;
     font-weight: 600 !important;
   }
 }
@@ -242,8 +358,8 @@ app-date-range-picker .flatpickr-time,
   cursor: not-allowed;
 }
 .processes-pagination .processes-pagination__controls.join .join-item.btn-active {
-  background-color: #161326;
-  border-color: #161326;
+  background-color: #4B2A7D;
+  border-color: #4B2A7D;
   color: #fff;
 }
 .processes-pagination .processes-pagination__per-page .select {
@@ -257,6 +373,6 @@ app-date-range-picker .flatpickr-time,
 }
 .processes-pagination .processes-pagination__per-page .select:focus {
   outline: none;
-  border-color: #161326;
-  box-shadow: 0 0 0 2px rgba(22, 19, 38, 0.15);
+  border-color: #4B2A7D;
+  box-shadow: 0 0 0 2px rgba(75, 42, 125, 0.15);
 }

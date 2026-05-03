@@ -6,33 +6,33 @@
   border-spacing: 0 !important;
 
   thead {
-    background-color: #161326 !important; // neutral color (black from project)
-    color: #ffffff !important; // white text
+    background-color: #4B2A7D !important;
+    color: #ffffff !important;
 
     tr {
-      background-color: #161326 !important; // neutral color (black from project)
+      background-color: #4B2A7D !important;
     }
 
     th {
       font-weight: 600;
       font-size: 0.875rem;
       text-transform: uppercase;
-      background-color: #161326 !important; // neutral color (black from project)
-      color: #ffffff !important; // white text
+      background-color: #4B2A7D !important;
+      color: #ffffff !important;
       position: relative;
 
       &.sticky-header {
         position: sticky !important;
         left: 0 !important;
         z-index: 1000 !important;
-        background: #161326 !important; // Force solid background
+        background: #4B2A7D !important;
         color: #ffffff !important;
         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
         min-width: 240px !important;
         max-width: 240px !important;
         width: 240px !important;
-        will-change: transform; // Optimize for sticky
-        isolation: isolate; // Create stacking context
+        will-change: transform;
+        isolation: isolate;
       }
     }
   }
@@ -41,7 +41,7 @@
   thead,
   thead tr,
   thead th {
-    background-color: #161326 !important;
+    background-color: #4B2A7D !important;
     color: #ffffff !important;
   }
 
@@ -91,75 +91,68 @@
         }
       }
 
-      // Hover effect - orange color with opacity for better visibility
+      // Hover effect — subtle primary purple tint (enterprise, muted)
       &:hover {
-        background-color: rgba(255, 152, 0, 0.2) !important;
+        background-color: rgba(75, 42, 125, 0.07) !important;
         cursor: pointer;
 
-        // Apply hover to all cells including sticky
         td {
-          background-color: rgba(255, 152, 0, 0.2) !important;
+          background-color: rgba(75, 42, 125, 0.07) !important;
         }
 
-        // Ensure sticky cell has solid hover color (no transparency)
-        // Using solid color equivalent to rgba(255, 152, 0, 0.2) on white background
-        // Calculation: 0.2 * rgb(255, 152, 0) + 0.8 * rgb(255, 255, 255) = rgb(255, 230, 204)
+        // Solid equivalent of rgba(75, 42, 125, 0.07) on white ≈ #EDE9F5
         td.sticky-cell {
-          background-color: #ffe6cc !important; // Solid color equivalent to rgba(255, 152, 0, 0.2) on white
-          background: #ffe6cc !important;
+          background-color: #EDE9F5 !important;
+          background: #EDE9F5 !important;
           backface-visibility: hidden !important;
           -webkit-backface-visibility: hidden !important;
           transform: translateZ(0) !important;
           -webkit-transform: translateZ(0) !important;
-          
-          // Update pseudo-element background on hover
+
           &::before {
-            background-color: #ffe6cc !important;
+            background-color: #EDE9F5 !important;
           }
         }
       }
     }
-    
-    // Additional rule with maximum specificity to ensure sticky cell hover works
+
     tr:hover td.sticky-cell {
-      background-color: #ffe6cc !important; // Solid color - no transparency
-      background: #ffe6cc !important;
+      background-color: #EDE9F5 !important;
+      background: #EDE9F5 !important;
       backface-visibility: hidden !important;
       -webkit-backface-visibility: hidden !important;
       transform: translateZ(0) !important;
       -webkit-transform: translateZ(0) !important;
-      
+
       &::before {
-        background-color: #ffe6cc !important;
+        background-color: #EDE9F5 !important;
       }
     }
   }
-  
-  // Even more specific rule to ensure hover works on sticky cells
+
   tbody tr:hover > td.sticky-cell {
-    background-color: #ffe6cc !important; // Solid color - no transparency
-    background: #ffe6cc !important;
+    background-color: #EDE9F5 !important;
+    background: #EDE9F5 !important;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
-    
+
     &::before {
-      background-color: #ffe6cc !important;
+      background-color: #EDE9F5 !important;
     }
   }
-  
-  // Support for group-hover class from Tailwind
+
   tbody tr.group:hover td.sticky-cell {
-    background-color: #ffe6cc !important; // Solid color - no transparency
-    background: #ffe6cc !important;
+    background-color: #EDE9F5 !important;
+    background: #EDE9F5 !important;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
-    
+
     &::before {
-      background-color: #ffe6cc !important;
+      background-color: #EDE9F5 !important;
     }
   }
 }

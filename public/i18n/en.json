@@ -71,6 +71,7 @@
         "dashboard": "Dashboard",
         "processes": "Processes",
         "clients": "Organizations",
+        "importHistory": "Import history",
         "toggleSidebar": "Toggle sidebar"
     },
     "header": {
@@ -86,6 +87,72 @@
     "dashboard": {
         "title": "Dashboard"
     },
+    "historialImportaciones": {
+        "title": "Import history",
+        "description": "Review the outcome of each bulk filing upload.",
+        "filters": {
+            "fabAria": "Show or hide search filters",
+            "title": "Search filters",
+            "organization": "Organization",
+            "organizationPlaceholder": "Partial match on name",
+            "fileName": "File",
+            "fileNamePlaceholder": "Partial match on imported file name",
+            "status": "Batch status",
+            "statusAll": "All",
+            "statusProcessing": "Processing",
+            "statusCompleted": "Completed",
+            "statusFailed": "Failed",
+            "hasErrors": "Recorded errors",
+            "hasErrorsAll": "All",
+            "hasErrorsYes": "With errors",
+            "hasErrorsNo": "Without errors",
+            "search": "Apply filters",
+            "reset": "Clear filters"
+        },
+        "empty": "No imports recorded yet.",
+        "copied": "Copied to clipboard",
+        "stats": {
+            "imports": "Imports",
+            "total": "Total processed",
+            "success": "Succeeded",
+            "failed": "Failed"
+        },
+        "table": {
+            "file": "File / batch",
+            "organization": "Organization",
+            "status": "Status",
+            "total": "Total",
+            "success": "Succeeded",
+            "failed": "Failed",
+            "multipleInstances": "Multiple instances",
+            "createdAt": "Created",
+            "completedAt": "Completed",
+            "showProcesses": "View processes",
+            "hideProcesses": "Hide processes",
+            "viewErrors": "View errors"
+        },
+        "processesTitle": "Filings in this import ({{count}})",
+        "status": {
+            "unknown": "Unknown"
+        },
+        "errorsModal": {
+            "title": "Import errors",
+            "organizationLabel": "Organization",
+            "importDate": "Import date",
+            "statTotal": "Total",
+            "statSuccess": "Succeeded",
+            "statFailed": "Failed",
+            "statStatus": "Status",
+            "statMultipleInstances": "Multiple instances",
+            "statExcelRows": "Spreadsheet rows",
+            "statExcelRowsHint": "Same as batch total when the API does not return spreadsheet rows.",
+            "processLabel": "Filing",
+            "reasonLabel": "Error detail",
+            "technicalBadge": "Technical / SQL",
+            "businessBadge": "Validation",
+            "close": "Close"
+        }
+    },
     "table": {
         "showing": "Showing",
         "to": "to",
@@ -97,6 +164,7 @@
         "title": "Organizations",
         "description": "List of organizations registered in the system",
         "filters": {
+            "fabAria": "Show or hide search filters",
             "title": "Search Filters",
             "name": "Name",
             "namePlaceholder": "Organization name",
@@ -169,21 +237,71 @@
     },
     "common": {
         "back": "Back",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "actions": "Actions"
     },
     "processes": {
         "title": "Judicial Processes",
         "description": "View and manage all judicial processes",
+        "kpi": {
+            "loading": "Loading system metrics...",
+            "operational": {
+                "title": "Filings and coverage",
+                "subtitle": "Unique judicial processes (one count per case number)",
+                "active": "Active",
+                "withoutWatching": "Unwatched",
+                "withoutWatchingHint": "Case numbers with no organization under active monitoring (operational orphans)."
+            },
+            "critical": {
+                "title": "Critical Alert",
+                "subtitle": "Immediate legal risk"
+            },
+            "early": {
+                "title": "Early Attention",
+                "subtitle": "Processes requiring close follow-up"
+            },
+            "instances": {
+                "title": "Multiple Instances",
+                "subtitle": "Cases in instance transition"
+            },
+            "health": {
+                "title": "Synchronization Technical Health",
+                "subtitle": "Processes not updated for more than 48 hours",
+                "outdated": "Outdated",
+                "ratio": "Impact"
+            }
+        },
+        "filters": {
+            "fabAria": "Open or close search filters"
+        },
+        "copy": {
+            "tooltip": "Copy",
+            "toastSuccess": "Case number copied",
+            "toastError": "Could not copy"
+        },
         "import": {
+            "fabMainAria": "Open or close quick actions",
+            "fabMenuBackdropAria": "Close quick actions menu",
+            "fabImportAria": "Import processes from Excel",
+            "importProcesses": "Import processes",
+            "sheetHint": "Pick an organization and an .xlsx file to import.",
             "button": "Import Excel",
             "title": "Import processes from Excel",
             "organizationLabel": "Organization",
             "organizationPlaceholder": "Select organization",
+            "organizationSearch": "Search organization…",
+            "organizationNoMatches": "No matches",
             "description": "Drag an .xlsx file here or click to select.",
             "cancel": "Cancel",
             "submit": "Import",
             "submitting": "Importing...",
             "close": "Close",
+            "confirmTitle": "Confirm import",
+            "confirmMessage": "You are about to start a background import with the details below. Please verify the spreadsheet file and the organization (client).",
+            "confirmFileLabel": "Spreadsheet file",
+            "confirmOrganizationLabel": "Organization / client",
+            "confirmFootnote": "After you confirm, the system will process the file in the background. You will receive a notice or report when the import completes.",
+            "confirmSubmit": "Yes, import",
             "errors": {
                 "generic": "Error importing. Please try again."
             }
@@ -192,9 +310,14 @@
     "notifications": {
         "title": "Notifications",
         "unread": "unread",
+        "new": "new",
         "noNotificationsTitle": "You're all caught up!",
         "noNotifications": "You have no notifications",
         "viewAll": "View all notifications",
-        "clickToViewDetails": "Click here to view details"
+        "clickToViewDetails": "Click to view details",
+        "tabs": {
+            "all": "All",
+            "unread": "Unread"
+        }
     }
 }

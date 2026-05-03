@@ -1,56 +1,108 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { resolveAdminNotificationNavigation } from '@app/core/constants/notification-navigation.constant';
 import { NotificationService } from '@app/core/services/notification/notification.service';
 import { AppNotification } from '@app/core/models/notification/notification.model';
 
 @Component({
-    selector: 'app-notification-bell',
-    standalone: true,
-    imports: [CommonModule, TranslocoModule],
-    templateUrl: './notification-bell.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'app-notification-bell',
+  standalone: true,
+  imports: [CommonModule, TranslocoPipe],
+  templateUrl: './notification-bell.component.html',
+  styleUrl: './notification-bell.component.scss',
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationBellComponent implements OnInit {
-    private _notificationService = inject(NotificationService);
-    private _router = inject(Router);
+  private _notificationService = inject(NotificationService);
+  private _router = inject(Router);
+  private _lastOpenRequestAt = 0;
 
-    public unreadCount = this._notificationService.unreadCount;
-    public notifications = this._notificationService.notifications;
+  @ViewChild('notificationBellTrigger') private _notificationBellTrigger?: ElementRef<HTMLElement>;
 
-    ngOnInit(): void {
-        this._notificationService.getNotifications(1).subscribe();
+  public notifications = this._notificationService.notifications;
+  public newCount = this._notificationService.newCount;
+
+  public activeTab = signal<'all' | 'unread'>('all');
+
+  public filteredNotifications = computed(() => {
+    const all = this.notifications();
+    if (this.activeTab() === 'unread') {
+      return all.filter((n) => !n.read_at);
+    }
+    return all;
+  });
+
+  ngOnInit(): void {
+    this._notificationService.getUnreadCount().subscribe();
+    this._notificationService.getNotifications(1).subscribe();
+  }
+
+  onDropdownOpen(): void {
+    const now = Date.now();
+    if (now - this._lastOpenRequestAt < 300) {
+      return;
+    }
+    this._lastOpenRequestAt = now;
+
+    this._notificationService.markAllAsOpened().subscribe();
+
+    this._notificationService.getNotifications(1).subscribe();
+  }
+
+  onDropdownFocus(): void {
+    this.onDropdownOpen();
+  }
+
+  setTab(tab: 'all' | 'unread'): void {
+    this.activeTab.set(tab);
+  }
+
+  onNotificationClick(notification: AppNotification): void {
+    this._closeDropdown();
+
+    const navigateToResolved = (): void => {
+      const target = resolveAdminNotificationNavigation(notification);
+      if (!target) {
+        return;
+      }
+      this._router.navigate(target.commands, {
+        queryParams: target.queryParams,
+      });
+    };
+
+    if (!notification.read_at) {
+      this._notificationService.markAsRead(notification.id).subscribe({
+        next: () => navigateToResolved(),
+        error: () => navigateToResolved(),
+      });
+      return;
     }
 
-    /**
-     * Load notifications when dropdown is opened (refresh)
-     */
-    onDropdownOpen(): void {
-        this._notificationService.getNotifications(1).subscribe();
-    }
+    navigateToResolved();
+  }
 
-    /**
-     * Mark as read and navigate
-     */
-    onNotificationClick(notification: AppNotification): void {
-        // 1. Mark as read in API
-        if (!notification.read_at) {
-            this._notificationService.markAsRead(notification.id).subscribe();
-        }
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleString();
+  }
 
-        // 2. Navigate based on type
-        const data = notification.data;
-        if (data.type === 'import-report') {
-            this._router.navigate(['/admin/import-batches', data.id]);
-        }
-        // Add more types here as needed
+  private _closeDropdown(): void {
+    this._notificationBellTrigger?.nativeElement.blur();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
-
-    /**
-     * Format date for display
-     */
-    formatDate(dateStr: string): string {
-        return new Date(dateStr).toLocaleString();
-    }
+  }
 }

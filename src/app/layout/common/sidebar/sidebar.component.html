@@ -1,11 +1,9 @@
-<!-- Sidebar Overlay (Mobile) -->
-@if (isMobile()) {
+<!-- Sidebar Overlay (Mobile): solo en DOM cuando el menú está abierto (evita scrim residual) -->
+@if (isMobile() && isOpen()) {
   <div
-    class="fixed inset-0 z-40 bg-base-content/50 transition-opacity"
-    [class.opacity-0]="!isOpen()"
-    [class.pointer-events-none]="!isOpen()"
-    [class.opacity-100]="isOpen()"
+    class="fixed inset-0 z-40 bg-base-content/50 transition-opacity duration-150"
     (click)="closeSidebar()"
+    aria-hidden="true"
   ></div>
 }
 
@@ -14,24 +12,32 @@
   class="fixed left-0 top-0 z-40 h-screen max-h-screen bg-neutral text-neutral-content transition-all duration-300 ease-in-out shadow-lg overflow-hidden"
   [class.-translate-x-full]="!isOpen() && isMobile()"
   [class.translate-x-0]="isOpen() || !isMobile()"
-  [class.w-64]="isOpen()"
+  [class.pointer-events-none]="isMobile() && !isOpen()"
+  [class.w-64]="isOpen() || isMobile()"
   [class.w-16]="!isOpen() && !isMobile()"
 >
   <div class="flex h-full max-h-screen flex-col overflow-hidden">
     <!-- Sidebar Header -->
     <div
-      class="flex h-16 items-center text-center border-b border-neutral/20 transition-all"
+      class="flex h-16 items-center text-center border-b transition-all"
+      [class.bg-white]="isOpen()"
+      [class.border-neutral/10]="isOpen()"
+      [class.border-neutral/20]="!isOpen()"
       [class.justify-between]="isOpen()"
       [class.justify-center]="!isOpen()"
       [class.px-4]="isOpen()"
       [class.px-0]="!isOpen()"
     >
       @if (isOpen()) {
-        <h2 class="text-lg font-semibold">{{ menuTitle }}</h2>
+        <img src="images/ui/logo-notijudicial.png" alt="NotiJudicial" class="h-10 object-contain mx-auto" />
       }
       <button
         type="button"
-        class="btn btn-ghost btn-sm flex items-center justify-center"
+        class="btn btn-ghost btn-sm flex items-center justify-center p-0 w-10 h-10"
+        [class.text-neutral]="isOpen()"
+        [class.hover:bg-neutral/10]="isOpen()"
+        [class.text-neutral-content]="!isOpen()"
+        [class.hover:bg-white/10]="!isOpen()"
         (click)="toggleSidebar()"
         [attr.aria-label]="'navigation.toggleSidebar' | transloco"
       >
@@ -92,22 +98,8 @@
                   [class.text-secondary-content]="isItemActive(item)"
                 >
                   @if (item.icon) {
-                    <span class="flex-shrink-0 flex items-center justify-center">
-                      <!-- Icon placeholder - will be replaced with actual icon component -->
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M4 6h16M4 12h16M4 18h16"
-                        />
-                      </svg>
+                    <span class="flex flex-shrink-0 items-center justify-center">
+                      <app-sidebar-icon [icon]="item.icon" />
                     </span>
                   }
                   <span class="flex-1 font-semibold" [class.hidden]="!isOpen()">{{ item.title | transloco }}</span>
@@ -137,27 +129,14 @@
                     <li>
                       <a
                         [routerLink]="child.link"
-                        routerLinkActive="bg-secondary text-secondary-content"
-                        [routerLinkActiveOptions]="{ exact: false }"
+                        [class.bg-secondary]="isLinkActive(child.link)"
+                        [class.text-secondary-content]="isLinkActive(child.link)"
                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-neutral-focus font-medium"
                         (click)="closeSidebar()"
                       >
                         @if (child.icon) {
                           <span class="flex-shrink-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              class="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                              />
-                            </svg>
+                            <app-sidebar-icon [icon]="child.icon" sizeClass="h-4 w-4" />
                           </span>
                         }
                         <span>{{ child.title | transloco }}</span>
@@ -172,8 +151,8 @@
             <li>
               <a
                 [routerLink]="item.link"
-                routerLinkActive="bg-secondary text-secondary-content"
-                [routerLinkActiveOptions]="{ exact: false }"
+                [class.bg-secondary]="isItemSelected(item.id)"
+                [class.text-secondary-content]="isItemSelected(item.id)"
                 [class.disabled]="item.disabled"
                 class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
                 [class.gap-3]="isOpen()"
@@ -183,22 +162,8 @@
                 (click)="onNavItemClick(item)"
               >
                 @if (item.icon) {
-                  <span class="flex-shrink-0 flex items-center justify-center">
-                    <!-- Icon placeholder -->
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    </svg>
+                  <span class="flex flex-shrink-0 items-center justify-center">
+                    <app-sidebar-icon [icon]="item.icon" />
                   </span>
                 }
                 <span class="flex-1 font-semibold" [class.hidden]="!isOpen()">{{ item.title | transloco }}</span>

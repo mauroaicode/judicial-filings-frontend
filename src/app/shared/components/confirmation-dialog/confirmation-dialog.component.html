@@ -1,9 +1,36 @@
-<dialog class="modal" [class.modal-open]="open()">
-  <div class="modal-box">
-    <h3 class="font-bold text-lg text-base-content">{{ title() }}</h3>
-    <p class="py-4 text-base-content/80">{{ message() }}</p>
-    <div class="modal-action">
-      <button type="button" class="btn btn-ghost" (click)="onCancel()">
+<dialog class="modal confirmation-dialog-modal" [class.modal-open]="open()">
+  <div class="modal-box confirmation-dialog-modal__box max-w-xl">
+    <h3 class="font-bold text-lg text-base-content pr-9">{{ title() }}</h3>
+
+    @let rows = detailRows() ?? [];
+
+    @if (rows.length > 0) {
+      <div class="mt-3 space-y-4">
+        @if (message().trim()) {
+          <p class="text-sm leading-relaxed text-base-content/80">{{ message() }}</p>
+        }
+        <div class="confirmation-dialog-details rounded-xl border border-base-300 bg-base-200/40 p-4">
+          @for (row of rows; track row.label + row.value; let i = $index) {
+            <div class="confirmation-dialog-details__row" [class.confirmation-dialog-details__row--split]="i > 0">
+              <p class="confirmation-dialog-details__label">{{ row.label }}</p>
+              <p class="confirmation-dialog-details__value text-primary">{{ row.value }}</p>
+            </div>
+          }
+        </div>
+        @if ((footnote() ?? '').trim()) {
+          <p class="text-xs leading-snug text-base-content/60 border-l-[3px] border-primary/40 pl-3 py-1">
+            {{ footnote() }}
+          </p>
+        }
+      </div>
+    }
+
+    @if (rows.length === 0 && message().trim()) {
+      <p class="py-4 text-base-content/80 leading-relaxed">{{ message() }}</p>
+    }
+
+    <div class="modal-action mt-6 flex-shrink-0">
+      <button type="button" class="btn btn-ghost normal-case font-semibold" (click)="onCancel()">
         {{ cancelLabel() }}
       </button>
       <button type="button" [class]="'btn ' + confirmClass()" (click)="onConfirm()">

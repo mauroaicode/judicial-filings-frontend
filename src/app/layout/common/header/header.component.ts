@@ -12,7 +12,6 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '@app/core/auth/auth.service';
-import { SidebarComponent } from '../sidebar/sidebar.component';
 import { NotificationBellComponent } from './notification-bell/notification-bell.component';
 
 @Component({
@@ -31,7 +30,6 @@ export class HeaderComponent {
 
   // Inputs
   public pageTitle = input<string>('');
-  public sidebar = input<SidebarComponent | null>(null);
 
   // Outputs
   public toggleSidebar = output<void>();
@@ -47,13 +45,11 @@ export class HeaderComponent {
   });
 
   /**
-   * Toggle sidebar
+   * Solicita alternar el sidebar: solo emite; el layout padre ejecuta el toggle una vez.
+   * (Evitar llamar toggle aquí y en el padre: dos toggles por clic dejaban el menú igual.)
    */
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
-    if (this.sidebar()) {
-      this.sidebar()?.toggleSidebar();
-    }
   }
 
   /**

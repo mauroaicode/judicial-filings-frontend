@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
 import { AppNotification, NotificationResponse, UnreadCountResponse } from '@app/core/models/notification/notification.model';
 
@@ -13,9 +13,12 @@ export class NotificationService {
     // State
     private _notifications = signal<AppNotification[]>([]);
     private _unreadCount = signal<number>(0);
+    /** Contador de la campana (notificaciones no “abiertas” hasta mark-all-opened) */
+    private _newCount = signal<number>(0);
 
     public readonly notifications = this._notifications.asReadonly();
     public readonly unreadCount = this._unreadCount.asReadonly();
+    public readonly newCount = this._newCount.asReadonly();
 
     /**
      * Fetch unread count from API
@@ -23,7 +26,31 @@ export class NotificationService {
     getUnreadCount(): Observable<UnreadCountResponse> {
         const url = `${environment.apiBaseUrl}/notifications/unread-count`;
         return this._httpClient.get<UnreadCountResponse>(url).pipe(
-            tap(res => this._unreadCount.set(res.unread_count))
+            tap((res) => {
+                this._unreadCount.set(res.unread_count);
+                this._newCount.set(res.new_count ?? res.unread_count);
+            })
+        );
+    }
+
+    /**
+     * Marca todas como abiertas (quita el número de la campana). POST notifications/mark-all-opened
+     */
+    markAllAsOpened(): Observable<unknown> {
+        const url = `${environment.apiBaseUrl}/notifications/mark-all-opened`;
+        const openedAt = new Date().toISOString();
+
+        this._newCount.set(0);
+        this._notifications.update((current) =>
+            current.map((n) => (n.opened_at ? n : { ...n, opened_at: openedAt }))
+        );
+
+        return this._httpClient.post(url, {}).pipe(
+            catchError((error) => {
+                console.error('Error marking admin notifications as opened:', error);
+                this.getUnreadCount().subscribe();
+                return of(null);
+            })
         );
     }
 
@@ -67,25 +94,41 @@ export class NotificationService {
      * Handle incoming WebSocket notification
      */
     handleIncomingNotification(payload: any): void {
+        const inner = typeof payload?.data === 'object' && payload.data !== null ? payload.data : {};
+
+        const businessType =
+            (typeof inner.type === 'string' && inner.type) ||
+            (typeof payload?.type === 'string' && payload.type) ||
+            (typeof payload?.notification_type === 'string' && payload.notification_type) ||
+            '';
+
+        /** Id del recurso (p. ej. lote de importación en `import-report`); no usar `payload.id` (id de la notificación). */
+        const resourceId =
+            (typeof inner.id === 'string' && inner.id) ||
+            (typeof payload?.id_resource === 'string' && payload.id_resource) ||
+            '';
+
         const newNotification: AppNotification = {
-            id: payload.id, // Notification DB ID
-            type: payload.type || 'BroadcastNotificationCreated',
-            notifiable_type: '',
-            notifiable_id: '',
+            id: String(payload?.id ?? ''),
+            type: typeof payload?.type === 'string' ? payload.type : 'BroadcastNotificationCreated',
+            notifiable_type: typeof payload?.notifiable_type === 'string' ? payload.notifiable_type : '',
+            notifiable_id: typeof payload?.notifiable_id === 'string' ? payload.notifiable_id : '',
             data: {
-                title: payload.title,
-                description: payload.description,
-                type: payload.type,
-                id: payload.id_resource || payload.id, // Adjust if needed
-                status: payload.status
+                title: String(inner.title ?? payload?.title ?? ''),
+                description: String(inner.description ?? payload?.description ?? ''),
+                type: String(businessType),
+                id: String(resourceId),
+                status: String(inner.status ?? payload?.status ?? ''),
             },
             read_at: null,
+            opened_at: null,
             created_at: new Date().toISOString(),
-            created_at_human: 'Justo ahora'
+            created_at_human: 'Justo ahora',
         };
 
         // Update state live
-        this._notifications.update(current => [newNotification, ...current]);
-        this._unreadCount.update(count => count + 1);
+        this._notifications.update((current) => [newNotification, ...current]);
+        this._unreadCount.update((count) => count + 1);
+        this._newCount.update((count) => count + 1);
     }
 }

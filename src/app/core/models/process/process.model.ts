@@ -168,3 +168,16 @@ export interface ProcessImportBatchResponse {
   message: string;
   batch_id: string;
 }
+
+/**
+ * Dashboard KPI stats for processes module
+ */
+export interface ProcessDashboardStats {
+  total_processes: number;
+  active_processes: number;
+  orphan_processes: number;
+  processes_with_multiple_instances: number;
+  outdated_processes: number;
+  critical_alert_processes: number;
+  early_attention_processes: number;
+}

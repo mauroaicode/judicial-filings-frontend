@@ -26,6 +26,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'clients',
     link: '/admin/organizations',
   },
+  {
+    id: 'import-history',
+    title: 'navigation.importHistory',
+    type: 'basic',
+    icon: 'importHistory',
+    link: '/admin/import-history',
+  },
   // More items will be added here as needed
 ];
 

@@ -19,6 +19,11 @@ export default [
     loadChildren: () =>
       import('./clients/clients.routes').then((m) => m.default),
   },
+  {
+    path: 'import-history',
+    loadChildren: () =>
+      import('./import-history/import-history.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

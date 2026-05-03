@@ -24,7 +24,7 @@
   <div class="overflow-x-auto w-full" style="position: relative; overflow-x: auto; overflow-y: visible;">
     <table class="table table-zebra" style="min-width: 1000px; border-collapse: separate !important; border-spacing: 0 !important; position: relative;">
       <!-- Table Header -->
-      <thead [attr.style]="'background-color: #161326 !important; color: #ffffff !important;'">
+      <thead [attr.style]="'background-color: #4B2A7D !important; color: #ffffff !important;'">
         <tr>
           @for (column of columns(); track column.key) {
             <th
@@ -59,10 +59,10 @@
               >
                 @if (column.key === 'status_label') {
                   <span
-                    class="badge whitespace-nowrap"
-                    [class.badge-success]="row.status_label === 'Activo'"
-                    [class.badge-warning]="row.status_label === 'Pendiente'"
-                    [class.badge-error]="row.status_label === 'Cerrado'"
+                    class="badge whitespace-nowrap uppercase font-semibold tracking-normal text-[11px] leading-tight"
+                    [class.badge-success]="(row.status_label || '').toLowerCase() === 'activo'"
+                    [class.badge-warning]="(row.status_label || '').toLowerCase() === 'pendiente'"
+                    [class.badge-error]="(row.status_label || '').toLowerCase() === 'cerrado'"
                   >
                     {{ row.status_label }}
                   </span>

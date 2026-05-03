@@ -1,16 +1,21 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
-  computed,
-  effect,
   inject,
   signal,
   ViewChild,
   ViewEncapsulation,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import {
+  Router,
+  RouterOutlet,
+  NavigationEnd,
+  ActivatedRouteSnapshot,
+} from '@angular/router';
+import { filter, tap } from 'rxjs';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SidebarComponent } from '@app/layout/common/sidebar/sidebar.component';
 import { HeaderComponent } from '@app/layout/common/header/header.component';
@@ -27,28 +32,67 @@ import { NotificationsComponent } from '@app/layout/common/notifications/notific
 })
 export class AuthenticatedLayoutComponent {
   private _router = inject(Router);
-  private _activatedRoute = inject(ActivatedRoute);
+  private _cdr = inject(ChangeDetectorRef);
 
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
 
-  // Current page title
-  public pageTitle = signal<string>('');
+  /**
+   * URL en señal: al cambiar, el título (computed) y el layout reaccionan.
+   * En zoneless, además forzamos CD al terminar la navegación (mismo criterio que judicial-filings-frontend).
+   */
+  private _currentUrl = signal<string>(this._router.url);
+
+  public pageTitle = computed(() => {
+    this._currentUrl();
+    const fromData = this._titleFromSnapshot(this._router.routerState.snapshot.root);
+    if (fromData) {
+      return fromData;
+    }
+    const path = this._router.url.split('?')[0];
+    if (path.includes('/admin/processes')) {
+      return 'processes.title';
+    }
+    if (path.includes('/admin/organizations')) {
+      return 'clients.title';
+    }
+    if (path.includes('/admin/dashboard')) {
+      return 'navigation.dashboard';
+    }
+    if (path.includes('/admin/import-history')) {
+      return 'historialImportaciones.title';
+    }
+    return '';
+  });
 
   // Sidebar state
   public sidebarOpen = signal<boolean>(true);
 
   constructor() {
-    // Update page title on route change
     this._router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this._updatePageTitle();
-      });
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        tap((event) => {
+          this._currentUrl.set(event.urlAfterRedirects || event.url);
+          this._cdr.detectChanges();
+        })
+      )
+      .subscribe();
+  }
 
-    // Initial title update
-    effect(() => {
-      this._updatePageTitle();
-    });
+  private _titleFromSnapshot(root: ActivatedRouteSnapshot): string | undefined {
+    let deepest = root;
+    while (deepest.firstChild) {
+      deepest = deepest.firstChild;
+    }
+    let s: ActivatedRouteSnapshot | null = deepest;
+    while (s) {
+      const t = s.data['title'];
+      if (typeof t === 'string' && t.length > 0) {
+        return t;
+      }
+      s = s.parent;
+    }
+    return undefined;
   }
 
   /**
@@ -58,33 +102,6 @@ export class AuthenticatedLayoutComponent {
     if (this.sidebar) {
       this.sidebar.toggleSidebar();
       this.sidebarOpen.set(this.sidebar.isOpen());
-    }
-  }
-
-  /**
-   * Update page title from route data
-   */
-  private _updatePageTitle(): void {
-    let route = this._activatedRoute;
-    while (route.firstChild) {
-      route = route.firstChild;
-    }
-
-    const title = route.snapshot.data['title'];
-    if (title) {
-      this.pageTitle.set(title);
-    } else {
-      // Default title based on route
-      const path = this._router.url;
-      if (path.includes('/dashboard')) {
-        this.pageTitle.set('navigation.dashboard');
-      } else if (path.includes('/processes')) {
-        this.pageTitle.set('processes.title');
-      } else if (path.includes('/organizations')) {
-        this.pageTitle.set('clients.title');
-      } else {
-        this.pageTitle.set('');
-      }
     }
   }
 }

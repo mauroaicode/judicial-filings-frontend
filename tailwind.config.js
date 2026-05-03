@@ -10,6 +10,8 @@ module.exports = {
       colors: {
         // Custom color palette
         primary: COLORS.primary,
+        'primary-dark': COLORS.primaryDark,
+        'primary-light': COLORS.primaryLight,
         'yellow-green': COLORS.yellowGreen,
         orchid: COLORS.orchid,
         khaki: COLORS.khaki,
@@ -41,15 +43,32 @@ module.exports = {
       {
         light: {
           ...require('daisyui/src/theming/themes')['light'],
-          // Override with custom colors
+          // Brand purple (shared with client app)
           primary: COLORS.primary,
           'primary-content': COLORS.textOnDark,
-          secondary: '#FF9800', // Orange color from DaisyUI
+          // Muted secondary purple (admin is more enterprise, less vibrant)
+          secondary: COLORS.orchid,
           'secondary-content': COLORS.textOnDark,
+          // Brand gold accent
           accent: COLORS.yellowGreen,
-          'accent-content': COLORS.textOnDark,
+          'accent-content': '#1F2937',
+          // Admin dark navy for sidebar/neutral (distinct from client #24163E)
+          neutral: COLORS.black,
+          'neutral-content': COLORS.textOnDark,
+          // Admin base uses cool blue-gray tint (differentiates from client's pure white)
+          'base-100': '#FFFFFF',
+          'base-200': COLORS.gainsboro,
+          'base-300': COLORS.lightGray,
           'base-content': COLORS.textOnWhite,
-          // Keep default DaisyUI colors for other properties
+          // Semantic states — professional, aligned with client
+          success: COLORS.green,
+          'success-content': '#ffffff',
+          warning: COLORS.orange,
+          'warning-content': '#ffffff',
+          error: COLORS.salmon,
+          'error-content': '#ffffff',
+          info: COLORS.orchid,
+          'info-content': '#ffffff',
         },
       },
     ],

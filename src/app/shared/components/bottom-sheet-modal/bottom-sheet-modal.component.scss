@@ -1,0 +1,26 @@
+// Ajustes móvil: DaisyUI fuerza modal-bottom .modal-box con max-height calc(100vh - 5em)
+@media (max-width: 1023px) {
+  dialog.app-bottom-sheet-modal.modal.modal-bottom:is(.modal-open, [open]) {
+    inset: 0 !important;
+    margin: 0 !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    place-items: end !important;
+    align-items: end !important;
+  }
+
+  dialog.app-bottom-sheet-modal.modal.modal-bottom .modal-box.app-bottom-sheet-modal__box {
+    max-height: calc(100dvh - env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    margin-bottom: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  dialog.app-bottom-sheet-modal.modal.modal-bottom .bottom-sheet-footer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

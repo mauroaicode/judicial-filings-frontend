@@ -1,0 +1,79 @@
+<div
+  class="app-searchable-select relative w-full"
+  [class.app-searchable-select--open]="isOpen()"
+>
+  @if (loading()) {
+    <span class="loading loading-spinner loading-sm"></span>
+  } @else {
+    <button
+      #trigger
+      type="button"
+      class="select select-bordered w-full min-h-12 flex cursor-pointer items-center justify-between gap-2 text-left font-normal normal-case disabled:cursor-not-allowed disabled:opacity-50"
+      [disabled]="disabled()"
+      [attr.aria-expanded]="isOpen()"
+      aria-haspopup="listbox"
+      (click)="toggle(); $event.stopPropagation()"
+    >
+      <span class="min-h-[1.25rem] flex-1 truncate text-base-content">
+        @if (selectedLabel()) {
+          {{ selectedLabel() }}
+        } @else {
+          <span class="text-base-content/50">{{ placeholder() }}</span>
+        }
+      </span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4 shrink-0 opacity-70"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  }
+
+  @if (isOpen() && !loading()) {
+    <div
+      class="app-searchable-select__panel absolute left-0 right-0 top-full z-[100] mt-1 flex max-h-[min(18rem,calc(100vh-6rem))] flex-col overflow-hidden rounded-lg border border-base-content/20 bg-base-100 shadow-xl"
+      role="listbox"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="shrink-0 border-b border-base-200 p-2">
+        <input
+          #searchInput
+          type="search"
+          class="input input-bordered input-sm w-full"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          [placeholder]="searchPlaceholder()"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          (click)="$event.stopPropagation()"
+        />
+      </div>
+      <ul class="menu menu-sm max-h-52 flex-1 overflow-y-auto p-0">
+        @if (filteredOptions().length === 0) {
+          <li class="px-3 py-2 text-sm text-base-content/60">{{ noResultsText() }}</li>
+        }
+        @for (opt of filteredOptions(); track opt.id) {
+          <li>
+            <button
+              type="button"
+              class="rounded-none active:bg-base-200"
+              [class.bg-secondary]="value() === opt.id"
+              [class.text-secondary-content]="value() === opt.id"
+              role="option"
+              [attr.aria-selected]="value() === opt.id"
+              (click)="selectOption(opt)"
+            >
+              <span class="truncate">{{ opt.label }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>

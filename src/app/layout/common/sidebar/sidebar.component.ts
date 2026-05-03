@@ -8,17 +8,19 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NavigationService } from '@app/core/navigation/navigation.service';
 import { NavigationItem } from '@app/core/models/navigation/navigation-item.model';
+import { SidebarIconComponent } from './sidebar-icon.component';
 import { STORAGE } from '@app/core/constants/storage.constant';
 import { environment } from '@app/core/config/environment.config';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslocoPipe],
+  imports: [CommonModule, RouterModule, TranslocoPipe, SidebarIconComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -27,7 +29,6 @@ import { environment } from '@app/core/config/environment.config';
 export class SidebarComponent {
   private _navigationService = inject(NavigationService);
   private _router = inject(Router);
-  private _activatedRoute = inject(ActivatedRoute);
 
   // Sidebar state - load from localStorage or default to true
   public isOpen = signal<boolean>(this._loadSidebarState());
@@ -42,7 +43,23 @@ export class SidebarComponent {
   // Track expanded items for collapsable menus
   private _expandedItems = signal<Set<string>>(new Set());
 
+  /** Sincronizado con Router (zoneless): evita que routerLinkActive quede desactualizado */
+  public currentUrl = signal<string>(this._router.url);
+
+  /** Ítem de menú activo según la URL (mismo patrón que judicial-filings-frontend) */
+  public selectedMenuId = signal<string | null>(null);
+
   constructor() {
+    this._syncSelectedMenuFromUrl(this._router.url);
+
+    this._router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const nextUrl = event.urlAfterRedirects || event.url || this._router.url;
+        this.currentUrl.set(nextUrl);
+        this._syncSelectedMenuFromUrl(nextUrl);
+      });
+
     // Check if mobile on init and resize
     this._checkMobile();
     window.addEventListener('resize', () => {
@@ -115,20 +132,39 @@ export class SidebarComponent {
   }
 
   /**
-   * Check if item is active (para ítems collapsable; los básicos usan routerLinkActive)
+   * Check if item is active (collapsable padre si algún hijo coincide con la URL)
    */
   isItemActive(item: NavigationItem): boolean {
-    if (!item.link) return false;
-    return this._router.isActive(item.link, {
+    this.currentUrl();
+    if (!item.link && (!item.children || item.children.length === 0)) return false;
+    if (item.link && this._router.isActive(item.link, {
       paths: 'subset',
       queryParams: 'subset',
       fragment: 'ignored',
       matrixParams: 'ignored',
-    });
+    })) {
+      return true;
+    }
+    if (item.children) {
+      return item.children.some((child) => this.isItemActive(child));
+    }
+    return false;
+  }
+
+  /** Resalta el enlace comparando la URL normalizada (evita retraso en modo zoneless) */
+  isLinkActive(link?: string): boolean {
+    if (!link) return false;
+    const current = this._normalizePath(this.currentUrl());
+    const target = this._normalizePath(link);
+    return this._matchesPath(current, target);
+  }
+
+  isItemSelected(itemId: string): boolean {
+    return this.selectedMenuId() === itemId;
   }
 
   /**
-   * Al hacer click en un ítem: en móvil cerrar sidebar; la navegación la hace el routerLink del <a>
+   * Click en ítem básico: marca selección y cierra en móvil (la navegación la hace routerLink)
    */
   onNavItemClick(item: NavigationItem): void {
     if (item.disabled || !item.link) return;
@@ -136,8 +172,40 @@ export class SidebarComponent {
       this.toggleItem(item);
       return;
     }
+    this.selectedMenuId.set(item.id);
     if (this.isMobile()) {
       this.closeSidebar();
+    }
+  }
+
+  private _normalizePath(url: string): string {
+    return (url || '').split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
+  }
+
+  private _matchesPath(current: string, target: string): boolean {
+    return current === target || current.startsWith(`${target}/`);
+  }
+
+  private _syncSelectedMenuFromUrl(url: string): void {
+    const normalized = this._normalizePath(url);
+    const navItems = this.navigation().default;
+
+    for (const item of navItems) {
+      if (item.type === 'divider' || item.type === 'group') {
+        continue;
+      }
+      if (item.link && this._matchesPath(normalized, this._normalizePath(item.link))) {
+        this.selectedMenuId.set(item.id);
+        return;
+      }
+      if (item.children?.length) {
+        for (const child of item.children) {
+          if (child.link && this._matchesPath(normalized, this._normalizePath(child.link))) {
+            this.selectedMenuId.set(child.id);
+            return;
+          }
+        }
+      }
     }
   }
 

@@ -19,6 +19,8 @@ export interface AppNotification {
     notifiable_id: string;
     data: NotificationData;
     read_at: string | null;
+    /** Marca “vistas” al abrir el panel (campana); la API usa mark-all-opened */
+    opened_at?: string | null;
     created_at: string;
     created_at_human?: string;
 }
@@ -37,4 +39,6 @@ export interface NotificationResponse {
  */
 export interface UnreadCountResponse {
     unread_count: number;
+    /** Contador para la campana (no abiertas); si no viene, se usa unread_count */
+    new_count?: number;
 }
