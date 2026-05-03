@@ -61,6 +61,9 @@ export class AuthenticatedLayoutComponent {
     if (path.includes('/admin/import-history')) {
       return 'historialImportaciones.title';
     }
+    if (path.includes('/admin/judicial-sync')) {
+      return 'judicialSync.title';
+    }
     return '';
   });
 

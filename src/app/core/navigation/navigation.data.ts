@@ -33,6 +33,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'importHistory',
     link: '/admin/import-history',
   },
+  {
+    id: 'judicial-sync',
+    title: 'navigation.judicialSync',
+    type: 'basic',
+    icon: 'judicialSync',
+    link: '/admin/judicial-sync',
+  },
   // More items will be added here as needed
 ];
 

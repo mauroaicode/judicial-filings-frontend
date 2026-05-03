@@ -30,7 +30,11 @@
         </svg>
         <span class="font-bold">{{ 'clients.filters.title' | transloco }}</span>
       </button>
-      <button type="button" class="btn btn-primary btn-sm sm:btn-md" (click)="openCreateModal()">
+      <button
+        type="button"
+        class="hidden lg:inline-flex btn btn-primary btn-sm sm:btn-md rounded-xl px-4"
+        (click)="openCreateModal()"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -39,7 +43,132 @@
     </div>
   </div>
 
-  <div class="lg:hidden fixed bottom-6 right-4 z-[60] flex flex-col gap-3 items-end" role="group">
+  <!-- Resumen / KPI (GET /organizations/stats) -->
+  @if (statsLoading()) {
+    <div class="card rounded-2xl border-0 bg-base-100 shadow-md sm:rounded-3xl">
+      <div class="card-body flex flex-col items-center justify-center gap-3 py-10 sm:py-12">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <span class="text-sm text-base-content/70">{{ 'clients.kpi.loading' | transloco }}</span>
+      </div>
+    </div>
+  }
+  @if (!statsLoading() && organizationStats(); as st) {
+    <div class="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12">
+      <div
+        class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] lg:col-span-5 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-3 p-4 sm:gap-4 sm:p-6">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-primary/80">
+                {{ 'clients.kpi.totalTitle' | transloco }}
+              </p>
+              <h2 class="mt-2 text-3xl font-bold text-primary sm:text-4xl tabular-nums">{{ st.total }}</h2>
+              <p class="mt-1 text-sm text-base-content/70">{{ 'clients.kpi.totalSubtitle' | transloco }}</p>
+            </div>
+            <div
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+              aria-hidden="true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-1">
+            <p class="text-xs font-semibold text-base-content/55">{{ 'clients.kpi.statusTitle' | transloco }}</p>
+            <p class="mt-1 text-sm leading-snug text-base-content/65">
+              {{
+                'clients.kpi.statusSummary'
+                  | transloco
+                    : {
+                        active: st.active,
+                        inactive: st.inactive,
+                        pct: getActiveSharePercent(st),
+                      }
+              }}
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-success/12 p-3">
+              <p class="text-xs font-medium text-success/80">{{ 'clients.kpi.active' | transloco }}</p>
+              <p class="mt-1 text-2xl font-bold tabular-nums text-success">{{ st.active }}</p>
+            </div>
+            <div class="rounded-xl bg-base-200/80 p-3">
+              <p class="text-xs font-medium text-base-content/60">{{ 'clients.kpi.inactive' | transloco }}</p>
+              <p class="mt-1 text-2xl font-bold tabular-nums text-base-content/80">{{ st.inactive }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] lg:col-span-7 rounded-2xl sm:rounded-3xl"
+      >
+        <div class="card-body gap-4 p-4 sm:p-6">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-xs font-semibold uppercase tracking-wide text-base-content/55">{{ 'clients.kpi.typeTitle' | transloco }}</p>
+            <div
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary/15 text-secondary"
+              aria-hidden="true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm leading-snug text-base-content/65">
+            {{
+              'clients.kpi.typeSummary'
+                | transloco
+                  : {
+                      natural: st.natural,
+                      juridical: st.juridical,
+                      pctNatural: getNaturalSharePercent(st),
+                      pctJuridical: getJuridicalSharePercent(st),
+                    }
+            }}
+          </p>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-primary/20 bg-primary/10 p-4">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-xs font-medium text-primary/90">{{ 'clients.kpi.natural' | transloco }}</p>
+                <span class="text-sm font-semibold tabular-nums text-primary/80">{{ getNaturalSharePercent(st) }}%</span>
+              </div>
+              <p class="mt-2 text-3xl font-bold tabular-nums text-primary">{{ st.natural }}</p>
+            </div>
+            <div class="rounded-xl border border-secondary/25 bg-secondary/10 p-4">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-xs font-medium text-secondary">{{ 'clients.kpi.juridical' | transloco }}</p>
+                <span class="text-sm font-semibold tabular-nums text-secondary/85">{{ getJuridicalSharePercent(st) }}%</span>
+              </div>
+              <p class="mt-2 text-3xl font-bold tabular-nums text-secondary">{{ st.juridical }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div
+    class="lg:hidden fixed bottom-20 right-4 z-[60] flex flex-col gap-3 items-end"
+    role="group"
+    [attr.aria-label]="'clients.fabGroupAria' | transloco"
+  >
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-primary bg-primary text-primary-content"
+      (click)="openCreateModal()"
+      [attr.aria-label]="'clients.create.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
     <button
       type="button"
       class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
@@ -178,16 +307,100 @@
           <p class="text-base-content/70">{{ 'clients.table.empty' | transloco }}</p>
         </div>
       } @else {
-        <div class="overflow-x-auto w-full clients-table">
-          <table class="table table-zebra" style="min-width: 900px;">
+        <!-- Móvil: tarjetas (sin scroll horizontal) -->
+        <div
+          class="lg:hidden w-full max-w-full min-w-0 overflow-x-hidden px-3 pb-3 pt-1 space-y-4 bg-base-100/60"
+        >
+          @for (org of organizations(); track org.id) {
+            <article
+              class="card border border-base-200 shadow-sm overflow-hidden rounded-xl bg-base-100 transition-shadow hover:shadow-md"
+            >
+              <div class="bg-base-200/50 px-3 py-3 border-b border-base-200">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="min-w-0 flex-1">
+                    <p class="font-bold text-primary text-base leading-snug break-words">{{ org.name }}</p>
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                      <span class="text-[11px] font-semibold text-base-content/45 tabular-nums">#{{ org.index }}</span>
+                      <span class="badge badge-outline badge-sm font-normal">{{ getTypeLabel(org.type) }}</span>
+                    </div>
+                  </div>
+                  <span
+                    class="badge badge-sm uppercase text-[0.65rem] shrink-0 whitespace-nowrap"
+                    [class.badge-success]="org.is_active"
+                    [class.badge-neutral]="!org.is_active"
+                  >
+                    {{ org.is_active ? ('clients.table.active' | transloco) : ('clients.table.inactive' | transloco) }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-body p-4 gap-0">
+                <dl class="space-y-3 text-sm">
+                  <div class="min-w-0">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                      {{ 'clients.table.identification' | transloco }}
+                    </dt>
+                    <dd class="mt-0.5 text-base-content break-words">{{ org.identification ?? '–' }}</dd>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                    <div class="min-w-0">
+                      <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                        {{ 'clients.table.email' | transloco }}
+                      </dt>
+                      <dd class="mt-0.5 text-base-content break-all">{{ org.email ?? '–' }}</dd>
+                    </div>
+                    <div class="min-w-0">
+                      <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                        {{ 'clients.table.phone' | transloco }}
+                      </dt>
+                      <dd class="mt-0.5 text-base-content break-words">{{ org.phone ?? '–' }}</dd>
+                    </div>
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                      {{ 'clients.table.contactPerson' | transloco }}
+                    </dt>
+                    <dd class="mt-0.5 text-base-content break-words">{{ org.contact_person ?? '–' }}</dd>
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                      {{ 'clients.table.address' | transloco }}
+                    </dt>
+                    <dd class="mt-0.5 text-base-content/90 break-words">{{ org.address ?? '–' }}</dd>
+                  </div>
+                </dl>
+                <div
+                  class="mt-4 pt-3 border-t border-base-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div class="flex items-center justify-between gap-3 min-w-0">
+                    <span class="text-xs font-medium text-base-content">{{ 'clients.table.notifications' | transloco }}</span>
+                    <input
+                      type="checkbox"
+                      class="toggle toggle-secondary toggle-sm shrink-0"
+                      [checked]="org.is_receiving_notifications"
+                      (click)="$event.preventDefault(); onToggleNotifications(org)"
+                    />
+                  </div>
+                  <p class="text-xs text-base-content/55 tabular-nums sm:text-end">
+                    {{ 'clients.table.createdAt' | transloco }}:
+                    <span class="text-base-content/80">{{ formatDate(org.created_at) }}</span>
+                  </p>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+
+        <!-- Escritorio: tabla con scroll horizontal -->
+        <div class="hidden lg:block overflow-x-auto w-full clients-table">
+          <table class="table table-zebra clients-table-grid" style="min-width: 1140px;">
             <thead class="clients-table-head">
               <tr>
-                <th class="text-center" style="width: 60px;">{{ 'clients.table.index' | transloco }}</th>
-                <th class="text-left">{{ 'clients.table.name' | transloco }}</th>
+                <th class="clients-sticky-index text-center">{{ 'clients.table.index' | transloco }}</th>
+                <th class="clients-sticky-name text-left">{{ 'clients.table.name' | transloco }}</th>
                 <th class="text-left" style="width: 140px;">{{ 'clients.table.type' | transloco }}</th>
                 <th class="text-left" style="width: 140px;">{{ 'clients.table.identification' | transloco }}</th>
                 <th class="text-left">{{ 'clients.table.address' | transloco }}</th>
-                <th class="text-left" style="width: 140px;">{{ 'clients.table.phone' | transloco }}</th>
+                <th class="clients-col-phone text-left">{{ 'clients.table.phone' | transloco }}</th>
                 <th class="text-left" style="width: 200px;">{{ 'clients.table.email' | transloco }}</th>
                 <th class="text-left" style="width: 160px;">{{ 'clients.table.contactPerson' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.notifications' | transloco }}</th>
@@ -198,12 +411,12 @@
             <tbody>
               @for (org of organizations(); track org.id) {
                 <tr class="clients-table-row clients-table-row-hover">
-                  <td class="text-center align-middle">{{ org.index }}</td>
-                  <td class="align-middle font-medium text-base-content">{{ org.name }}</td>
+                  <td class="clients-sticky-index text-center align-middle">{{ org.index }}</td>
+                  <td class="clients-sticky-name align-middle font-medium text-base-content">{{ org.name }}</td>
                   <td class="align-middle text-base-content/90">{{ getTypeLabel(org.type) }}</td>
                   <td class="align-middle text-base-content/90">{{ org.identification ?? '–' }}</td>
                   <td class="align-middle text-base-content/90 max-w-[200px] truncate" [title]="org.address ?? ''">{{ org.address ?? '–' }}</td>
-                  <td class="align-middle text-base-content/90">{{ org.phone ?? '–' }}</td>
+                  <td class="clients-col-phone align-middle text-base-content/90 whitespace-nowrap">{{ org.phone ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.email ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.contact_person ?? '–' }}</td>
                   <td class="text-center align-middle">
@@ -216,7 +429,7 @@
                   </td>
                   <td class="text-center align-middle">
                     <span
-                      class="badge whitespace-nowrap"
+                      class="badge whitespace-nowrap uppercase text-xs"
                       [class.badge-success]="org.is_active"
                       [class.badge-neutral]="!org.is_active"
                     >
@@ -297,156 +510,301 @@
 
   <!-- Modal crear organización -->
   <dialog class="modal" [class.modal-open]="createModalOpen()">
-    <div class="modal-box max-w-lg">
-      <h3 class="font-bold text-lg text-base-content mb-4">
-        {{ 'clients.create.modalTitle' | transloco }}
-      </h3>
+    <div
+      class="modal-box relative max-h-[min(90vh,52rem)] w-[min(100vw-1.5rem,42rem)] max-w-none sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-2xl"
+    >
+      <button
+        type="button"
+        class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3 z-10 text-base-content/50 hover:bg-base-200 hover:text-base-content"
+        (click)="closeCreateModal()"
+        [attr.aria-label]="'clients.create.closeModalAria' | transloco"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="border-b border-base-200 bg-base-200/30 px-5 pb-4 pt-5 pr-14 sm:px-6 sm:pt-6">
+        <h3 class="text-lg font-bold tracking-tight text-base-content sm:text-xl">
+          {{ 'clients.create.modalTitle' | transloco }}
+        </h3>
+        @if (createStep() === 0) {
+          <p class="mt-1 text-sm font-medium text-base-content/90">
+            {{ 'clients.create.selectType' | transloco }}
+          </p>
+          <p class="mt-2 text-sm leading-relaxed text-base-content/65">
+            {{ 'clients.create.selectTypeHint' | transloco }}
+          </p>
+        }
+        @if (createStep() === 1) {
+          <p class="mt-2 text-sm leading-relaxed text-base-content/65">
+            {{ 'clients.create.formLead' | transloco }}
+          </p>
+        }
+      </div>
 
       @if (createStep() === 0) {
-        <p class="text-base-content/80 mb-4">{{ 'clients.create.selectType' | transloco }}</p>
-        <div class="flex flex-col sm:flex-row gap-3">
-          @for (opt of typeOptions(); track opt.value) {
-            <button
-              type="button"
-              class="btn btn-outline flex-1"
-              (click)="selectCreateType(opt.value)"
-            >
-              {{ opt.label }}
-            </button>
-          }
+        <div class="max-h-[min(60vh,28rem)] overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            @for (opt of typeOptions(); track opt.value) {
+              <button
+                type="button"
+                class="group flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-base-300 bg-base-100 p-5 text-center transition-all hover:border-primary/40 hover:bg-primary/[0.06] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                (click)="selectCreateType(opt.value)"
+              >
+                @if (opt.value === 'juridical') {
+                  <span
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </span>
+                }
+                @if (opt.value === 'natural') {
+                  <span
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </span>
+                }
+                @if (opt.value !== 'juridical' && opt.value !== 'natural') {
+                  <span
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-200 text-base-content/70 transition-colors group-hover:bg-primary/10 group-hover:text-primary"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </span>
+                }
+                <span class="text-sm font-semibold leading-snug text-base-content group-hover:text-primary">
+                  {{ opt.label }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+        <div class="flex justify-end border-t border-base-200 bg-base-100 px-5 py-4 sm:px-6">
+          <button type="button" class="btn btn-ghost w-full sm:w-auto" (click)="closeCreateModal()">
+            {{ 'common.cancel' | transloco }}
+          </button>
         </div>
       }
 
       @if (createStep() === 1) {
-        <form [formGroup]="createForm" class="space-y-4" (ngSubmit)="onSubmitCreate()">
-          @if (createValidationErrors().length > 0) {
-            <div class="alert alert-error shadow-lg text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div class="flex flex-col gap-1">
-                <span class="font-semibold">{{ 'clients.create.validationErrorsTitle' | transloco }}</span>
-                <ul class="list-disc list-inside">
-                  @for (msg of createValidationErrors(); track msg) {
-                    <li>{{ msg }}</li>
-                  }
-                </ul>
+        <form [formGroup]="createForm" class="flex max-h-[min(78vh,44rem)] flex-col" (ngSubmit)="onSubmitCreate()">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+            @if (createValidationErrors().length > 0) {
+              <div class="alert alert-error mb-5 text-sm shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="min-w-0 flex flex-col gap-1">
+                  <span class="font-semibold">{{ 'clients.create.validationErrorsTitle' | transloco }}</span>
+                  <ul class="list-inside list-disc text-sm opacity-95">
+                    @for (msg of createValidationErrors(); track msg) {
+                      <li>{{ msg }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            }
+
+            <div class="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <span class="text-sm text-base-content/75">{{ 'clients.create.creatingType' | transloco }}</span>
+              <span class="badge badge-primary badge-sm font-semibold normal-case">{{ getTypeLabel(createForm.get('organizationType')?.value) }}</span>
+            </div>
+
+            @if (isJuridical()) {
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-5">
+                <div class="form-control md:col-span-2">
+                  <label class="label cursor-default justify-start py-1">
+                    <span class="label-text text-sm font-medium normal-case text-base-content/90">{{
+                      'clients.create.companyName' | transloco
+                    }}</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="name"
+                    class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    [placeholder]="'clients.create.companyNamePlaceholder' | transloco"
+                    autocomplete="organization"
+                  />
+                </div>
+                <div class="form-control md:col-span-2">
+                  <label class="label cursor-default justify-start py-1">
+                    <span class="label-text text-sm font-medium normal-case text-base-content/90">{{
+                      'clients.table.contactPerson' | transloco
+                    }}</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="contact_person"
+                    class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    [placeholder]="'clients.create.contactPersonPlaceholder' | transloco"
+                    autocomplete="name"
+                  />
+                </div>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-5">
+                <div class="form-control md:col-span-2">
+                  <label class="label cursor-default justify-start py-1">
+                    <span class="label-text text-sm font-medium normal-case text-base-content/90">{{
+                      'clients.create.fullName' | transloco
+                    }}</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="fullName"
+                    class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    [placeholder]="'clients.create.fullNamePlaceholder' | transloco"
+                    autocomplete="name"
+                  />
+                </div>
+              </div>
+            }
+
+            <div class="relative my-6">
+              <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-base-200"></div>
+              </div>
+              <div class="relative flex justify-start">
+                <span class="bg-base-100 pr-3 text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                  {{ 'clients.create.sectionContact' | transloco }}
+                </span>
               </div>
             </div>
-          }
-          <p class="text-sm text-base-content/80 mb-2">
-            {{ 'clients.create.creatingType' | transloco }}
-            <span class="font-semibold text-secondary">{{ getTypeLabel(createForm.get('organizationType')?.value) }}</span>
-          </p>
-          @if (isJuridical()) {
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">{{ 'clients.create.companyName' | transloco }}</span>
-              </label>
-              <input
-                type="text"
-                formControlName="name"
-                class="input input-bordered input-sm w-full"
-                [placeholder]="'clients.create.companyNamePlaceholder' | transloco"
-                autocomplete="off"
-              />
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">{{ 'clients.table.contactPerson' | transloco }}</span>
-              </label>
-              <input
-                type="text"
-                formControlName="contact_person"
-                class="input input-bordered input-sm w-full"
-                [placeholder]="'clients.create.contactPersonPlaceholder' | transloco"
-                autocomplete="off"
-              />
-            </div>
-          } @else {
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">{{ 'clients.create.fullName' | transloco }}</span>
-              </label>
-              <input
-                type="text"
-                formControlName="fullName"
-                class="input input-bordered input-sm w-full"
-                [placeholder]="'clients.create.fullNamePlaceholder' | transloco"
-                autocomplete="off"
-              />
-            </div>
-          }
 
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">{{ 'clients.table.identification' | transloco }}</span>
-            </label>
-            <input
-              type="text"
-              formControlName="identification"
-              class="input input-bordered input-sm w-full"
-              [placeholder]="'clients.create.identificationPlaceholder' | transloco"
-              autocomplete="off"
-            />
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">{{ 'clients.table.address' | transloco }}</span>
-            </label>
-            <input
-              type="text"
-              formControlName="address"
-              class="input input-bordered input-sm w-full"
-              [placeholder]="'clients.create.addressPlaceholder' | transloco"
-              autocomplete="off"
-            />
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">{{ 'clients.table.phone' | transloco }}</span>
-            </label>
-            <input
-              type="text"
-              formControlName="phone"
-              class="input input-bordered input-sm w-full"
-              [placeholder]="'clients.create.phonePlaceholder' | transloco"
-              autocomplete="off"
-            />
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">{{ 'clients.table.email' | transloco }}</span>
-            </label>
-            <input
-              type="email"
-              formControlName="email"
-              class="input input-bordered input-sm w-full"
-              [placeholder]="'clients.create.emailPlaceholder' | transloco"
-              autocomplete="off"
-            />
-          </div>
-
-          <div class="form-control bg-base-200/50 p-4 rounded-lg border border-base-300 transition-all hover:bg-base-200">
-            <label class="label cursor-pointer justify-between gap-4">
-              <div class="flex flex-col">
-                <span class="label-text font-bold text-secondary">{{ 'clients.create.generatePassword' | transloco }}</span>
-                <span class="text-xs text-base-content/60">{{ 'clients.create.generatePasswordDescription' | transloco }}</span>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-5">
+              <div class="form-control">
+                <label class="label cursor-default justify-start py-1">
+                  <span class="label-text text-sm font-medium normal-case text-base-content/90">{{
+                    'clients.table.identification' | transloco
+                  }}</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="identification"
+                  class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  [placeholder]="'clients.create.identificationPlaceholder' | transloco"
+                  autocomplete="off"
+                />
               </div>
-              <input type="checkbox" formControlName="generate_password" class="toggle toggle-secondary" />
-            </label>
+              <div class="form-control">
+                <label class="label cursor-default justify-start py-1">
+                  <span class="label-text text-sm font-medium normal-case text-base-content/90">{{ 'clients.table.phone' | transloco }}</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="phone"
+                  class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  [placeholder]="'clients.create.phonePlaceholder' | transloco"
+                  autocomplete="tel"
+                />
+              </div>
+              <div class="form-control md:col-span-2">
+                <label class="label cursor-default justify-start py-1">
+                  <span class="label-text text-sm font-medium normal-case text-base-content/90">{{
+                    'clients.table.address' | transloco
+                  }}</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="address"
+                  class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  [placeholder]="'clients.create.addressPlaceholder' | transloco"
+                  autocomplete="street-address"
+                />
+              </div>
+              <div class="form-control md:col-span-2">
+                <label class="label cursor-default justify-start py-1">
+                  <span class="label-text text-sm font-medium normal-case text-base-content/90">{{ 'clients.table.email' | transloco }}</span>
+                </label>
+                <input
+                  type="email"
+                  formControlName="email"
+                  class="input input-bordered input-md w-full border-base-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  [placeholder]="'clients.create.emailPlaceholder' | transloco"
+                  autocomplete="email"
+                />
+              </div>
+            </div>
+
+            <div
+              class="clients-create-password mt-6 w-full max-w-full min-w-0 rounded-2xl border p-4 transition-[background-color,box-shadow,border-color,opacity] duration-200 sm:p-5"
+              [ngClass]="
+                createForm.get('generate_password')?.value
+                  ? 'border-primary/45 bg-primary/10 shadow-md ring-1 ring-primary/20'
+                  : 'border-base-300/70 bg-base-200/30 shadow-inner opacity-[0.92] saturate-[0.85]'
+              "
+            >
+              <div class="flex w-full min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="text-sm font-semibold leading-snug transition-colors duration-200"
+                    [ngClass]="
+                      createForm.get('generate_password')?.value ? 'text-primary' : 'text-base-content/60'
+                    "
+                  >
+                    {{ 'clients.create.generatePassword' | transloco }}
+                  </p>
+                  <p
+                    class="mt-1.5 text-xs leading-relaxed transition-colors duration-200"
+                    [ngClass]="
+                      createForm.get('generate_password')?.value
+                        ? 'text-base-content/80'
+                        : 'text-base-content/45'
+                    "
+                  >
+                    {{ 'clients.create.generatePasswordDescription' | transloco }}
+                  </p>
+                </div>
+                <div
+                  class="flex shrink-0 items-center justify-end border-t pt-3 transition-[border-color] duration-200 sm:border-t-0 sm:pt-0"
+                  [ngClass]="
+                    createForm.get('generate_password')?.value
+                      ? 'border-primary/20'
+                      : 'border-base-300/50'
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    formControlName="generate_password"
+                    class="toggle toggle-primary cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="modal-action pt-4">
-            <button type="button" class="btn btn-ghost" (click)="backToCreateType()">
-              {{ 'common.back' | transloco }}
-            </button>
-            <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">
-              {{ 'common.cancel' | transloco }}
-            </button>
+          <div
+            class="flex w-full shrink-0 flex-col gap-3 border-t border-base-200 bg-base-200/30 px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-3 sm:px-6"
+          >
+            <div class="grid w-full grid-cols-2 gap-2 sm:contents sm:w-auto">
+              <button
+                type="button"
+                class="btn btn-outline border-base-300 bg-base-100 cursor-pointer shadow-none hover:bg-base-200"
+                (click)="backToCreateType()"
+              >
+                {{ 'common.back' | transloco }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline border-base-300 bg-base-100 cursor-pointer shadow-none hover:bg-base-200"
+                (click)="closeCreateModal()"
+              >
+                {{ 'common.cancel' | transloco }}
+              </button>
+            </div>
             <button
               type="submit"
-              class="btn btn-primary"
+              class="btn btn-primary min-h-[3rem] w-full cursor-pointer shadow-md sm:min-w-[13rem] sm:w-auto disabled:cursor-not-allowed"
               [disabled]="createSubmitting() || !buildCreatePayload()"
             >
               @if (createSubmitting()) {

@@ -84,6 +84,13 @@ export class ProcessesComponent {
   /** Menú del FAB móvil (+): muestra acciones (p. ej. Importar Excel) */
   public mobileFabMenuOpen = signal<boolean>(false);
 
+  /** Bottom sheet: lista completa de organizaciones / demandantes / demandados (tap en +N en tarjetas móvil) */
+  public partyListSheetOpen = signal(false);
+  public partyListSheetTitleKey = signal<string>('processes.partyList.titleOrganizations');
+  public partyListSheetItems = signal<string[]>([]);
+  /** Radicado asociado al listado (referencia visual en el bottom sheet). */
+  public partyListSheetProcessNumber = signal<string>('');
+
   // Import modal state
   public isImportModalOpen = signal<boolean>(false);
   public importSubmitting = signal<boolean>(false);
@@ -367,7 +374,7 @@ export class ProcessesComponent {
   /**
    * Load processes with current filters
    */
-  loadProcesses(page: number = 1, perPage: number = 10): void {
+  loadProcesses(page: number = 1, perPage: number = 10, scrollMainToTopOnMobile = false): void {
     this.loading.set(true);
 
     const formValue = this.filterForm.value;
@@ -416,12 +423,35 @@ export class ProcessesComponent {
           to: response.to,
         });
         this.loading.set(false);
+        if (scrollMainToTopOnMobile) {
+          afterNextRender(
+            () => this._scrollMainToTopMobileSmooth(),
+            { injector: this._injector },
+          );
+        }
       },
       error: (error) => {
         console.error('Error loading processes:', error);
         this.loading.set(false);
       },
     });
+  }
+
+  /**
+   * Layout autenticado: el scroll va en `<main class="overflow-y-auto">`, no en `window`.
+   * Solo en viewport móvil (max-width: 1023px), alineado con tarjetas y FAB.
+   */
+  private _scrollMainToTopMobileSmooth(): void {
+    const win = this._document.defaultView;
+    if (!win || !win.matchMedia('(max-width: 1023px)').matches) {
+      return;
+    }
+    const main =
+      (this._document.querySelector('main.flex-1.overflow-y-auto') as HTMLElement | null) ??
+      (this._document.querySelector('main') as HTMLElement | null);
+    if (main) {
+      main.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   /**
@@ -488,7 +518,7 @@ export class ProcessesComponent {
   }
 
   onPageChangeFromTable(page: number, perPage: number): void {
-    this.loadProcesses(page, perPage);
+    this.loadProcesses(page, perPage, true);
   }
 
   /**
@@ -510,6 +540,14 @@ export class ProcessesComponent {
    */
   isExpanded(process: Process): boolean {
     return this.expandedProcessIds().has(process.id);
+  }
+
+  /**
+   * Cantidad de instancias asociadas al radicado (vista móvil / pie de tarjeta).
+   */
+  getInstanceCount(process: Process): number {
+    if (process.instances && process.instances.length > 0) return process.instances.length;
+    return 1;
   }
 
   /**
@@ -614,6 +652,39 @@ export class ProcessesComponent {
 
   closeMobileFabMenu(): void {
     this.mobileFabMenuOpen.set(false);
+  }
+
+  /**
+   * Abre el bottom sheet con todas las filas (misma fuente que tooltips de escritorio).
+   */
+  openPartyListSheet(
+    kind: 'organization' | 'plaintiff' | 'defendant',
+    items: string[],
+    processNumber: string,
+    event?: Event,
+  ): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const filtered = (items ?? []).map((s) => String(s).trim()).filter(Boolean);
+    if (filtered.length === 0) {
+      return;
+    }
+    const keys: Record<'organization' | 'plaintiff' | 'defendant', string> = {
+      organization: 'processes.partyList.titleOrganizations',
+      plaintiff: 'processes.partyList.titlePlaintiffs',
+      defendant: 'processes.partyList.titleDefendants',
+    };
+    this.partyListSheetTitleKey.set(keys[kind]);
+    this.partyListSheetItems.set(filtered);
+    this.partyListSheetProcessNumber.set((processNumber ?? '').trim());
+    this.partyListSheetOpen.set(true);
+  }
+
+  closePartyListSheet(): void {
+    this.partyListSheetOpen.set(false);
+    this.partyListSheetProcessNumber.set('');
   }
 
   /**

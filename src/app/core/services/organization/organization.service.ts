@@ -8,6 +8,7 @@ import {
   Organization,
   OrganizationFilter,
   OrganizationResponse,
+  OrganizationStats,
   SelectOptionsResponse,
 } from '@app/core/models/organization/organization.model';
 
@@ -20,6 +21,14 @@ export class OrganizationService {
   /**
    * Get organizations (clients) with filters and pagination
    */
+  /**
+   * Resumen agregado (totales, activas/inactivas, natural/jurídica)
+   */
+  getOrganizationStats(): Observable<OrganizationStats> {
+    const url = `${environment.apiBaseUrl}/organizations/stats`;
+    return this._http.get<OrganizationStats>(url);
+  }
+
   getOrganizations(filters: OrganizationFilter = {}): Observable<OrganizationResponse> {
     let params = new HttpParams();
 

@@ -72,6 +72,7 @@
         "processes": "Processes",
         "clients": "Organizations",
         "importHistory": "Import history",
+        "judicialSync": "Branch sync",
         "toggleSidebar": "Toggle sidebar"
     },
     "header": {
@@ -86,6 +87,59 @@
     },
     "dashboard": {
         "title": "Dashboard"
+    },
+    "judicialSync": {
+        "title": "Judicial Branch sync",
+        "description": "Queue actuaciones lookups and browse each run history.",
+        "radicadoLabel": "Process number (optional)",
+        "radicadoPlaceholder": "23 digits or leave empty for all active processes",
+        "radicadoInvalid": "Must be exactly 23 digits.",
+        "dispatchButton": "Run sync",
+        "dispatchSubmitting": "Queueing…",
+        "confirm": {
+            "title": "Confirm sync",
+            "message": "This will enqueue background jobs. Continue?",
+            "submit": "Yes, run",
+            "radicadoLabel": "Process number",
+            "scopeLabel": "Scope",
+            "scopeAll": "All active processes",
+            "footnote": "Notifications depend on the queue and the Judicial Branch."
+        },
+        "toastSuccess": "Sync queued successfully ({{jobs}} job(s)).",
+        "toastError": "Could not queue the sync.",
+        "moment": {
+            "morning": "Morning",
+            "afternoon": "Afternoon",
+            "night": "Night",
+            "dawn": "Overnight",
+            "other": "Other"
+        },
+        "status": {
+            "batch_completed": "Completed",
+            "completed": "Completed",
+            "running": "Running",
+            "pending": "Pending",
+            "failed": "Failed",
+            "dispatched": "Queued"
+        },
+        "run": {
+            "processesQueued": "Processes queued",
+            "radicadoFilter": "Filter",
+            "allProcesses": "All (active)",
+            "batchEnded": "Batch finished",
+            "exitCode": "Command exit code",
+            "failedJobs": "Failed jobs",
+            "pendingJobs": "Pending jobs"
+        },
+        "runs": {
+            "sectionTitle": "Run history",
+            "sectionHint": "Scroll to load more",
+            "loading": "Loading history…",
+            "loadError": "Could not load history.",
+            "retry": "Retry",
+            "empty": "No runs recorded yet.",
+            "end": "No more runs"
+        }
     },
     "historialImportaciones": {
         "title": "Import history",
@@ -163,6 +217,20 @@
     "clients": {
         "title": "Organizations",
         "description": "List of organizations registered in the system",
+        "kpi": {
+            "loading": "Loading summary…",
+            "totalTitle": "Total organizations",
+            "totalSubtitle": "Registered in the system",
+            "statusTitle": "Status",
+            "statusSummary": "{{active}} active, {{inactive}} inactive ({{pct}}% active of total)",
+            "typeTitle": "Entity type",
+            "typeSummary": "{{natural}} natural person ({{pctNatural}}%) · {{juridical}} legal entity ({{pctJuridical}}%)",
+            "active": "Active",
+            "inactive": "Inactive",
+            "natural": "Natural person",
+            "juridical": "Legal entity"
+        },
+        "fabGroupAria": "Quick actions: new organization and filters",
         "filters": {
             "fabAria": "Show or hide search filters",
             "title": "Search Filters",
@@ -196,10 +264,15 @@
             "createdAt": "Created At"
         },
         "create": {
+            "fabAria": "Add organization",
             "button": "Add organization",
             "modalTitle": "New organization",
+            "closeModalAria": "Close",
             "selectType": "Select the type of organization",
+            "selectTypeHint": "Choose whether you are registering a natural person or a legal entity. You can update details later if needed.",
             "creatingType": "Creating:",
+            "sectionContact": "Address and contact",
+            "formLead": "Fill in the details below. You can go back to change the organization type.",
             "companyName": "Company name",
             "companyNamePlaceholder": "E.g. ABC Corp.",
             "fullName": "Full name",
@@ -278,6 +351,32 @@
             "tooltip": "Copy",
             "toastSuccess": "Case number copied",
             "toastError": "Could not copy"
+        },
+        "table": {
+            "empty": "No processes available",
+            "index": "#",
+            "processNumber": "Filing number",
+            "court": "Court / chamber",
+            "processClass": "Case type",
+            "status": "Status",
+            "plaintiff": "Plaintiff(s)",
+            "defendant": "Defendant(s)",
+            "organization": "Organization(s)",
+            "multipleInstances": "Multiple instances",
+            "createdAt": "Created",
+            "lastActivityDate": "Last filing activity"
+        },
+        "card": {
+            "instances": "Instances",
+            "toggleInstancesAria": "Show or hide instances for this filing",
+            "instanceTitle": "Filing no. (Inst. {{n}})",
+            "lastActivityShort": "Last activity"
+        },
+        "partyList": {
+            "titleOrganizations": "Monitoring organizations",
+            "titlePlaintiffs": "Plaintiffs",
+            "titleDefendants": "Defendants",
+            "showAllHint": "View full list"
         },
         "import": {
             "fabMainAria": "Open or close quick actions",

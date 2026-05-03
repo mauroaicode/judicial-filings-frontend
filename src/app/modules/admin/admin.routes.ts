@@ -24,6 +24,11 @@ export default [
     loadChildren: () =>
       import('./import-history/import-history.routes').then((m) => m.default),
   },
+  {
+    path: 'judicial-sync',
+    loadChildren: () =>
+      import('./judicial-sync/judicial-sync.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

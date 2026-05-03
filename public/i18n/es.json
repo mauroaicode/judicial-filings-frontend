@@ -71,6 +71,7 @@
     "processes": "Procesos",
     "clients": "Organizaciones",
     "importHistory": "Historial importaciones",
+    "judicialSync": "Sincronización Rama",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -85,6 +86,59 @@
   },
   "dashboard": {
     "title": "Dashboard"
+  },
+  "judicialSync": {
+    "title": "Sincronización con Rama Judicial",
+    "description": "Encola la consulta de actuaciones y revisa el historial de cada ejecución.",
+    "radicadoLabel": "Radicado (opcional)",
+    "radicadoPlaceholder": "23 dígitos o vacío para todos los procesos activos",
+    "radicadoInvalid": "Debe tener exactamente 23 dígitos.",
+    "dispatchButton": "Ejecutar sincronización",
+    "dispatchSubmitting": "Encolando…",
+    "confirm": {
+      "title": "Confirmar sincronización",
+      "message": "Se enviará el comando para encolar trabajos en segundo plano. ¿Continuar?",
+      "submit": "Sí, ejecutar",
+      "radicadoLabel": "Radicado",
+      "scopeLabel": "Alcance",
+      "scopeAll": "Todos los procesos activos",
+      "footnote": "Las notificaciones por nuevas actuaciones dependen de la cola y de la Rama Judicial."
+    },
+    "toastSuccess": "Sincronización encolada correctamente ({{jobs}} trabajo(s)).",
+    "toastError": "No se pudo encolar la sincronización.",
+    "moment": {
+      "morning": "Mañana",
+      "afternoon": "Tarde",
+      "night": "Noche",
+      "dawn": "Madrugada",
+      "other": "Otro"
+    },
+    "status": {
+      "batch_completed": "Completado",
+      "completed": "Completado",
+      "running": "En curso",
+      "pending": "Pendiente",
+      "failed": "Fallido",
+      "dispatched": "Encolado"
+    },
+    "run": {
+      "processesQueued": "Procesos en cola",
+      "radicadoFilter": "Filtro",
+      "allProcesses": "Todos (activos)",
+      "batchEnded": "Batch finalizado",
+      "exitCode": "Salida comando",
+      "failedJobs": "Jobs fallidos",
+      "pendingJobs": "Jobs pendientes"
+    },
+    "runs": {
+      "sectionTitle": "Historial de ejecuciones",
+      "sectionHint": "Scroll para cargar más",
+      "loading": "Cargando historial…",
+      "loadError": "No se pudo cargar el historial.",
+      "retry": "Reintentar",
+      "empty": "Aún no hay ejecuciones registradas.",
+      "end": "No hay más ejecuciones"
+    }
   },
   "processes": {
     "title": "Procesos Judiciales",
@@ -163,10 +217,22 @@
       "status": "Estado",
       "plaintiff": "Demandante (s)",
       "defendant": "Demandados (s)",
-      "organization": "Organización",
+      "organization": "Organización (es)",
       "multipleInstances": "Múltiples instancias",
       "createdAt": "Fecha de Creación",
       "lastActivityDate": "Fecha Ultima Actuación"
+    },
+    "card": {
+      "instances": "Instancias",
+      "toggleInstancesAria": "Mostrar u ocultar instancias del mismo radicado",
+      "instanceTitle": "Radicación (Inst. {{n}})",
+      "lastActivityShort": "Últ. actuación"
+    },
+    "partyList": {
+      "titleOrganizations": "Organizaciones en seguimiento",
+      "titlePlaintiffs": "Demandantes",
+      "titleDefendants": "Demandados",
+      "showAllHint": "Ver listado completo"
     },
     "import": {
       "fabMainAria": "Abrir o cerrar acciones rápidas",
@@ -217,6 +283,20 @@
   "clients": {
     "title": "Organizaciones",
     "description": "Listado de organizaciones registradas en el sistema",
+    "kpi": {
+      "loading": "Cargando resumen…",
+      "totalTitle": "Total de organizaciones",
+      "totalSubtitle": "Registradas en el sistema",
+      "statusTitle": "Estado",
+      "statusSummary": "{{active}} activas, {{inactive}} inactivas ({{pct}}% activas sobre el total)",
+      "typeTitle": "Tipo de persona",
+      "typeSummary": "{{natural}} persona natural ({{pctNatural}}%) · {{juridical}} persona jurídica ({{pctJuridical}}%)",
+      "active": "Activas",
+      "inactive": "Inactivas",
+      "natural": "Persona natural",
+      "juridical": "Persona jurídica"
+    },
+    "fabGroupAria": "Acciones rápidas: nueva organización y filtros",
     "filters": {
       "fabAria": "Abrir o cerrar filtros de búsqueda",
       "title": "Filtros de Búsqueda",
@@ -250,10 +330,15 @@
       "createdAt": "Fecha de Creación"
     },
     "create": {
+      "fabAria": "Agregar organización",
       "button": "Agregar organización",
       "modalTitle": "Nueva organización",
+      "closeModalAria": "Cerrar",
       "selectType": "Seleccione el tipo de organización",
+      "selectTypeHint": "Defina si registrará una persona natural o una persona jurídica. Podrá editar los datos después si es necesario.",
       "creatingType": "Creando:",
+      "sectionContact": "Ubicación y contacto",
+      "formLead": "Complete los datos. Puede volver atrás para cambiar el tipo de organización.",
       "companyName": "Nombre empresa",
       "companyNamePlaceholder": "Ej: Empresa ABC Ltda.",
       "fullName": "Nombre completo",

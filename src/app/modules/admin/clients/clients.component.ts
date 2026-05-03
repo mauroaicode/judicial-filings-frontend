@@ -17,6 +17,7 @@ import {
   Organization,
   OrganizationFilter,
   OrganizationResponseMeta,
+  OrganizationStats,
   SelectOption,
 } from '@app/core/models/organization/organization.model';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
@@ -54,6 +55,10 @@ export class ClientsComponent {
   public organizations = signal<Organization[]>([]);
   public loading = signal<boolean>(false);
   public pagination = signal<OrganizationResponseMeta | null>(null);
+
+  /** KPI GET /organizations/stats */
+  public statsLoading = signal<boolean>(true);
+  public organizationStats = signal<OrganizationStats | null>(null);
 
   /** Opciones para tipo (persona natural / jurídica) */
   public typeOptions = signal<SelectOption[]>([]);
@@ -109,6 +114,55 @@ export class ClientsComponent {
     this._loadSelectOptions();
     this._loadFiltersFromQueryParams();
     this.loadOrganizations();
+    this.loadOrganizationStats();
+  }
+
+  loadOrganizationStats(): void {
+    this.statsLoading.set(true);
+    this._organizationService.getOrganizationStats().subscribe({
+      next: (data) => {
+        this.organizationStats.set(data);
+        this.statsLoading.set(false);
+      },
+      error: () => {
+        this.organizationStats.set(null);
+        this.statsLoading.set(false);
+      },
+    });
+  }
+
+  /** Porcentaje activas sobre el total */
+  getActiveSharePercent(stats: OrganizationStats): number {
+    if (!stats.total || stats.total <= 0) return 0;
+    return Math.round((stats.active / stats.total) * 100);
+  }
+
+  /** Porcentaje natural / jurídica sobre el total */
+  getNaturalSharePercent(stats: OrganizationStats): number {
+    if (!stats.total || stats.total <= 0) return 0;
+    return Math.round((stats.natural / stats.total) * 100);
+  }
+
+  getJuridicalSharePercent(stats: OrganizationStats): number {
+    if (!stats.total || stats.total <= 0) return 0;
+    return Math.round((stats.juridical / stats.total) * 100);
+  }
+
+  /**
+   * Layout autenticado: el scroll va en `<main class="overflow-y-auto">`, no en `window`.
+   * Solo en viewport móvil (max-width: 1023px), alineado con tarjetas y FAB.
+   */
+  private _scrollMainToTopMobileSmooth(): void {
+    const win = this._document.defaultView;
+    if (!win || !win.matchMedia('(max-width: 1023px)').matches) {
+      return;
+    }
+    const main =
+      (this._document.querySelector('main.flex-1.overflow-y-auto') as HTMLElement | null) ??
+      (this._document.querySelector('main') as HTMLElement | null);
+    if (main) {
+      main.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   toggleFilters(): void {
@@ -180,7 +234,7 @@ export class ClientsComponent {
     });
   }
 
-  loadOrganizations(page: number = 1, perPage: number = 10): void {
+  loadOrganizations(page: number = 1, perPage: number = 10, scrollMainToTopOnMobile = false): void {
     this.loading.set(true);
 
     const formValue = this.filterForm.value;
@@ -218,6 +272,9 @@ export class ClientsComponent {
           to: response.to,
         });
         this.loading.set(false);
+        if (scrollMainToTopOnMobile) {
+          afterNextRender(() => this._scrollMainToTopMobileSmooth(), { injector: this._injector });
+        }
       },
       error: () => this.loading.set(false),
     });
@@ -244,7 +301,7 @@ export class ClientsComponent {
   }
 
   onPageChangeFromTable(page: number, perPage: number): void {
-    this.loadOrganizations(page, perPage);
+    this.loadOrganizations(page, perPage, true);
   }
 
   formatDate(dateString: string | null | undefined): string {
@@ -390,6 +447,7 @@ export class ClientsComponent {
         }
 
         this.loadOrganizations(1, this.pagination()?.per_page ?? 10);
+        this.loadOrganizationStats();
       },
       error: (err) => {
         this.createSubmitting.set(false);

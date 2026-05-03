@@ -77,6 +77,17 @@ export interface OrganizationResponse {
 }
 
 /**
+ * GET /organizations/stats — conteos agregados
+ */
+export interface OrganizationStats {
+  total: number;
+  active: number;
+  inactive: number;
+  natural: number;
+  juridical: number;
+}
+
+/**
  * Organization response meta (simplified for component usage)
  */
 export interface OrganizationResponseMeta {

@@ -32,7 +32,7 @@
         {{ 'processes.description' | transloco }}
       </p>
     </div>
-    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+    <div class="hidden lg:flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
       <button
         type="button"
         class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
@@ -44,7 +44,11 @@
         </svg>
         <span class="font-bold">{{ 'processes.filters.title' | transloco }}</span>
       </button>
-      <button type="button" class="btn btn-success btn-sm sm:btn-md btn-toolbar-tall" (click)="openImportModal()">
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-success btn-sm sm:btn-md btn-toolbar-tall"
+        (click)="openImportModal()"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
@@ -63,10 +67,18 @@
     @if (mobileFabMenuOpen()) {
       <button
         type="button"
-        class="btn btn-success min-h-[3rem] rounded-2xl border-0 px-5 font-bold normal-case whitespace-nowrap shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+        class="btn btn-success inline-flex items-center justify-center gap-2 min-h-[3rem] rounded-2xl border-0 px-5 font-bold normal-case whitespace-nowrap shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
         (click)="openImportFromMobileFab()"
         [attr.aria-label]="'processes.import.fabImportAria' | transloco"
       >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
         {{ 'processes.import.button' | transloco }}
       </button>
     }
@@ -594,6 +606,47 @@
     }
   </app-bottom-sheet-modal>
 
+  <!-- Lista organizaciones / partes (tap +N en tarjetas móvil) -->
+  <app-bottom-sheet-modal
+    [open]="partyListSheetOpen()"
+    [backdropAriaLabel]="'processes.import.close' | transloco"
+    (dismiss)="closePartyListSheet()"
+  >
+    <div class="bottom-sheet-body max-w-full min-w-0 overflow-x-hidden">
+      <h3 class="text-lg font-bold text-primary break-words">{{ partyListSheetTitleKey() | transloco }}</h3>
+      @if (partyListSheetProcessNumber()) {
+        <div class="mt-3 max-w-full overflow-hidden rounded-xl border border-base-200 bg-base-200/50 px-3 py-3">
+          <div class="flex min-w-0 max-w-full items-start gap-2">
+            <span class="min-w-0 flex-1 font-bold text-primary text-sm break-all leading-snug">{{ partyListSheetProcessNumber() | processNumber }}</span>
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-circle shrink-0 pt-0.5 text-base-content/30 hover:bg-primary/5 hover:text-primary"
+              (click)="copyProcessRadicado(partyListSheetProcessNumber(), $event)"
+              [attr.aria-label]="'processes.copy.tooltip' | transloco"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+      <ul class="mt-4 list-none space-y-0 divide-y divide-base-200">
+        @for (line of partyListSheetItems(); track $index) {
+          <li class="flex gap-2 py-3 text-sm text-base-content leading-snug first:pt-0">
+            <span class="shrink-0 font-mono text-xs text-base-content/45 tabular-nums">{{ $index + 1 }}.</span>
+            <span class="min-w-0 break-words">{{ line }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+    <div class="bottom-sheet-footer shrink-0 border-t border-base-200 bg-base-100 px-4 py-4 sm:px-6 lg:rounded-b-2xl">
+      <button type="button" class="btn btn-primary w-full rounded-xl font-bold normal-case" (click)="closePartyListSheet()">
+        {{ 'processes.import.close' | transloco }}
+      </button>
+    </div>
+  </app-bottom-sheet-modal>
+
   <div class="import-excel-confirmation">
     <app-confirmation-dialog
       [open]="importConfirmOpen()"
@@ -611,9 +664,10 @@
 
   <!-- Data Table (custom: expandible instances + tooltips; scroll interno + header visible en lg) -->
   <div
-    class="card bg-base-100 shadow-sm processes-table-card flex flex-col min-h-0 lg:max-h-[calc(100dvh-13rem)]"
+    class="card bg-base-100 shadow-sm processes-table-card flex flex-col lg:min-h-0 lg:max-h-[calc(100dvh-13rem)]"
   >
-    <div class="card-body p-0 flex flex-1 flex-col min-h-0 lg:overflow-hidden">
+    <!-- En móvil sin flex-1/min-h-0: el scroll es el de la página (evita “scroll atrapado”). En lg el flex limita alto para la tabla. -->
+    <div class="card-body p-0 flex flex-col lg:flex-1 lg:min-h-0 lg:overflow-hidden">
       @if (loading()) {
         <div class="flex flex-1 min-h-[12rem] items-center justify-center py-12">
           <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -637,8 +691,207 @@
           <p class="text-base-content/70">{{ 'processes.table.empty' | transloco }}</p>
         </div>
       } @else {
-        <div class="flex flex-1 flex-col min-h-0 w-full lg:overflow-hidden">
-          <div class="process-list-table w-full flex-1 min-h-0 lg:min-h-0">
+        <div class="flex flex-col w-full lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+          <!-- Vista móvil: tarjetas — sin overflow interno; desplazamiento = scroll del documento -->
+          <div class="lg:hidden w-full max-w-full min-w-0 overflow-x-hidden px-3 pb-3 pt-1 space-y-4 bg-base-100/60">
+            @for (process of processes(); track process.id) {
+              <div
+                class="card border border-base-200 shadow-sm overflow-hidden rounded-xl bg-base-100 transition-shadow hover:shadow-md"
+                [class.border-primary/30]="isExpanded(process)"
+                (click)="toggleExpand(process)"
+              >
+                <div class="bg-base-200/50 px-3 py-3 flex justify-between items-start gap-2 border-b border-base-200">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span class="text-[11px] font-semibold text-base-content/45 tabular-nums">{{ process.index }}</span>
+                      <div class="flex items-start gap-1.5 min-w-0 flex-1">
+                        <span class="font-bold text-primary text-sm break-all leading-snug">{{ process.process_number | processNumber }}</span>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs btn-circle shrink-0 pt-0.5 text-base-content/30 hover:bg-primary/5 hover:text-primary"
+                          (click)="copyProcessRadicado(process.process_number, $event)"
+                          [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    class="process-status-badge badge badge-sm whitespace-nowrap uppercase text-[0.65rem] font-semibold leading-tight shrink-0"
+                    [class.badge-success]="(process.status_label || '').toLowerCase() === 'activo'"
+                    [class.badge-warning]="(process.status_label || '').toLowerCase() === 'pendiente'"
+                    [class.badge-error]="(process.status_label || '').toLowerCase() === 'cerrado'"
+                  >
+                    {{ process.status_label }}
+                  </span>
+                </div>
+
+                <div class="p-3 space-y-3 text-sm">
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.court' | transloco }}</span>
+                      <span class="text-base-content/90 font-medium leading-snug break-words">{{ process.court || '–' }}</span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.processClass' | transloco }}</span>
+                      <span class="text-base-content/90 font-medium leading-snug break-words">{{ process.process_class || '–' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.lastActivityDate' | transloco }}</span>
+                      <span class="text-base-content/90 font-medium whitespace-nowrap">{{ formatProcessDate(process.last_activity_date) }}</span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.createdAt' | transloco }}</span>
+                      <span class="text-base-content/90 font-medium whitespace-nowrap">{{ formatProcessDate(process.created_at) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.organization' | transloco }}</span>
+                    @let orgM = getPartyDisplay(process.organizations ?? (process.organization ? [process.organization] : []));
+                    <span class="text-base-content/90 font-medium break-words leading-snug">
+                      {{ orgM.mainText || '–' }}
+                      @if (orgM.extraCount > 0) {
+                        <button
+                          type="button"
+                          class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                          [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
+                          (click)="openPartyListSheet('organization', orgM.fullList, process.process_number, $event)"
+                        >
+                          (+{{ orgM.extraCount }})
+                        </button>
+                      }
+                    </span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 rounded-lg bg-base-200/50 px-2.5 py-1.5 text-xs">
+                    <span class="text-base-content/50 font-medium uppercase tracking-wide truncate">{{ 'processes.table.multipleInstances' | transloco }}</span>
+                    <span class="font-semibold text-base-content shrink-0">{{ process.has_multiple_instances ? ('processes.filters.yes' | transloco) : ('processes.filters.no' | transloco) }}</span>
+                  </div>
+
+                  <div class="divider my-0 opacity-50"></div>
+
+                  @let pM = getPartyDisplay(process.plaintiffs ?? (process.plaintiff ? [process.plaintiff] : []));
+                  @let dM = getPartyDisplay(process.defendants ?? (process.defendant ? [process.defendant] : []));
+                  <div class="space-y-2.5">
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.plaintiff' | transloco }}</span>
+                      <span class="text-base-content/85 text-sm font-medium break-words leading-snug">
+                        {{ pM.mainText || '–' }}
+                        @if (pM.extraCount > 0) {
+                          <button
+                            type="button"
+                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
+                            (click)="openPartyListSheet('plaintiff', pM.fullList, process.process_number, $event)"
+                          >
+                            (+{{ pM.extraCount }})
+                          </button>
+                        }
+                      </span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.defendant' | transloco }}</span>
+                      <span class="text-base-content/85 text-sm font-medium break-words leading-snug">
+                        {{ dM.mainText || '–' }}
+                        @if (dM.extraCount > 0) {
+                          <button
+                            type="button"
+                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
+                            (click)="openPartyListSheet('defendant', dM.fullList, process.process_number, $event)"
+                          >
+                            (+{{ dM.extraCount }})
+                          </button>
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                @if (process.has_multiple_instances && process.instances && process.instances.length > 1) {
+                  <div
+                    class="bg-base-200/50 px-3 py-2.5 border-t border-base-200 flex justify-between items-center gap-2"
+                    (click)="toggleExpand(process); $event.stopPropagation()"
+                    role="button"
+                    [attr.aria-expanded]="isExpanded(process)"
+                    [attr.aria-label]="'processes.card.toggleInstancesAria' | transloco"
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="badge badge-primary badge-sm font-bold shadow-sm tabular-nums">{{ getInstanceCount(process) }}</span>
+                      <span class="text-[11px] font-bold text-base-content/70 uppercase tracking-widest truncate">{{ 'processes.card.instances' | transloco }}</span>
+                    </div>
+                    <span class="shrink-0 text-base-content/50" aria-hidden="true">
+                      @if (isExpanded(process)) {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                        </svg>
+                      }
+                      @if (!isExpanded(process)) {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      }
+                    </span>
+                  </div>
+                }
+
+                @if (isExpanded(process) && process.instances && process.instances.length > 0) {
+                  <div class="bg-primary/5 p-3 space-y-3 border-t border-base-200 border-l-4 border-l-primary" (click)="$event.stopPropagation()">
+                    @for (instance of process.instances; track instance.id) {
+                      <div class="bg-base-100 rounded-lg p-3 shadow-sm border border-base-200">
+                        <div class="flex justify-between items-start gap-2 mb-2">
+                          <div class="min-w-0 flex-1">
+                            <p class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">
+                              {{ 'processes.card.instanceTitle' | transloco: { n: instance.index } }}
+                            </p>
+                            <div class="flex items-start gap-1.5 min-w-0">
+                              <span class="font-bold text-primary text-sm break-all leading-snug">{{ instance.process_number | processNumber }}</span>
+                              <button
+                                type="button"
+                                class="btn btn-ghost btn-xs btn-circle shrink-0 pt-0.5 text-base-content/30 hover:bg-primary/5 hover:text-primary"
+                                (click)="copyProcessRadicado(instance.process_number, $event)"
+                                [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <span
+                            class="badge badge-sm font-semibold whitespace-nowrap uppercase text-[0.65rem] shrink-0"
+                            [class.badge-success]="(instance.status_label || '').toLowerCase() === 'activo'"
+                            [class.badge-warning]="(instance.status_label || '').toLowerCase() === 'pendiente'"
+                            [class.badge-error]="(instance.status_label || '').toLowerCase() === 'cerrado'"
+                          >
+                            {{ instance.status_label }}
+                          </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-base-200/60 text-xs">
+                          <div class="flex flex-col min-w-0">
+                            <span class="text-[9px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.court' | transloco }}</span>
+                            <span class="text-base-content/85 font-medium leading-snug break-words">{{ instance.court }}</span>
+                          </div>
+                          <div class="flex flex-col min-w-0">
+                            <span class="text-[9px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.card.lastActivityShort' | transloco }}</span>
+                            <span class="text-base-content/85 font-medium whitespace-nowrap">{{ formatProcessDate(instance.last_activity_date) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <div class="hidden lg:block process-list-table w-full flex-1 min-h-0 lg:min-h-0">
           <table class="table table-zebra" style="min-width: 1000px;">
             <thead style="background-color: #4B2A7D; color: #ffffff;">
               <tr>

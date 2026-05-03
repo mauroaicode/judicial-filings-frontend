@@ -33,17 +33,137 @@
   }
 }
 
+// Anchos columnas fijas (# + nombre) — el segundo `left` debe coincidir con el ancho del #
+$clients-sticky-index-width: 64px;
+$clients-sticky-name-min: 240px;
+$clients-sticky-base: #ffffff;
+$clients-sticky-zebra: #f4f5f9;
+/** Hover opaco (sin alpha): si no, al hacer scroll se ve el texto de las columnas detrás */
+$clients-hover-bg: #ebeaf3;
+
 .clients-table {
   overflow-x: auto;
   overflow-y: visible;
+
+  .clients-table-grid {
+    position: relative;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    transform: translateZ(0);
+  }
+
+  thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 600 !important;
+    background-color: #4b2a7d !important;
+    background: #4b2a7d !important;
+    color: #fff !important;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+  }
+
+  thead th.clients-sticky-index {
+    position: sticky !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 620 !important;
+    min-width: $clients-sticky-index-width !important;
+    max-width: $clients-sticky-index-width !important;
+    width: $clients-sticky-index-width !important;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+  }
+
+  thead th.clients-sticky-name {
+    position: sticky !important;
+    left: $clients-sticky-index-width !important;
+    top: 0 !important;
+    z-index: 619 !important;
+    min-width: $clients-sticky-name-min !important;
+    max-width: 320px !important;
+    /* Misma separación sombreada que procesos (sticky-col-radicado) */
+    box-shadow:
+      2px 0 4px rgba(0, 0, 0, 0.1),
+      0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /** Capa opaca bajo el texto (mismo patrón que procesos / radicado) */
+  tbody td.clients-sticky-index,
+  tbody td.clients-sticky-name {
+    position: sticky !important;
+    isolation: isolate !important;
+    backface-visibility: hidden !important;
+    transform: translateZ(0) !important;
+    vertical-align: middle !important;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: $clients-sticky-base !important;
+    }
+  }
+
+  tbody td.clients-sticky-index {
+    left: 0 !important;
+    z-index: 502 !important;
+    background-color: $clients-sticky-base !important;
+    background: $clients-sticky-base !important;
+    min-width: $clients-sticky-index-width !important;
+    max-width: $clients-sticky-index-width !important;
+    width: $clients-sticky-index-width !important;
+    box-shadow: none !important;
+  }
+
+  tbody td.clients-sticky-name {
+    left: $clients-sticky-index-width !important;
+    z-index: 501 !important;
+    background-color: $clients-sticky-base !important;
+    background: $clients-sticky-base !important;
+    min-width: $clients-sticky-name-min !important;
+    max-width: 320px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  tbody tr:nth-child(2n) td.clients-sticky-index,
+  tbody tr:nth-child(2n) td.clients-sticky-name {
+    background-color: $clients-sticky-zebra !important;
+    background: $clients-sticky-zebra !important;
+
+    &::before {
+      background: $clients-sticky-zebra !important;
+    }
+  }
+
+  tbody tr.clients-table-row-hover:hover td.clients-sticky-index,
+  tbody tr.clients-table-row-hover:hover td.clients-sticky-name {
+    background-color: $clients-hover-bg !important;
+    background: $clients-hover-bg !important;
+
+    &::before {
+      background: $clients-hover-bg !important;
+    }
+  }
 
   tbody tr.clients-table-row-hover {
     transition: background-color 0.15s ease;
     cursor: default;
 
-    &:hover td {
-      background-color: hsl(var(--b3) / 0.85) !important;
+    &:hover td:not(.clients-sticky-index):not(.clients-sticky-name) {
+      background-color: $clients-hover-bg !important;
     }
+  }
+
+  /** Teléfono: ancho fijo para +57 y números largos sin romper otras columnas (scroll horizontal) */
+  th.clients-col-phone,
+  td.clients-col-phone {
+    min-width: 11.5rem; // ~184px
+    width: 11.5rem;
+    max-width: 11.5rem;
+    box-sizing: border-box;
   }
 }
 
