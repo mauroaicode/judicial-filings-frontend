@@ -8,6 +8,8 @@ export interface ProcessImportHistoryItem {
   organization_id?: string;
   organization_name?: string | null;
   file_name?: string | null;
+  /** true = importación privada (Excel + fuente de datos); false = flujo estándar */
+  is_private_import?: boolean | null;
   total_count?: number | null;
   success_count?: number | null;
   failed_count?: number | null;

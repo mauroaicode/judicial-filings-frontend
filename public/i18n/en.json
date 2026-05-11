@@ -174,6 +174,9 @@
         "table": {
             "file": "File / batch",
             "organization": "Organization",
+            "importKind": "Import type",
+            "importPrivate": "Private",
+            "importStandard": "Judicial",
             "status": "Status",
             "total": "Total",
             "success": "Succeeded",
@@ -323,7 +326,9 @@
                 "subtitle": "Unique judicial processes (one count per case number)",
                 "active": "Active",
                 "withoutWatching": "Unwatched",
-                "withoutWatchingHint": "Case numbers with no organization under active monitoring (operational orphans)."
+                "withoutWatchingHint": "Case numbers with no organization under active monitoring (operational orphans).",
+                "privateProcesses": "Private",
+                "privateProcessesHint": "Filings marked private or coming from a non-standard data source."
             },
             "critical": {
                 "title": "Critical Alert",
@@ -345,7 +350,13 @@
             }
         },
         "filters": {
-            "fabAria": "Open or close search filters"
+            "fabAria": "Open or close search filters",
+            "privacy": "Privacy",
+            "privacyPlaceholder": "All",
+            "privacyPrivate": "Private only",
+            "privacyPublic": "Public only",
+            "lastApiUpdateRange": "Last sync",
+            "lastApiUpdateRangePlaceholder": "Date range"
         },
         "copy": {
             "tooltip": "Copy",
@@ -362,6 +373,9 @@
             "plaintiff": "Plaintiff(s)",
             "defendant": "Defendant(s)",
             "organization": "Organization(s)",
+            "dataOrigin": "Origin",
+            "originPrivate": "Private",
+            "originJudicial": "Judicial",
             "multipleInstances": "Multiple instances",
             "createdAt": "Created",
             "lastActivityDate": "Last filing activity"
@@ -390,6 +404,11 @@
             "organizationPlaceholder": "Select organization",
             "organizationSearch": "Search organization…",
             "organizationNoMatches": "No matches",
+            "privateToggle": "Import as private processes",
+            "dataSourceLabel": "Data source",
+            "dataSourcePlaceholder": "Select data source",
+            "dataSourceSearch": "Search source…",
+            "dataSourceNoMatches": "No sources available",
             "description": "Drag an .xlsx file here or click to select.",
             "cancel": "Cancel",
             "submit": "Import",
@@ -397,9 +416,15 @@
             "close": "Close",
             "confirmTitle": "Confirm import",
             "confirmMessage": "You are about to start a background import with the details below. Please verify the spreadsheet file and the organization (client).",
+            "confirmMessagePrivate": "You are about to import private processes with the details below. Please verify file, organization, and data source.",
             "confirmFileLabel": "Spreadsheet file",
             "confirmOrganizationLabel": "Organization / client",
+            "confirmDataSourceLabel": "Data source",
             "confirmFootnote": "After you confirm, the system will process the file in the background. You will receive a notice or report when the import completes.",
+            "confirmFootnotePrivate": "After you confirm, the system will apply the selected source mapping to your file.",
+            "privateStatsCreated": "Processes created:",
+            "privateStatsUpdated": "Processes updated:",
+            "privateStatsActions": "Actions imported:",
             "confirmSubmit": "Yes, import",
             "errors": {
                 "generic": "Error importing. Please try again."

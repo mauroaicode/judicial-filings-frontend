@@ -10,7 +10,10 @@ export interface ProcessInstance {
   subclass_process: string;
   process_date: string;
   last_activity_date: string | null;
-  is_private: boolean;
+  is_private?: boolean;
+  /** Fuente cuando el proceso es privado (p. ej. SAMAI) */
+  data_source_slug?: string | null;
+  data_source_name?: string | null;
   has_multiple_instances: boolean;
   status_label: string;
   created_at: string;
@@ -37,7 +40,10 @@ export interface Process {
   subclass_process: string;
   process_date: string;
   last_activity_date: string | null;
-  is_private: boolean;
+  is_private?: boolean;
+  /** Fuente cuando el proceso es privado (p. ej. SAMAI) */
+  data_source_slug?: string | null;
+  data_source_name?: string | null;
   has_multiple_instances: boolean;
   status_label: string;
   created_at: string;
@@ -68,6 +74,8 @@ export interface ProcessFilter {
   defendant?: string;
   organization?: string;
   status?: string; // 'active' | 'inactive'
+  /** Filtra por origen: `private` | `public` (query `privacy`) */
+  privacy?: 'private' | 'public';
   has_multiple_instances?: boolean;
   process_date?: string;
   process_date_from?: string;
@@ -163,10 +171,16 @@ export type ProcessImportResponse = ProcessImportSuccessResponse | ProcessImport
 
 /**
  * Process import batch response (async import - report by email)
+ * | respuesta síncrona de importación privada (stats inmediatos)
  */
 export interface ProcessImportBatchResponse {
   message: string;
-  batch_id: string;
+  /** Presente en importación estándar (segundo plano) */
+  batch_id?: string;
+  /** Respuesta POST /processes/private-import */
+  processes_created?: number;
+  processes_updated?: number;
+  actions_imported?: number;
 }
 
 /**
@@ -176,6 +190,8 @@ export interface ProcessDashboardStats {
   total_processes: number;
   active_processes: number;
   orphan_processes: number;
+  /** Procesos con origen privado (p. ej. SAMAI u otras fuentes) */
+  private_processes?: number;
   processes_with_multiple_instances: number;
   outdated_processes: number;
   critical_alert_processes: number;

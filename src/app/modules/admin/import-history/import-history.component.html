@@ -198,6 +198,7 @@
               <tr>
                 <th>{{ 'historialImportaciones.table.file' | transloco }}</th>
                 <th>{{ 'historialImportaciones.table.organization' | transloco }}</th>
+                <th class="text-center">{{ 'historialImportaciones.table.importKind' | transloco }}</th>
                 <th class="text-center">{{ 'historialImportaciones.table.status' | transloco }}</th>
                 <th class="text-center">{{ 'historialImportaciones.table.total' | transloco }}</th>
                 <th class="text-center">{{ 'historialImportaciones.table.success' | transloco }}</th>
@@ -225,6 +226,25 @@
                     <div class="text-sm text-base-content/90 truncate" [title]="item.organization_name || ''">
                       {{ item.organization_name || '–' }}
                     </div>
+                  </td>
+                  <td class="text-center">
+                    @if (item.is_private_import === true) {
+                      <span
+                        class="badge badge-outline badge-primary whitespace-nowrap text-[11px] font-semibold uppercase"
+                      >
+                        {{ 'historialImportaciones.table.importPrivate' | transloco }}
+                      </span>
+                    }
+                    @if (item.is_private_import === false) {
+                      <span
+                        class="badge badge-ghost whitespace-nowrap border border-base-200 text-[11px] font-medium uppercase text-base-content/80"
+                      >
+                        {{ 'historialImportaciones.table.importStandard' | transloco }}
+                      </span>
+                    }
+                    @if (item.is_private_import !== true && item.is_private_import !== false) {
+                      <span class="text-sm text-base-content/40 tabular-nums">–</span>
+                    }
                   </td>
                   <td class="text-center">
                     <span
@@ -277,7 +297,7 @@
 
                 @if (isExpanded(item.id)) {
                   <tr class="bg-primary/5">
-                    <td colspan="10">
+                    <td colspan="11">
                       <div class="p-4 space-y-3">
                         <p class="text-xs font-bold uppercase tracking-widest text-base-content/50">
                           {{
