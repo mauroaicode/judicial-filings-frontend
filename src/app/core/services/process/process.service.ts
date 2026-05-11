@@ -10,6 +10,7 @@ import {
   ProcessImportBatchResponse,
   ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
+import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 
 @Injectable({
   providedIn: 'root',
@@ -53,6 +54,9 @@ export class ProcessService {
     }
     if (filters.status) {
       params = params.set('status', filters.status);
+    }
+    if (filters.privacy === 'private' || filters.privacy === 'public') {
+      params = params.set('privacy', filters.privacy);
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       params = params.set('has_multiple_instances', filters.has_multiple_instances.toString());
@@ -113,6 +117,30 @@ export class ProcessService {
     const formData = new FormData();
     formData.append('file', file, file.name);
     formData.append('organization_id', organizationId);
+    return this._http.post<ProcessImportBatchResponse>(url, formData);
+  }
+
+  /**
+   * Lista fuentes de datos para importación de procesos privados.
+   */
+  getProcessDataSources(): Observable<ProcessDataSource[]> {
+    const url = `${environment.apiBaseUrl}/process-data-sources`;
+    return this._http.get<ProcessDataSource[]>(url);
+  }
+
+  /**
+   * Importa procesos privados desde Excel (xlsx) con slug de fuente de datos.
+   */
+  importPrivateProcesses(
+    file: File,
+    organizationId: string,
+    dataSourceSlug: string
+  ): Observable<ProcessImportBatchResponse> {
+    const url = `${environment.apiBaseUrl}/processes/private-import`;
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('organization_id', organizationId);
+    formData.append('data_source_slug', dataSourceSlug);
     return this._http.post<ProcessImportBatchResponse>(url, formData);
   }
 

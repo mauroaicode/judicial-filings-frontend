@@ -22,6 +22,7 @@ import {
   ProcessImportBatchResponse,
   ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
+import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 import { Organization } from '@app/core/models/organization/organization.model';
 import { DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
@@ -104,10 +105,33 @@ export class ProcessesComponent {
   public importOrganizations = signal<Organization[]>([]);
   public importOrganizationsLoading = signal<boolean>(false);
 
+  /** Importación como procesos privados + fuente de datos */
+  public importIsPrivate = signal<boolean>(false);
+  public importDataSourceSlug = signal<string>('');
+  public importDataSources = signal<ProcessDataSource[]>([]);
+  public importDataSourcesLoading = signal<boolean>(false);
+
   /** Opciones para el combobox de importación (id + nombre) */
   public importOrganizationOptions = computed(() =>
     this.importOrganizations().map((o) => ({ id: o.id, label: o.name }))
   );
+
+  /** Fuentes activas para el select (el `id` es el slug enviado al API) */
+  public importDataSourceOptions = computed(() =>
+    this.importDataSources()
+      .filter((s) => s.is_active)
+      .map((s) => ({ id: s.slug, label: s.name }))
+  );
+
+  /** Habilita el paso siguiente (confirmación / envío visual del botón principal) */
+  public importReadyToConfirm = computed(() => {
+    if (this.importSubmitting()) return false;
+    if (!this.importFile()) return false;
+    if (!this.importOrganizationId()?.trim()) return false;
+    if (!this.importIsPrivate()) return true;
+    if (this.importDataSourcesLoading()) return false;
+    return !!this.importDataSourceSlug()?.trim();
+  });
 
   // Filter form
   public filterForm: FormGroup = this._fb.group({
@@ -118,6 +142,8 @@ export class ProcessesComponent {
     defendant: [''],
     organization: [''],
     status: [''],
+    /** '' | 'private' | 'public' — query `privacy` */
+    privacy: [''],
     has_multiple_instances: [null as boolean | null],
     process_date_range: [null as DateRange | null],
     created_at_range: [null as DateRange | null],
@@ -153,6 +179,12 @@ export class ProcessesComponent {
       key: 'status_label',
       label: 'processes.table.status',
       width: '120px',
+      align: 'center',
+    },
+    {
+      key: 'is_private',
+      label: 'processes.table.dataOrigin',
+      width: '118px',
       align: 'center',
     },
     {
@@ -274,6 +306,9 @@ export class ProcessesComponent {
     if (isValidValue(queryParams['status'])) {
       this.filterForm.patchValue({ status: queryParams['status'] });
     }
+    if (queryParams['privacy'] === 'private' || queryParams['privacy'] === 'public') {
+      this.filterForm.patchValue({ privacy: queryParams['privacy'] });
+    }
     if (isValidValue(queryParams['has_multiple_instances'])) {
       this.filterForm.patchValue({ has_multiple_instances: queryParams['has_multiple_instances'] === 'true' });
     }
@@ -328,6 +363,9 @@ export class ProcessesComponent {
     }
     if (filters.status && filters.status.trim()) {
       queryParams['status'] = filters.status;
+    }
+    if (filters.privacy === 'private' || filters.privacy === 'public') {
+      queryParams['privacy'] = filters.privacy;
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       queryParams['has_multiple_instances'] = filters.has_multiple_instances.toString();
@@ -390,6 +428,10 @@ export class ProcessesComponent {
       defendant: formValue.defendant?.trim() || undefined,
       organization: formValue.organization?.trim() || undefined,
       status: formValue.status?.trim() || undefined,
+      privacy:
+        formValue.privacy === 'private' || formValue.privacy === 'public'
+          ? (formValue.privacy as 'private' | 'public')
+          : undefined,
       has_multiple_instances: formValue.has_multiple_instances !== null && formValue.has_multiple_instances !== '' ? formValue.has_multiple_instances : undefined,
       process_date_from: processDateRange?.from && processDateRange.from.trim() ? processDateRange.from : undefined,
       process_date_to: processDateRange?.to && processDateRange.to.trim() ? processDateRange.to : undefined,
@@ -492,6 +534,7 @@ export class ProcessesComponent {
       defendant: '',
       organization: '',
       status: '',
+      privacy: '',
       has_multiple_instances: null,
       process_date_range: null,
       created_at_range: null,
@@ -702,6 +745,9 @@ export class ProcessesComponent {
     this.importFile.set(null);
     this.importResult.set(null);
     this.importOrganizationId.set('');
+    this.importIsPrivate.set(false);
+    this.importDataSourceSlug.set('');
+    this.importDataSources.set([]);
     this.isImportModalOpen.set(true);
     this._loadImportOrganizations();
   }
@@ -732,6 +778,9 @@ export class ProcessesComponent {
     this.importFile.set(null);
     this.importResult.set(null);
     this.importOrganizationId.set('');
+    this.importIsPrivate.set(false);
+    this.importDataSourceSlug.set('');
+    this.importDataSources.set([]);
     this.importSubmitting.set(false);
   }
 
@@ -742,6 +791,24 @@ export class ProcessesComponent {
     this.importFile.set(file);
   }
 
+  onImportPrivateChange(checked: boolean): void {
+    this.importIsPrivate.set(checked);
+    this.importDataSourceSlug.set('');
+    if (!checked) {
+      return;
+    }
+    this._loadImportDataSources();
+  }
+
+  /** Éxito: import estándar (batch_id) o privado con contadores numéricos */
+  isImportResultSuccess(res: ProcessImportBatchResponse): boolean {
+    const bid = res.batch_id?.trim();
+    if (bid) {
+      return true;
+    }
+    return typeof res.processes_created === 'number';
+  }
+
   getImportConfirmTitle(): string {
     return this._transloco.translate('processes.import.confirmTitle');
   }
@@ -750,14 +817,20 @@ export class ProcessesComponent {
     if (!this.importConfirmOpen()) {
       return '';
     }
-    return this._transloco.translate('processes.import.confirmMessage');
+    const key = this.importIsPrivate()
+      ? 'processes.import.confirmMessagePrivate'
+      : 'processes.import.confirmMessage';
+    return this._transloco.translate(key);
   }
 
   getImportConfirmFootnote(): string {
     if (!this.importConfirmOpen()) {
       return '';
     }
-    return this._transloco.translate('processes.import.confirmFootnote');
+    const key = this.importIsPrivate()
+      ? 'processes.import.confirmFootnotePrivate'
+      : 'processes.import.confirmFootnote';
+    return this._transloco.translate(key);
   }
 
   getImportConfirmDetailRows(): ConfirmationDialogDetailRow[] {
@@ -770,13 +843,23 @@ export class ProcessesComponent {
       return [];
     }
     const organizationName = this._importOrganizationDisplayName(organizationId);
-    return [
+    const rows: ConfirmationDialogDetailRow[] = [
       { label: this._transloco.translate('processes.import.confirmFileLabel'), value: file.name },
       {
         label: this._transloco.translate('processes.import.confirmOrganizationLabel'),
         value: organizationName,
       },
     ];
+    if (this.importIsPrivate()) {
+      const slug = this.importDataSourceSlug()?.trim();
+      if (slug) {
+        rows.push({
+          label: this._transloco.translate('processes.import.confirmDataSourceLabel'),
+          value: this._importDataSourceDisplayName(slug),
+        });
+      }
+    }
+    return rows;
   }
 
   /**
@@ -786,6 +869,9 @@ export class ProcessesComponent {
     const file = this.importFile();
     const organizationId = this.importOrganizationId()?.trim();
     if (!file || !organizationId) return;
+    if (this.importIsPrivate() && !this.importDataSourceSlug()?.trim()) {
+      return;
+    }
 
     this.importConfirmOpen.set(true);
   }
@@ -808,22 +894,52 @@ export class ProcessesComponent {
     return name || organizationId;
   }
 
+  private _importDataSourceDisplayName(slug: string): string {
+    const src = this.importDataSources().find((s) => s.slug === slug);
+    const name = src?.name?.trim();
+    return name || slug;
+  }
+
+  private _loadImportDataSources(): void {
+    this.importDataSourcesLoading.set(true);
+    this._processService.getProcessDataSources().subscribe({
+      next: (list) => {
+        this.importDataSources.set(Array.isArray(list) ? list : []);
+        this.importDataSourcesLoading.set(false);
+      },
+      error: () => {
+        this.importDataSources.set([]);
+        this.importDataSourcesLoading.set(false);
+      },
+    });
+  }
+
   private executeImportSubmit(): void {
     const file = this.importFile();
     const organizationId = this.importOrganizationId()?.trim();
     if (!file || !organizationId) return;
 
+    const isPrivate = this.importIsPrivate();
+    const dataSourceSlug = this.importDataSourceSlug()?.trim();
+    if (isPrivate && !dataSourceSlug) {
+      return;
+    }
+
     this.importSubmitting.set(true);
     this.importResult.set(null);
 
-    this._processService.importProcesses(file, organizationId).subscribe({
+    const req = isPrivate
+      ? this._processService.importPrivateProcesses(file, organizationId, dataSourceSlug!)
+      : this._processService.importProcesses(file, organizationId);
+
+    req.subscribe({
       next: (response) => {
         this.importResult.set(response);
         this.importSubmitting.set(false);
       },
       error: (err) => {
         const message = err.error?.message || this._transloco.translate('processes.import.errors.generic');
-        this.importResult.set({ message, batch_id: '' });
+        this.importResult.set({ message });
         this.importSubmitting.set(false);
       },
     });

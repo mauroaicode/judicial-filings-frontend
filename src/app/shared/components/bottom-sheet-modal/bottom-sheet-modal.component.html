@@ -5,9 +5,11 @@
   (cancel)="onNativeCancel($event)"
 >
   <div
-    class="app-bottom-sheet-modal__box modal-box flex w-full min-w-0 max-w-2xl flex-col overflow-hidden rounded-t-[1.75rem] rounded-b-none p-0 lg:max-h-[min(90vh,560px)] lg:rounded-2xl lg:rounded-b-2xl"
+    class="app-bottom-sheet-modal__box modal-box flex w-full min-w-0 max-w-2xl flex-col overflow-hidden rounded-t-[1.75rem] rounded-b-none p-0 lg:max-h-[min(92vh,820px)] lg:rounded-2xl lg:rounded-b-2xl"
   >
-    <div class="app-bottom-sheet-modal__scroll min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-5 sm:p-6 lg:pt-6">
+    <div
+      class="app-bottom-sheet-modal__scroll min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-8 lg:pb-10 lg:pt-6"
+    >
       @if (showMobileHandle()) {
         <div class="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-base-300 lg:hidden" aria-hidden="true"></div>
       }
