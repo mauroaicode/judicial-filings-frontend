@@ -39,6 +39,10 @@
         [class.text-neutral-content]="!isOpen()"
         [class.hover:bg-white/10]="!isOpen()"
         (click)="toggleSidebar()"
+        (mouseenter)="onNavItemHover($event, 'navigation.toggleSidebar')"
+        (mouseleave)="hideNavTooltip()"
+        (focus)="onNavItemHover($event, 'navigation.toggleSidebar')"
+        (blur)="hideNavTooltip()"
         [attr.aria-label]="'navigation.toggleSidebar' | transloco"
       >
         <svg
@@ -68,15 +72,21 @@
     </div>
 
     <!-- Navigation Items -->
-    <nav class="flex-1 overflow-y-auto transition-all"
-         [class.p-4]="isOpen()"
-         [class.p-2]="!isOpen()">
+    <nav
+      class="flex-1 overflow-y-auto overflow-x-hidden transition-all"
+      [class.p-4]="isOpen()"
+      [class.p-2]="!isOpen()"
+      style="max-height: calc(100vh - 4rem);"
+    >
       <ul class="space-y-1">
         @for (item of navigation().default; track item.id) {
           @if (item.type === 'divider') {
             <li class="my-2 border-t border-neutral/20"></li>
           } @else if (item.type === 'group') {
-            <li class="px-2 py-1 text-xs font-semibold uppercase text-base-content/70">
+            <li
+              class="px-2 py-1 text-xs font-semibold uppercase text-base-content/70"
+              [class.hidden]="showCollapsedTooltips()"
+            >
               {{ item.title | transloco }}
             </li>
           } @else if (item.type === 'collapsable' && item.children) {
@@ -87,6 +97,10 @@
                 [class.active]="isItemActive(item)"
                 [class.disabled]="item.disabled"
                 (click)="toggleItem(item)"
+                (mouseenter)="onNavItemHover($event, item.title)"
+                (mouseleave)="hideNavTooltip()"
+                (focus)="onNavItemHover($event, item.title)"
+                (blur)="hideNavTooltip()"
               >
                 <div
                   class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
@@ -147,19 +161,22 @@
               }
             </li>
           } @else {
-            <!-- Basic Item: igual que frontend - routerLinkActive marca el activo, click solo cierra sidebar en móvil -->
             <li>
               <a
                 [routerLink]="item.link"
                 [class.bg-secondary]="isItemSelected(item.id)"
                 [class.text-secondary-content]="isItemSelected(item.id)"
                 [class.disabled]="item.disabled"
-                class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
+                class="flex w-full items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
                 [class.gap-3]="isOpen()"
                 [class.px-3]="isOpen()"
                 [class.justify-center]="!isOpen()"
                 [class.px-2]="!isOpen()"
                 (click)="onNavItemClick(item)"
+                (mouseenter)="onNavItemHover($event, item.title)"
+                (mouseleave)="hideNavTooltip()"
+                (focus)="onNavItemHover($event, item.title)"
+                (blur)="hideNavTooltip()"
               >
                 @if (item.icon) {
                   <span class="flex flex-shrink-0 items-center justify-center">
@@ -183,4 +200,3 @@
     </nav>
   </div>
 </aside>
-
