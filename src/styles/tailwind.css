@@ -4,6 +4,9 @@
   themes: light;
 }
 
+/* Clases usadas con data-tip dinámico en el sidebar colapsado */
+@source inline("tooltip tooltip-right tooltip-left tooltip-top tooltip-bottom");
+
 @theme {
   /* Misma pila sans que `body` en styles.scss y que judicial-filings-frontend (evita discrepancia ui-sans vs -apple-system) */
   --font-sans:
