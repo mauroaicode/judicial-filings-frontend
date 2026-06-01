@@ -1,0 +1,47 @@
+<span
+  class="process-alert-tooltip"
+  [class.tooltip-left-aligned]="leftAligned()"
+  [class.tooltip-bottom]="position() === 'bottom'"
+>
+  <div
+    class="tooltip-content text-left text-sm max-w-xs rounded-xl shadow-2xl bg-white border border-base-200 p-4 space-y-2 z-[1000]"
+  >
+    <div class="flex items-center gap-2 mb-1">
+      <div class="w-3 h-3 rounded-full alert-dot" [class]="'alert-' + alertLevel()"></div>
+      <span class="font-extrabold text-[10px] uppercase text-base-content/40 tracking-wider">
+        {{ 'alertSemafor.alertLevel' | transloco }}
+      </span>
+    </div>
+
+    <p class="text-base-content leading-relaxed font-bold text-[13px]">
+      {{ getAlertTooltipMessage() | transloco }}
+    </p>
+
+    @if (lawyerRole()) {
+      <div
+        class="mt-2 pt-2 border-t border-base-100 text-[10px] text-base-content/30 uppercase font-black tracking-tight text-left"
+      >
+        Rol del abogado:
+        @if (getLawyerRoleLabelKey(); as roleLabelKey) {
+          {{ roleLabelKey | transloco }}
+        } @else {
+          {{ lawyerRole() }}
+        }
+      </div>
+    }
+  </div>
+
+  <div class="alert-dot-trigger" [class.cursor-help]="!disableTrigger()">
+    <ng-content>
+      <div
+        class="alert-dot"
+        [ngClass]="{
+          'alert-red alert-pulse': alertLevel() === 'red',
+          'alert-yellow': alertLevel() === 'yellow',
+          'alert-green': alertLevel() === 'green'
+        }"
+      ></div>
+    </ng-content>
+  </div>
+</span>
+

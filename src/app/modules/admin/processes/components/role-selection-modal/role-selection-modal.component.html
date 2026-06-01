@@ -1,0 +1,118 @@
+<div class="modal-box p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-xl">
+  <!-- Header -->
+  <div class="p-6 pb-4 border-b border-base-200/50">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-base-content">
+            {{ 'processDetail.organizations.roleModal.title' | transloco }}
+            @if (isBulk()) {
+              <span class="text-primary ml-1 animate-fade-in">({{ selectedCount() }})</span>
+            }
+          </h3>
+          @if (organizationName()) {
+            <p class="text-sm font-semibold text-primary mt-0.5">{{ organizationName() }}</p>
+          }
+          <p class="text-sm text-base-content/40 font-medium">
+            {{ 'processDetail.organizations.roleModal.subtitle' | transloco }}
+          </p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all" (click)="onClose()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+    <!-- Info Box -->
+    <div class="bg-primary/5 border border-primary/10 rounded-2xl p-5 flex gap-4">
+      <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="space-y-1">
+        <h4 class="font-bold text-sm text-primary">{{ 'processDetail.organizations.roleModal.infoTitle' | transloco }}</h4>
+        <p class="text-xs text-primary/60 leading-relaxed">
+          {{ 'processDetail.organizations.roleModal.infoDesc' | transloco }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Role Selection Form -->
+    <form [formGroup]="roleForm" (ngSubmit)="onSave()" class="space-y-5">
+      @if (isLoading()) {
+        <div class="flex flex-col items-center justify-center py-10 space-y-4">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <span class="text-xs font-bold text-base-content/20 uppercase tracking-widest">Cargando Roles...</span>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-3">
+          @for (role of roles(); track role.value) {
+            <label
+              class="relative flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 group hover:border-primary/40 active:scale-[0.98]"
+              [class.border-primary]="roleForm.get('role')?.value === role.value"
+              [class.bg-primary/5]="roleForm.get('role')?.value === role.value"
+              [class.border-base-200]="roleForm.get('role')?.value !== role.value"
+              [class.hover:bg-base-200/30]="roleForm.get('role')?.value !== role.value"
+            >
+              <input type="radio" formControlName="role" [value]="role.value" class="radio radio-primary border-base-300 w-5 h-5" />
+
+              <div class="ml-4 flex flex-col">
+                <span class="font-bold text-base-content group-hover:text-primary transition-colors">{{ role.label }}</span>
+                <span class="text-[10px] uppercase font-black tracking-wider text-base-content/30 mt-0.5">
+                  {{
+                    (role.value === 'plaintiff'
+                      ? 'processDetail.organizations.roleModal.plaintiffDesc'
+                      : 'processDetail.organizations.roleModal.defendantDesc') | transloco
+                  }}
+                </span>
+              </div>
+
+              @if (roleForm.get('role')?.value === role.value) {
+                <div class="absolute right-4 animate-scale-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              }
+            </label>
+          }
+        </div>
+      }
+    </form>
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="p-6 border-t border-base-200/50 bg-base-200/20 flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
+    <button
+      type="button"
+      class="btn btn-ghost btn-md normal-case font-bold px-8 rounded-xl w-full sm:w-auto text-base-content/40 hover:bg-base-300/40"
+      (click)="onClose()"
+    >
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary btn-md normal-case font-bold px-12 rounded-xl w-full sm:w-auto shadow-lg shadow-primary/20 transition-all active:scale-95"
+      [disabled]="roleForm.invalid || isSaving() || isLoading()"
+      (click)="onSave()"
+    >
+      @if (isSaving()) {
+        <span class="loading loading-spinner loading-xs mr-2"></span>
+        {{ 'common.saving' | transloco }}
+      } @else {
+        {{ 'common.save' | transloco }}
+      }
+    </button>
+  </div>
+</div>
+

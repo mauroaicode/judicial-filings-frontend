@@ -1,0 +1,9 @@
+.modal-box {
+  @media (max-width: 640px) {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    height: auto !important;
+    max-height: 90vh !important;
+  }
+}

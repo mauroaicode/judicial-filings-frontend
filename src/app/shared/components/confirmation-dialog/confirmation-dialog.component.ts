@@ -43,8 +43,8 @@ export class ConfirmationDialogComponent {
   confirmLabel = input<string>('Confirmar');
   /** Etiqueta del botón cancelar */
   cancelLabel = input<string>('Cancelar');
-  /** Clase DaisyUI del botón confirmar (ej. 'btn-primary', 'btn-success') */
-  confirmClass = input<string>('btn-primary');
+  /** Clase DaisyUI del botón confirmar (negro por defecto) */
+  confirmClass = input<string>('btn-neutral');
 
   confirm = output<void>();
   cancel = output<void>();

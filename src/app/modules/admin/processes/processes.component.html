@@ -1052,6 +1052,7 @@
                   (mouseenter)="hoveredRowId.set(process.id)"
                   (mouseleave)="hoveredRowId.set(null)"
                   (click)="toggleExpand(process)"
+                  (dblclick)="onRowDblClick(process, $event)"
                 >
                   <td class="text-center align-middle p-2">
                     @if (process.has_multiple_instances && process.instances && process.instances.length > 1) {
@@ -1210,6 +1211,7 @@
                       [class.process-row-hovered]="hoveredRowId() === instance.id"
                       (mouseenter)="hoveredRowId.set(instance.id)"
                       (mouseleave)="hoveredRowId.set(null)"
+                      (dblclick)="onRowDblClick(instance, $event)"
                     >
                       <td class="text-center align-middle p-2 pl-4">
                         <span class="text-secondary/70 text-xs" aria-hidden="true">↳</span>

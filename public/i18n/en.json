@@ -65,7 +65,11 @@
         "confirm": "Confirm",
         "cancel": "Cancel",
         "spanish": "Spanish",
-        "english": "English"
+        "english": "English",
+        "action": "Action",
+        "actions": "Actions",
+        "instance": "Instance",
+        "instances": "Instances"
     },
     "navigation": {
         "dashboard": "Dashboard",
@@ -430,6 +434,179 @@
                 "generic": "Error importing. Please try again."
             }
         }
+    },
+    "common": {
+        "actions": "Actions",
+        "loading": "Loading...",
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+    },
+    "gestionProcesos": {
+        "filters": {
+            "plaintiff": "Plaintiff",
+            "defendant": "Defendant"
+        }
+    },
+    "alertSemafor": {
+        "alertLevel": "Status",
+        "linkRole": "Link role",
+        "linkRoleDesc": "Link your role to activate intelligent procedural alerts",
+        "alerts": {
+            "redDemandante": "Critical Alert: Risk of withdrawal or serious paralysis (+90 days of inactivity).",
+            "yellowDemandante": "Early Alert: Follow-up needed to avoid default (+45 days of inactivity).",
+            "greenDemandante": "Process with recent and healthy activity.",
+            "redGeneral": "Critical Alert: Judgment, order or termination detected.",
+            "yellowGeneral": "Process Alert: Transfer, memorial or notice detected.",
+            "greenGeneral": "Informational: Record or file detected.",
+            "greenDemandado": "Favorable Informational: The case against is not advancing (+90 days of inactivity)."
+        },
+        "legend": {
+            "title": "Status Legend",
+            "green": {
+                "title": "Healthy / Informational",
+                "desc": "Processes with recent activity or favorable inactivity for your role."
+            },
+            "yellow": {
+                "title": "Early Alert",
+                "desc": "Preventive monitoring (+45 days) or ongoing judicial proceedings."
+            },
+            "red": {
+                "title": "Critical Alert",
+                "desc": "Prolonged inactivity (+90 days) or decisive procedural milestones."
+            }
+        }
+    },
+    "processDetail": {
+        "title": "Process Detail",
+        "activateProcess": "Activate Tracking",
+        "deactivateProcess": "Deactivate Tracking",
+        "back": "Back",
+        "generalInfo": "General Information",
+        "processNumber": "Process Number",
+        "speaker": "Speaker",
+        "court": "Court",
+        "department": "Department",
+        "processType": "Process Type",
+        "processClass": "Process Class",
+        "subclassProcess": "Subclass Process",
+        "processDate": "Filing Date",
+        "lastActivityDate": "Last Activity Date",
+        "location": "Location",
+        "status": "Status",
+        "isPrivate": "Is Private",
+        "hasMultipleInstances": "Has Multiple Instances",
+        "lastUpdate": "Last Update",
+        "createdAt": "Created At",
+        "updatedAt": "Updated At",
+        "lawyerRole": "Lawyer Role",
+        "yes": "Yes",
+        "no": "No",
+        "organizations": {
+            "title": "Interested Organizations",
+            "interested": "Interested Organizations",
+            "viewAll": "View Organizations",
+            "interestDate": "Interest date",
+            "role": "Organization role",
+            "trackingStatus": "Tracking status",
+            "assignRole": "Assign role",
+            "changeRole": "Change role",
+            "activateTracking": "Activate tracking",
+            "deactivateTracking": "Deactivate tracking",
+            "statusSaved": "Tracking status updated successfully.",
+            "statusError": "Error updating tracking status.",
+            "confirmActivateTitle": "Activate tracking",
+            "confirmDeactivateTitle": "Deactivate tracking",
+            "confirmActivateMessage": "Are you sure you want to activate tracking for organization \"{{name}}\"?",
+            "confirmDeactivateMessage": "Are you sure you want to deactivate tracking for organization \"{{name}}\"? Automatic update tracking will stop.",
+            "roleSaved": "Organization role updated successfully.",
+            "roleModal": {
+                "title": "Assign organization role",
+                "subtitle": "Define whether the organization acts as plaintiff or defendant in this process",
+                "infoTitle": "Role importance",
+                "infoDesc": "The assigned role allows customizing alerts and notifications based on the organization's legal position.",
+                "plaintiffDesc": "Acts as plaintiff",
+                "defendantDesc": "Acts as defendant"
+            }
+        },
+        "subjects": {
+            "title": "Process Subjects",
+            "empty": "No process subjects available",
+            "others": "Other subjects",
+            "addSubject": "Add subject",
+            "editSubject": "Edit",
+            "deleteSubject": "Delete",
+            "deleted": "Process subject deleted successfully.",
+            "deleteError": "Could not delete the process subject.",
+            "deleteConfirmTitle": "Delete process subject",
+            "deleteConfirmMessage": "Are you sure you want to delete subject \"{{name}}\"? This action cannot be undone.",
+            "saved": "Process subjects saved successfully.",
+            "badgeManual": "Manual",
+            "badgeJudicial": "Judicial Branch",
+            "modal": {
+                "addTitle": "Add process subject",
+                "editTitle": "Edit process subject",
+                "subtitle": "Register or update the subject type and name. Only this record is sent when saving.",
+                "infoTitle": "Create and edit",
+                "infoDesc": "New subjects are marked as Manual. Judicial Branch subjects keep their origin; only type and name can be edited.",
+                "subjectTypePlaceholder": "E.g.: defendant, witness, attorney",
+                "namePlaceholder": "E.g.: John Doe",
+                "subjectTypeRequired": "Subject type is required.",
+                "nameRequired": "Name or business name is required.",
+                "errorGeneric": "Could not save the process subject. Check the data and try again."
+            },
+            "table": {
+                "subjectType": "Subject Type",
+                "name": "Name or Business Name",
+                "identification": "Identification",
+                "isCited": "Is Cited"
+            }
+        },
+        "actions": {
+            "title": "Actions",
+            "empty": "No actions available",
+            "filters": {
+                "title": "Search Filters",
+                "actionDateRange": "Action Date",
+                "actionDateRangePlaceholder": "Select date range",
+                "registrationDateRange": "Registration Date",
+                "registrationDateRangePlaceholder": "Select date range",
+                "alertKeyword": "Procedural stage alert",
+                "alertKeywordPlaceholder": "All procedural stages",
+                "search": "Search",
+                "searchPlaceholder": "Search in action or annotation",
+                "reset": "Clear Filters"
+            },
+            "table": {
+                "index": "#",
+                "action": "Action",
+                "annotation": "Annotation",
+                "termStartDate": "Term start date",
+                "termEndDate": "Term end date",
+                "actionDate": "Action date",
+                "registrationDate": "Registration date",
+                "court": "Court"
+            }
+        },
+        "error": {
+            "idNotFound": "Process ID not found in route params",
+            "loadError": "Error loading process detail"
+        },
+        "instances": {
+            "title": "Process instances",
+            "subtitle": "Select an instance to inspect its actions",
+            "countLabel": "instances",
+            "selected": "Selected",
+            "lastUpdate": "Last update",
+            "actionsCount": "actions"
+        }
+    },
+    "table": {
+        "showing": "Showing",
+        "to": "to",
+        "of": "of",
+        "results": "results",
+        "perPage": "per page"
     },
     "notifications": {
         "title": "Notifications",

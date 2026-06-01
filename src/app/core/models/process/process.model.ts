@@ -197,3 +197,240 @@ export interface ProcessDashboardStats {
   critical_alert_processes: number;
   early_attention_processes: number;
 }
+
+// -----------------------------------------------------------------------------------------------------
+// Process Detail + Actions (used by Process Detail module)
+// -----------------------------------------------------------------------------------------------------
+
+/**
+ * Process Detail - Full process information
+ */
+export interface ProcessDetail {
+  id: string;
+  process_id: number;
+  process_number: string;
+  court: string;
+  speaker?: string | null;
+  department: string;
+  process_type: string;
+  process_class: string;
+  subclass_process: string;
+  litigants: string | null;
+  process_date: string;
+  last_activity_date: string | null;
+  location: string;
+  filing_content: string | null;
+  is_private: boolean;
+  has_multiple_instances: boolean;
+  last_api_update: string;
+  status_label: string;
+  created_at: string;
+  updated_at: string;
+  alert_level?: 'red' | 'yellow' | 'green' | null;
+  lawyer_role?: string | null;
+}
+
+/**
+ * Process instance summary for detail view selector (GET /processes/:id/instances)
+ */
+export interface ProcessDetailInstance {
+  id: string;
+  court: string;
+  actions_count: number;
+  last_activity_date: string | null;
+  last_api_update: string;
+  status_label: string;
+  lawyer_role?: string | null;
+  inactivity_alert_level?: 'red' | 'yellow' | 'green' | null;
+}
+
+/**
+ * Subject - Process subject (Demandante/Demandado)
+ */
+export interface Subject {
+  id: string;
+  subject_registration_id: number | null;
+  subject_type: string;
+  is_cited: boolean;
+  identification: string | null;
+  name_or_business_name: string;
+  /** Present in PUT response; infer from subject_registration_id on GET if absent */
+  is_manual?: boolean;
+}
+
+export interface SubjectUpsertPayload {
+  id?: string;
+  subject_type: string;
+  name_or_business_name: string;
+}
+
+export interface SaveProcessSubjectsResponse {
+  message: string;
+  subjects: Subject[];
+}
+
+/**
+ * Organization interested in a process (admin process detail)
+ */
+export interface ProcessInterestedOrganization {
+  id: string;
+  name: string;
+  type: string;
+  type_label: string;
+  lawyer_role: string | null;
+  lawyer_role_label: string | null;
+  status: string;
+  status_label: string;
+  is_active?: boolean;
+  interest_date: string;
+  inactivity_alert_level?: 'red' | 'yellow' | 'green' | null;
+  alert_level?: 'red' | 'yellow' | 'green' | null;
+}
+
+export interface ProcessInterestedOrganizations {
+  count: number;
+  items: ProcessInterestedOrganization[];
+}
+
+/**
+ * Process Detail Response
+ */
+export interface ProcessDetailResponse {
+  process: ProcessDetail;
+  subjects: Subject[];
+  organizations?: ProcessInterestedOrganizations;
+}
+
+/**
+ * Range to highlight inside annotation (keyword match from API)
+ */
+export interface AlertHighlight {
+  start: number;
+  end: number;
+  text: string;
+  source?: string;
+}
+
+/**
+ * Action - Process action/actuación
+ */
+export interface Action {
+  index?: number;
+  id: string;
+  action_registration_id?: number;
+  cons_action?: number;
+  action_date: string;
+  registration_date: string;
+  action: string;
+  annotation: string | null;
+  term_start_date?: string | null;
+  term_end_date?: string | null;
+  court?: string;
+  created_at?: string;
+  updated_at?: string;
+  alert_highlights?: AlertHighlight[] | null;
+  notified_action_id?: string | null;
+  fijacion_action_id?: string | null;
+  related_action?: Action | null;
+}
+
+/**
+ * Alert keyword for filtering actions
+ */
+export interface AlertKeyword {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface AlertKeywordsResponse {
+  data: AlertKeyword[];
+}
+
+/**
+ * Alert keyword with count
+ */
+export interface AlertKeywordStat {
+  id: string;
+  name: string;
+  slug: string;
+  count: number;
+}
+
+export interface AlertKeywordStatsResponse {
+  data: AlertKeywordStat[];
+}
+
+/**
+ * Action Filter Options
+ */
+export interface ActionFilter {
+  action_date_from?: string;
+  action_date_to?: string;
+  registration_date_from?: string;
+  registration_date_to?: string;
+  alert_slug?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}
+
+/**
+ * Action Response from API (Laravel Pagination)
+ */
+export interface ActionResponse {
+  current_page: number;
+  data: Action[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: PaginationLink[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+}
+
+/**
+ * Action Response Meta (simplified for component usage)
+ */
+export interface ActionResponseMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  last_page: number;
+  from: number;
+  to: number;
+}
+
+/**
+ * Bulk Role Update Alert Data
+ */
+export interface BulkRoleUpdateAlert {
+  count: number;
+  process_ids: string[];
+}
+
+/**
+ * Bulk Role Update Failure Data
+ */
+export interface BulkRoleUpdateFailure {
+  count: number;
+  process_numbers: string[];
+}
+
+/**
+ * Bulk Role Update Response
+ */
+export interface BulkRoleUpdateResponse {
+  message: string;
+  total_updated: number;
+  red_alerts: BulkRoleUpdateAlert;
+  yellow_alerts: BulkRoleUpdateAlert;
+  green_alerts: BulkRoleUpdateAlert;
+  no_alerts: BulkRoleUpdateAlert;
+  failed: BulkRoleUpdateFailure;
+}
