@@ -1,0 +1,96 @@
+.process-alert-tooltip {
+  position: relative !important;
+  display: inline-flex !important;
+
+  .tooltip-content {
+    position: absolute !important;
+    bottom: 140% !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(4px) !important;
+    white-space: normal !important;
+    width: max-content !important;
+    max-width: 280px !important;
+    z-index: 100 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.15s ease-out;
+    pointer-events: none;
+    background-color: #ffffff !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    padding: 1rem !important;
+    border-radius: 0.75rem !important;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #ffffff;
+      z-index: 101;
+    }
+  }
+
+  &:hover .tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) !important;
+    pointer-events: auto;
+  }
+
+  .alert-dot-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  &.tooltip-left-aligned {
+    .tooltip-content {
+      left: 0 !important;
+      transform: translateY(4px) !important;
+
+      &::after {
+        left: 0.75rem !important;
+        transform: none !important;
+      }
+    }
+
+    &:hover .tooltip-content {
+      transform: translateY(0) !important;
+    }
+  }
+
+  &.tooltip-bottom {
+    .tooltip-content {
+      bottom: auto !important;
+      top: 140% !important;
+
+      &::after {
+        top: auto !important;
+        bottom: 100% !important;
+        border-top-color: transparent !important;
+        border-bottom-color: #ffffff !important;
+        transform: translateX(-50%) !important;
+      }
+    }
+
+    &:hover .tooltip-content {
+      transform: translateX(-50%) translateY(0) !important;
+    }
+
+    &.tooltip-left-aligned {
+      .tooltip-content {
+        transform: translateY(0) !important;
+        &::after {
+          left: 0.75rem !important;
+          transform: none !important;
+        }
+      }
+    }
+  }
+}
+

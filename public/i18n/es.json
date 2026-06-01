@@ -5,7 +5,11 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "confirm": "Confirmar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "action": "Actuación",
+    "actions": "Actuaciones",
+    "instance": "Instancia",
+    "instances": "Instancias"
   },
   "auth": {
     "signIn": {
@@ -463,9 +467,178 @@
       "close": "Cerrar"
     }
   },
+  "gestionProcesos": {
+    "filters": {
+      "plaintiff": "Demandante",
+      "defendant": "Demandado"
+    }
+  },
+  "alertSemafor": {
+    "alertLevel": "Estado",
+    "linkRole": "Vincular rol",
+    "linkRoleDesc": "Vincule su rol para activar alertas procesales inteligentes",
+    "alerts": {
+      "redDemandante": "Alerta Crítica: Riesgo de desistimiento o parálisis grave (+90 días de inactividad).",
+      "yellowDemandante": "Alerta Temprana: Seguimiento necesario para evitar mora (+45 días de inactividad).",
+      "greenDemandante": "Proceso con actividad reciente y saludable.",
+      "redGeneral": "Alerta Crítica: Sentencia, mandamiento o terminación detectada.",
+      "yellowGeneral": "Alerta de Trámite: Traslado, memorial u oficio detectado.",
+      "greenGeneral": "Informativo: Constancia o archivo detectado.",
+      "greenDemandado": "Informativo Favorable: El proceso en contra no avanza (+90 días de inactividad)."
+    },
+    "legend": {
+      "title": "Leyenda de Estados",
+      "green": {
+        "title": "Saludable / Informativo",
+        "desc": "Procesos con actividad reciente o inactividad favorable para su rol."
+      },
+      "yellow": {
+        "title": "Alerta Temprana",
+        "desc": "Seguimiento preventivo (+45 días) o trámites judiciales en curso."
+      },
+      "red": {
+        "title": "Alerta Crítica",
+        "desc": "Inactividad prolongada (+90 días) o hitos procesales determinantes."
+      }
+    }
+  },
+  "processDetail": {
+    "title": "Detalle del Proceso",
+    "activateProcess": "Activar Seguimiento",
+    "deactivateProcess": "Desactivar Seguimiento",
+    "back": "Volver",
+    "generalInfo": "Información General",
+    "processNumber": "Número de Radicado",
+    "speaker": "Ponente",
+    "court": "Despacho",
+    "department": "Departamento",
+    "processType": "Tipo de Proceso",
+    "processClass": "Clase de Proceso",
+    "subclassProcess": "Subclase de Proceso",
+    "processDate": "Fecha de Radicación",
+    "lastActivityDate": "Fecha de Última Actuación",
+    "location": "Ubicación",
+    "status": "Estado",
+    "isPrivate": "Es Privado",
+    "hasMultipleInstances": "Tiene Múltiples Instancias",
+    "lastUpdate": "Última Actualización",
+    "createdAt": "Fecha de Creación",
+    "updatedAt": "Fecha de Actualización",
+    "lawyerRole": "Rol del Abogado",
+    "alertStatus": "Semáforo de Alerta",
+    "yes": "Sí",
+    "no": "No",
+    "organizations": {
+      "title": "Organizaciones Interesadas",
+      "interested": "Organizaciones Interesadas",
+      "viewAll": "Ver Organizaciones",
+      "interestDate": "Fecha de interés",
+      "role": "Rol de la organización",
+      "trackingStatus": "Estado de seguimiento",
+      "assignRole": "Asignar rol",
+      "changeRole": "Cambiar rol",
+      "activateTracking": "Activar seguimiento",
+      "deactivateTracking": "Desactivar seguimiento",
+      "statusSaved": "Estado de seguimiento actualizado correctamente.",
+      "statusError": "Error al cambiar el estado de seguimiento.",
+      "confirmActivateTitle": "Activar seguimiento",
+      "confirmDeactivateTitle": "Desactivar seguimiento",
+      "confirmActivateMessage": "¿Está seguro de activar el seguimiento para la organización \"{{name}}\"?",
+      "confirmDeactivateMessage": "¿Está seguro de desactivar el seguimiento para la organización \"{{name}}\"? Ya no se realizará seguimiento automático de las actualizaciones.",
+      "roleSaved": "Rol de la organización actualizado exitosamente.",
+      "roleModal": {
+        "title": "Asignar rol de la organización",
+        "subtitle": "Define si la organización actúa como demandante o demandado en este proceso",
+        "infoTitle": "Importancia del rol",
+        "infoDesc": "El rol asignado permite personalizar las alertas y notificaciones según la posición jurídica de la organización.",
+        "plaintiffDesc": "Actúa como demandante",
+        "defendantDesc": "Actúa como demandado"
+      }
+    },
+    "subjects": {
+      "title": "Sujetos Procesales",
+      "empty": "No hay sujetos procesales disponibles",
+      "others": "Otros sujetos",
+      "addSubject": "Agregar sujeto",
+      "editSubject": "Editar",
+      "deleteSubject": "Eliminar",
+      "deleted": "Sujeto procesal eliminado exitosamente.",
+      "deleteError": "No se pudo eliminar el sujeto procesal.",
+      "deleteConfirmTitle": "Eliminar sujeto procesal",
+      "deleteConfirmMessage": "¿Está seguro de eliminar el sujeto \"{{name}}\"? Esta acción no se puede deshacer.",
+      "saved": "Sujetos procesales guardados exitosamente.",
+      "badgeManual": "Manual",
+      "badgeJudicial": "Rama Judicial",
+      "modal": {
+        "addTitle": "Agregar sujeto procesal",
+        "editTitle": "Editar sujeto procesal",
+        "subtitle": "Registre o corrija el tipo y nombre del sujeto. Solo se envía este registro al guardar.",
+        "infoTitle": "Creación y edición",
+        "infoDesc": "Los sujetos nuevos se marcan como Manual. Los de la Rama Judicial conservan su origen y solo pueden editarse tipo y nombre.",
+        "subjectTypePlaceholder": "Ej: demandado, testigo, apoderado",
+        "namePlaceholder": "Ej: Juan Pérez García",
+        "subjectTypeRequired": "El tipo de sujeto es obligatorio.",
+        "nameRequired": "El nombre o razón social es obligatorio.",
+        "errorGeneric": "No se pudo guardar el sujeto procesal. Revise los datos e intente de nuevo."
+      },
+      "table": {
+        "subjectType": "Tipo de Sujeto",
+        "name": "Nombre o Razón Social",
+        "identification": "Identificación",
+        "isCited": "Citado"
+      }
+    },
+    "actions": {
+      "title": "Actuaciones",
+      "empty": "No hay actuaciones disponibles",
+      "filters": {
+        "title": "Filtros de Búsqueda",
+        "actionDateRange": "Fecha de Actuación",
+        "actionDateRangePlaceholder": "Seleccionar rango de fechas",
+        "registrationDateRange": "Fecha de Registro",
+        "registrationDateRangePlaceholder": "Seleccionar rango de fechas",
+        "alertKeyword": "Etapa procesal de alerta",
+        "alertKeywordPlaceholder": "Todas las etapas procesales",
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar en acción o anotación",
+        "reset": "Limpiar Filtros"
+      },
+      "table": {
+        "index": "#",
+        "action": "Actuación",
+        "annotation": "Anotación",
+        "termStartDate": "Fecha inicio término",
+        "termEndDate": "Fecha finaliza término",
+        "actionDate": "Fecha de actuación",
+        "registrationDate": "Fecha de registro",
+        "court": "Despacho"
+      }
+    },
+    "error": {
+      "idNotFound": "ID del proceso no encontrado en los parámetros de la ruta",
+      "loadError": "Error al cargar el detalle del proceso"
+    },
+    "instances": {
+      "title": "Instancias del proceso",
+      "subtitle": "Selecciona una instancia para consultar sus actuaciones",
+      "countLabel": "instancias",
+      "selected": "Seleccionada",
+      "lastUpdate": "Última actualización",
+      "actionsCount": "actuaciones"
+    }
+  },
+  "table": {
+    "showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "perPage": "por página"
+  },
   "common": {
     "back": "Atrás",
     "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
     "actions": "Acciones"
   },
   "notifications": {

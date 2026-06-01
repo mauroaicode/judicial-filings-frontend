@@ -17,6 +17,8 @@ export interface DataTableColumn {
   sortable?: boolean;
   width?: string;
   align?: 'left' | 'center' | 'right';
+  /** When true, treat rendered value as safe-ish HTML (Angular sanitizes). */
+  html?: boolean;
   render?: (value: any, row: any) => string;
 }
 

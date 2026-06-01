@@ -689,6 +689,18 @@ export class ProcessesComponent {
     }
   }
 
+  /**
+   * Doble click en fila: navegar al detalle del proceso/instancia.
+   * (mismo UX que en `judicial-filings-frontend`)
+   */
+  onRowDblClick(row: Process | ProcessInstance, event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this._router.navigate(['/admin', 'processes', row.id]);
+  }
+
   toggleMobileFabMenu(): void {
     this.mobileFabMenuOpen.update((open) => !open);
   }

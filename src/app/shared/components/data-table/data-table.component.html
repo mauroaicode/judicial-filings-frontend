@@ -84,6 +84,8 @@
                   <span class="whitespace-nowrap inline-block relative z-10" [title]="getCellValue(row, column)" style="max-width: 100%; overflow: visible;">
                     {{ getCellValue(row, column) }}
                   </span>
+                } @else if (column.html) {
+                  <span [innerHTML]="getCellValue(row, column)"></span>
                 } @else {
                   {{ getCellValue(row, column) }}
                 }
