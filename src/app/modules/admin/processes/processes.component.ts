@@ -198,6 +198,11 @@ export class ProcessesComponent {
       width: '200px',
     },
     {
+      key: 'other_subjects',
+      label: 'processes.table.otherSubjects',
+      width: '200px',
+    },
+    {
       key: 'organization',
       label: 'processes.table.organization',
       width: '200px',
@@ -608,6 +613,15 @@ export class ProcessesComponent {
     return { mainText, extraCount, tooltipText, fullList: arr };
   }
 
+  /** Lista de otros sujetos procesales (prioriza array `others` del API) */
+  getOthersList(row: { others?: string[]; other_subject?: string | null }): string[] {
+    if (row.others?.length) {
+      return row.others;
+    }
+    const single = row.other_subject?.trim();
+    return single ? [single.replace(/\s*\(\+\d+\)\s*$/i, '').trim()].filter(Boolean) : [];
+  }
+
   /**
    * Formatear fecha para tabla (si viene en formato ISO; si no, mostrar tal cual)
    */
@@ -713,7 +727,7 @@ export class ProcessesComponent {
    * Abre el bottom sheet con todas las filas (misma fuente que tooltips de escritorio).
    */
   openPartyListSheet(
-    kind: 'organization' | 'plaintiff' | 'defendant',
+    kind: 'organization' | 'plaintiff' | 'defendant' | 'other',
     items: string[],
     processNumber: string,
     event?: Event,
@@ -726,10 +740,11 @@ export class ProcessesComponent {
     if (filtered.length === 0) {
       return;
     }
-    const keys: Record<'organization' | 'plaintiff' | 'defendant', string> = {
+    const keys: Record<'organization' | 'plaintiff' | 'defendant' | 'other', string> = {
       organization: 'processes.partyList.titleOrganizations',
       plaintiff: 'processes.partyList.titlePlaintiffs',
       defendant: 'processes.partyList.titleDefendants',
+      other: 'processes.partyList.titleOthers',
     };
     this.partyListSheetTitleKey.set(keys[kind]);
     this.partyListSheetItems.set(filtered);

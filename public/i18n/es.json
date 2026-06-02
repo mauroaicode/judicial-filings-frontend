@@ -227,6 +227,7 @@
       "status": "Estado",
       "plaintiff": "Demandante (s)",
       "defendant": "Demandados (s)",
+      "otherSubjects": "Otros sujetos",
       "organization": "Organización (es)",
       "dataOrigin": "Origen",
       "originPrivate": "Privada",
@@ -245,6 +246,7 @@
       "titleOrganizations": "Organizaciones en seguimiento",
       "titlePlaintiffs": "Demandantes",
       "titleDefendants": "Demandados",
+      "titleOthers": "Otros sujetos procesales",
       "showAllHint": "Ver listado completo"
     },
     "import": {

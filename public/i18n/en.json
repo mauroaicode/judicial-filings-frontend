@@ -376,6 +376,7 @@
             "status": "Status",
             "plaintiff": "Plaintiff(s)",
             "defendant": "Defendant(s)",
+            "otherSubjects": "Other subjects",
             "organization": "Organization(s)",
             "dataOrigin": "Origin",
             "originPrivate": "Private",
@@ -394,6 +395,7 @@
             "titleOrganizations": "Monitoring organizations",
             "titlePlaintiffs": "Plaintiffs",
             "titleDefendants": "Defendants",
+            "titleOthers": "Other process subjects",
             "showAllHint": "View full list"
         },
         "import": {
