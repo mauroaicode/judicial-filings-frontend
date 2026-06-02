@@ -26,6 +26,10 @@ export interface ProcessInstance {
   organizations?: string[];
   plaintiffs?: string[];
   defendants?: string[];
+  other_subject?: string | null;
+  others_count?: number | null;
+  others?: string[];
+  subjects_count?: number | null;
 }
 
 /**
@@ -59,6 +63,11 @@ export interface Process {
   plaintiffs?: string[];
   /** Lista completa de demandados (para tooltip) */
   defendants?: string[];
+  /** Otros sujetos procesales (apoderados, testigos, etc.) */
+  other_subject?: string | null;
+  others_count?: number | null;
+  others?: string[];
+  subjects_count?: number | null;
   /** Instancias del mismo radicado (filas expandibles) */
   instances?: ProcessInstance[];
 }

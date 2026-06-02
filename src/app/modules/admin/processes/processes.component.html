@@ -883,6 +883,7 @@
 
                   @let pM = getPartyDisplay(process.plaintiffs ?? (process.plaintiff ? [process.plaintiff] : []));
                   @let dM = getPartyDisplay(process.defendants ?? (process.defendant ? [process.defendant] : []));
+                  @let oM = getPartyDisplay(getOthersList(process));
                   <div class="space-y-2.5">
                     <div class="flex flex-col min-w-0">
                       <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.plaintiff' | transloco }}</span>
@@ -912,6 +913,22 @@
                             (click)="openPartyListSheet('defendant', dM.fullList, process.process_number, $event)"
                           >
                             (+{{ dM.extraCount }})
+                          </button>
+                        }
+                      </span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">{{ 'processes.table.otherSubjects' | transloco }}</span>
+                      <span class="text-base-content/85 text-sm font-medium break-words leading-snug">
+                        {{ oM.mainText || '–' }}
+                        @if (oM.extraCount > 0) {
+                          <button
+                            type="button"
+                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
+                            (click)="openPartyListSheet('other', oM.fullList, process.process_number, $event)"
+                          >
+                            (+{{ oM.extraCount }})
                           </button>
                         }
                       </span>
@@ -1023,7 +1040,7 @@
             }
           </div>
           <div class="hidden lg:block process-list-table w-full flex-1 min-h-0 lg:min-h-0">
-          <table class="table table-zebra" style="min-width: 1120px;">
+          <table class="table table-zebra" style="min-width: 1320px;">
             <thead style="background-color: #4B2A7D; color: #ffffff;">
               <tr>
                 <th style="width: 48px;" class="text-center"></th>
@@ -1178,6 +1195,28 @@
                     }
                   </td>
                   <td class="align-middle">
+                    @let othersDisplay = getPartyDisplay(getOthersList(process));
+                    @if (othersDisplay.mainText || othersDisplay.extraCount > 0) {
+                      <span>
+                        {{ othersDisplay.mainText }}
+                        @if (othersDisplay.extraCount > 0) {
+                          <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                            <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                              @for (name of othersDisplay.fullList; track name; let i = $index) {
+                                <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                              }
+                            </div>
+                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                              (+{{ othersDisplay.extraCount }})
+                            </span>
+                          </span>
+                        }
+                      </span>
+                    } @else {
+                      <span class="text-base-content/50">–</span>
+                    }
+                  </td>
+                  <td class="align-middle">
                     @let orgDisplay = getPartyDisplay(process.organizations ?? (process.organization ? [process.organization] : []));
                     @if (orgDisplay.mainText || orgDisplay.extraCount > 0) {
                       <span>
@@ -1308,6 +1347,28 @@
                                 </div>
                                 <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instDef.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="text-base-content/50">–</span>
+                        }
+                      </td>
+                      <td class="align-middle">
+                        @let instOthers = getPartyDisplay(getOthersList(instance));
+                        @if (instOthers.mainText || instOthers.extraCount > 0) {
+                          <span>
+                            {{ instOthers.mainText }}
+                            @if (instOthers.extraCount > 0) {
+                              <span class="tooltip tooltip-bottom process-list-tooltip process-list-tooltip-primary" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of instOthers.fullList; track name; let i = $index) {
+                                    <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                  (+{{ instOthers.extraCount }})
                                 </span>
                               </span>
                             }
