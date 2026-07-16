@@ -186,7 +186,7 @@ export interface ProcessImportBatchResponse {
   message: string;
   /** Presente en importación estándar (segundo plano) */
   batch_id?: string;
-  /** Respuesta POST /processes/private-import */
+  /** Respuesta POST /processes/private-import (reservado) o stats síncronos */
   processes_created?: number;
   processes_updated?: number;
   actions_imported?: number;

@@ -955,20 +955,23 @@ export class ProcessesComponent {
     this.importSubmitting.set(true);
     this.importResult.set(null);
 
-    const req = isPrivate
-      ? this._processService.importPrivateProcesses(file, organizationId, dataSourceSlug!)
-      : this._processService.importProcesses(file, organizationId);
-
-    req.subscribe({
-      next: (response) => {
-        this.importResult.set(response);
-        this.importSubmitting.set(false);
-      },
-      error: (err) => {
-        const message = err.error?.message || this._transloco.translate('processes.import.errors.generic');
-        this.importResult.set({ message });
-        this.importSubmitting.set(false);
-      },
-    });
+    // Privados con SAMAI / Rama Judicial → POST /processes/import
+    // (/processes/private-import queda para otros casos)
+    this._processService
+      .importProcesses(file, organizationId, {
+        isPrivate,
+        dataSourceSlug: isPrivate ? dataSourceSlug : undefined,
+      })
+      .subscribe({
+        next: (response) => {
+          this.importResult.set(response);
+          this.importSubmitting.set(false);
+        },
+        error: (err) => {
+          const message = err.error?.message || this._transloco.translate('processes.import.errors.generic');
+          this.importResult.set({ message });
+          this.importSubmitting.set(false);
+        },
+      });
   }
 }
