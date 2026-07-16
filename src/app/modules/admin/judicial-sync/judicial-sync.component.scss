@@ -2,3 +2,101 @@
   display: block;
   width: 100%;
 }
+
+.judicial-sync-page {
+  .js-hero__accent {
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--p)) 0%, #0f766e 55%, #92400e 100%);
+  }
+
+  .js-btn-samai {
+    background: #0f766e;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #0d9488;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+
+  .js-filter-track {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .js-filter-track__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: hsl(var(--bc) / 0.4);
+  }
+
+  .js-filter-track__pills {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 9999px;
+    background: hsl(var(--b2));
+    border: 1px solid hsl(var(--bc) / 0.06);
+  }
+
+  .js-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    color: hsl(var(--bc) / 0.55);
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0.45rem 0.75rem;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover {
+      color: hsl(var(--bc) / 0.85);
+    }
+  }
+
+  .js-filter-chip--active {
+    background: hsl(var(--b1));
+    color: hsl(var(--p));
+    box-shadow: 0 1px 2px hsl(var(--bc) / 0.08);
+
+    &:hover {
+      color: hsl(var(--p));
+    }
+  }
+
+  /* Badge de fuente — se suma al badge DaisyUI sin romper status/moment */
+  .js-source-badge {
+    border: none;
+  }
+
+  .js-source-badge--judicial {
+    background-color: hsl(var(--p));
+    color: hsl(var(--pc));
+  }
+
+  .js-source-badge--samai {
+    background-color: #0f766e;
+    color: #fff;
+  }
+
+  .js-source-badge--tyba {
+    background-color: #c2410c;
+    color: #fff;
+  }
+}

@@ -5,6 +5,7 @@ import { environment } from '@app/core/config/environment.config';
 import {
   JudicialSyncDispatchRequest,
   JudicialSyncDispatchResponse,
+  JudicialSyncRunsQuery,
   JudicialSyncRunsResponse,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
 
@@ -21,12 +22,29 @@ export class JudicialSyncService {
   dispatchSync(payload: JudicialSyncDispatchRequest): Observable<JudicialSyncDispatchResponse> {
     const body: JudicialSyncDispatchRequest = {
       radicado: payload.radicado?.trim() ?? '',
+      data_source: payload.data_source ?? 'judicial_branch',
     };
     return this._http.post<JudicialSyncDispatchResponse>(this._baseUrl(), body);
   }
 
-  getRuns(page: number = 1, perPage: number = 15): Observable<JudicialSyncRunsResponse> {
-    let params = new HttpParams().set('page', String(page)).set('per_page', String(perPage));
+  getRuns(query: JudicialSyncRunsQuery = {}): Observable<JudicialSyncRunsResponse> {
+    let params = new HttpParams()
+      .set('page', String(query.page ?? 1))
+      .set('per_page', String(query.per_page ?? 15));
+
+    if (query.data_source) {
+      params = params.set('data_source', query.data_source);
+    }
+    if (query.status) {
+      params = params.set('status', query.status);
+    }
+    if (query.started_at_from) {
+      params = params.set('started_at_from', query.started_at_from);
+    }
+    if (query.started_at_to) {
+      params = params.set('started_at_to', query.started_at_to);
+    }
+
     const url = `${this._baseUrl()}/runs`;
     return this._http.get<JudicialSyncRunsResponse>(url, { params });
   }

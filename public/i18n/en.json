@@ -94,22 +94,31 @@
     },
     "judicialSync": {
         "title": "Judicial Branch sync",
-        "description": "Queue actuaciones lookups and browse each run history.",
+        "description": "Queue actuaciones lookups (Judicial Branch or SAMAI) and browse each run history.",
         "radicadoLabel": "Process number (optional)",
         "radicadoPlaceholder": "23 digits or leave empty for all active processes",
         "radicadoInvalid": "Must be exactly 23 digits.",
         "dispatchButton": "Run sync",
+        "dispatchJudicial": "Judicial Branch",
+        "dispatchSamai": "SAMAI",
         "dispatchSubmitting": "Queueing…",
+        "dispatchHint": "Same process number for both sources. They can run in parallel (separate queues).",
+        "dataSource": {
+            "judicialBranch": "Judicial Branch",
+            "samai": "SAMAI",
+            "tyba": "TYBA"
+        },
         "confirm": {
             "title": "Confirm sync",
             "message": "This will enqueue background jobs. Continue?",
             "submit": "Yes, run",
+            "dataSourceLabel": "Source",
             "radicadoLabel": "Process number",
             "scopeLabel": "Scope",
             "scopeAll": "All active processes",
-            "footnote": "Notifications depend on the queue and the Judicial Branch."
+            "footnote": "Notifications depend on the queue and the selected data source."
         },
-        "toastSuccess": "Sync queued successfully ({{jobs}} job(s)).",
+        "toastSuccess": "{{source}} sync queued successfully ({{jobs}} job(s)).",
         "toastError": "Could not queue the sync.",
         "moment": {
             "morning": "Morning",
@@ -138,6 +147,8 @@
         "runs": {
             "sectionTitle": "Run history",
             "sectionHint": "Scroll to load more",
+            "filterLabel": "Source",
+            "filterAll": "All",
             "loading": "Loading history…",
             "loadError": "Could not load history.",
             "retry": "Retry",

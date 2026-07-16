@@ -93,22 +93,31 @@
   },
   "judicialSync": {
     "title": "Sincronización con Rama Judicial",
-    "description": "Encola la consulta de actuaciones y revisa el historial de cada ejecución.",
+    "description": "Encola la consulta de actuaciones (Rama Judicial o SAMAI) y revisa el historial de cada ejecución.",
     "radicadoLabel": "Radicado (opcional)",
     "radicadoPlaceholder": "23 dígitos o vacío para todos los procesos activos",
     "radicadoInvalid": "Debe tener exactamente 23 dígitos.",
     "dispatchButton": "Ejecutar sincronización",
+    "dispatchJudicial": "Rama Judicial",
+    "dispatchSamai": "SAMAI",
     "dispatchSubmitting": "Encolando…",
+    "dispatchHint": "Mismo radicado para ambas fuentes. Pueden ejecutarse en paralelo (colas distintas).",
+    "dataSource": {
+      "judicialBranch": "Rama Judicial",
+      "samai": "SAMAI",
+      "tyba": "TYBA"
+    },
     "confirm": {
       "title": "Confirmar sincronización",
       "message": "Se enviará el comando para encolar trabajos en segundo plano. ¿Continuar?",
       "submit": "Sí, ejecutar",
+      "dataSourceLabel": "Fuente",
       "radicadoLabel": "Radicado",
       "scopeLabel": "Alcance",
       "scopeAll": "Todos los procesos activos",
-      "footnote": "Las notificaciones por nuevas actuaciones dependen de la cola y de la Rama Judicial."
+      "footnote": "Las notificaciones por nuevas actuaciones dependen de la cola y de la fuente seleccionada."
     },
-    "toastSuccess": "Sincronización encolada correctamente ({{jobs}} trabajo(s)).",
+    "toastSuccess": "Sincronización {{source}} encolada correctamente ({{jobs}} trabajo(s)).",
     "toastError": "No se pudo encolar la sincronización.",
     "moment": {
       "morning": "Mañana",
@@ -137,6 +146,8 @@
     "runs": {
       "sectionTitle": "Historial de ejecuciones",
       "sectionHint": "Scroll para cargar más",
+      "filterLabel": "Fuente",
+      "filterAll": "Todas",
       "loading": "Cargando historial…",
       "loadError": "No se pudo cargar el historial.",
       "retry": "Reintentar",
