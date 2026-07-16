@@ -14,7 +14,11 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { CommonModule } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { JudicialSyncService } from '@app/core/services/judicial-sync/judicial-sync.service';
-import { JudicialSyncRun } from '@app/core/models/judicial-sync/judicial-sync.model';
+import {
+  JudicialSyncDataSource,
+  JudicialSyncDispatchableSource,
+  JudicialSyncRun,
+} from '@app/core/models/judicial-sync/judicial-sync.model';
 import { ConfirmationDialogComponent, ConfirmationDialogDetailRow } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 
@@ -49,13 +53,20 @@ export class JudicialSyncComponent {
   public runs = signal<JudicialSyncRun[]>([]);
   public initialLoading = signal<boolean>(true);
   public loadingMore = signal<boolean>(false);
-  public dispatchSubmitting = signal<boolean>(false);
   public loadError = signal<boolean>(false);
+
+  /** Fuentes en cola de envío (pueden ir en paralelo). */
+  public submittingJudicial = signal<boolean>(false);
+  public submittingSamai = signal<boolean>(false);
 
   public currentPage = signal<number>(1);
   public lastPage = signal<number>(1);
 
+  /** Filtro del historial: '' = todas las fuentes. */
+  public historyDataSource = signal<'' | JudicialSyncDataSource>('');
+
   public confirmDispatchOpen = signal<boolean>(false);
+  public pendingDataSource = signal<JudicialSyncDispatchableSource | null>(null);
   public toastMessage = signal<string | null>(null);
 
   /** Body normalizado solo dígitos (23) para POST */
@@ -96,60 +107,92 @@ export class JudicialSyncComponent {
     });
   }
 
-  openDispatchConfirm(): void {
+  isSubmitting(source: JudicialSyncDispatchableSource): boolean {
+    return source === 'judicial_branch' ? this.submittingJudicial() : this.submittingSamai();
+  }
+
+  openDispatchConfirm(source: JudicialSyncDispatchableSource): void {
     if (this.dispatchForm.invalid) {
       this.dispatchForm.markAllAsTouched();
       return;
     }
-    if (this.dispatchSubmitting()) return;
+    if (this.isSubmitting(source)) return;
+    this.pendingDataSource.set(source);
     this.confirmDispatchOpen.set(true);
   }
 
   cancelDispatchConfirm(): void {
     this.confirmDispatchOpen.set(false);
+    this.pendingDataSource.set(null);
+  }
+
+  dataSourceLabel(source: string | null | undefined): string {
+    const s = String(source ?? '').toLowerCase();
+    if (s === 'samai') return this._transloco.translate('judicialSync.dataSource.samai');
+    if (s === 'tyba') return this._transloco.translate('judicialSync.dataSource.tyba');
+    if (s === 'judicial_branch') return this._transloco.translate('judicialSync.dataSource.judicialBranch');
+    return source?.trim() || '–';
   }
 
   getConfirmDetailRows(): ConfirmationDialogDetailRow[] {
+    const source = this.pendingDataSource();
+    const rows: ConfirmationDialogDetailRow[] = [
+      {
+        label: this._transloco.translate('judicialSync.confirm.dataSourceLabel'),
+        value: this.dataSourceLabel(source),
+      },
+    ];
+
     const raw = String(this.dispatchForm.get('radicado')?.value ?? '').trim();
     const digits = raw.replace(/\D/g, '');
     if (digits.length === 23) {
-      return [
-        {
-          label: this._transloco.translate('judicialSync.confirm.radicadoLabel'),
-          value: digits,
-        },
-      ];
-    }
-    return [
-      {
+      rows.push({
+        label: this._transloco.translate('judicialSync.confirm.radicadoLabel'),
+        value: digits,
+      });
+    } else {
+      rows.push({
         label: this._transloco.translate('judicialSync.confirm.scopeLabel'),
         value: this._transloco.translate('judicialSync.confirm.scopeAll'),
-      },
-    ];
+      });
+    }
+    return rows;
   }
 
   onConfirmDispatch(): void {
+    const source = this.pendingDataSource();
     this.confirmDispatchOpen.set(false);
+    this.pendingDataSource.set(null);
+    if (!source) return;
+
     const digits = String(this.dispatchForm.get('radicado')?.value ?? '')
       .trim()
       .replace(/\D/g, '');
     const radicadoPayload = digits.length === 23 ? digits : '';
 
-    this.dispatchSubmitting.set(true);
-    this._judicialSync.dispatchSync({ radicado: radicadoPayload }).subscribe({
+    this._setSubmitting(source, true);
+    this._judicialSync.dispatchSync({ radicado: radicadoPayload, data_source: source }).subscribe({
       next: (res) => {
-        this.dispatchSubmitting.set(false);
+        this._setSubmitting(source, false);
+        const label = res.data_source_label?.trim() || this.dataSourceLabel(res.data_source);
         const msg = this._transloco.translate('judicialSync.toastSuccess', {
           jobs: String(res.jobs_dispatched),
+          source: label,
         });
         this.showToast(msg);
         this.reloadRuns(true);
       },
       error: () => {
-        this.dispatchSubmitting.set(false);
+        this._setSubmitting(source, false);
         this.showToast(this._transloco.translate('judicialSync.toastError'));
       },
     });
+  }
+
+  setHistoryDataSource(value: '' | JudicialSyncDataSource): void {
+    if (this.historyDataSource() === value) return;
+    this.historyDataSource.set(value);
+    this.reloadRuns(true);
   }
 
   reloadRuns(reset: boolean): void {
@@ -159,26 +202,32 @@ export class JudicialSyncComponent {
       this.currentPage.set(1);
     }
 
-    this._judicialSync.getRuns(reset ? 1 : this.currentPage(), PER_PAGE).subscribe({
-      next: (response) => {
-        if (reset) {
-          this.runs.set(response.data);
-        } else {
-          this.runs.update((prev) => [...prev, ...response.data]);
-        }
-        this.currentPage.set(response.current_page);
-        this.lastPage.set(response.last_page);
-        this.initialLoading.set(false);
-        this.loadingMore.set(false);
-      },
-      error: () => {
-        this.initialLoading.set(false);
-        this.loadingMore.set(false);
-        if (reset) {
-          this.loadError.set(true);
-        }
-      },
-    });
+    this._judicialSync
+      .getRuns({
+        page: reset ? 1 : this.currentPage(),
+        per_page: PER_PAGE,
+        data_source: this.historyDataSource() || undefined,
+      })
+      .subscribe({
+        next: (response) => {
+          if (reset) {
+            this.runs.set(response.data);
+          } else {
+            this.runs.update((prev) => [...prev, ...response.data]);
+          }
+          this.currentPage.set(response.current_page);
+          this.lastPage.set(response.last_page);
+          this.initialLoading.set(false);
+          this.loadingMore.set(false);
+        },
+        error: () => {
+          this.initialLoading.set(false);
+          this.loadingMore.set(false);
+          if (reset) {
+            this.loadError.set(true);
+          }
+        },
+      });
   }
 
   loadMoreIfNeeded(): void {
@@ -188,15 +237,21 @@ export class JudicialSyncComponent {
     const nextPage = this.currentPage() + 1;
     this.loadingMore.set(true);
 
-    this._judicialSync.getRuns(nextPage, PER_PAGE).subscribe({
-      next: (response) => {
-        this.runs.update((prev) => [...prev, ...response.data]);
-        this.currentPage.set(response.current_page);
-        this.lastPage.set(response.last_page);
-        this.loadingMore.set(false);
-      },
-      error: () => this.loadingMore.set(false),
-    });
+    this._judicialSync
+      .getRuns({
+        page: nextPage,
+        per_page: PER_PAGE,
+        data_source: this.historyDataSource() || undefined,
+      })
+      .subscribe({
+        next: (response) => {
+          this.runs.update((prev) => [...prev, ...response.data]);
+          this.currentPage.set(response.current_page);
+          this.lastPage.set(response.last_page);
+          this.loadingMore.set(false);
+        },
+        error: () => this.loadingMore.set(false),
+      });
   }
 
   /**
@@ -217,6 +272,13 @@ export class JudicialSyncComponent {
   normalizedRadicado(filter: string | null | undefined): string {
     const d = String(filter ?? '').replace(/\D/g, '');
     return d.length === 23 ? d : '';
+  }
+
+  dataSourceBadgeClass(source: string | null | undefined): string {
+    const s = String(source ?? '').toLowerCase();
+    if (s === 'samai') return 'js-source-badge js-source-badge--samai';
+    if (s === 'tyba') return 'js-source-badge js-source-badge--tyba';
+    return 'js-source-badge js-source-badge--judicial';
   }
 
   /**
@@ -269,6 +331,14 @@ export class JudicialSyncComponent {
     if (m === 'noche') return 'judicialSync.moment.night';
     if (m.includes('madrug')) return 'judicialSync.moment.dawn';
     return 'judicialSync.moment.other';
+  }
+
+  private _setSubmitting(source: JudicialSyncDispatchableSource, value: boolean): void {
+    if (source === 'judicial_branch') {
+      this.submittingJudicial.set(value);
+    } else {
+      this.submittingSamai.set(value);
+    }
   }
 
   private showToast(message: string): void {
