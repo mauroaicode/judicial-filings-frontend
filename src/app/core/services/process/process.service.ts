@@ -117,15 +117,30 @@ export class ProcessService {
    * Import processes from Excel file (xlsx) for a given organization.
    * Import runs in background; user receives a report by email.
    *
+   * También cubre importación marcada como privada con fuente SAMAI / Rama Judicial
+   * (`is_private` + `data_source_slug`). POST /processes/private-import queda para otros casos.
+   *
    * @param file - Excel file (.xlsx)
    * @param organizationId - Organization UUID to assign the imported processes to
+   * @param options - Optional private import flags
    * @returns Observable with message and batch_id
    */
-  importProcesses(file: File, organizationId: string): Observable<ProcessImportBatchResponse> {
+  importProcesses(
+    file: File,
+    organizationId: string,
+    options?: { isPrivate?: boolean; dataSourceSlug?: string }
+  ): Observable<ProcessImportBatchResponse> {
     const url = `${environment.apiBaseUrl}/processes/import`;
     const formData = new FormData();
     formData.append('file', file, file.name);
     formData.append('organization_id', organizationId);
+    if (options?.isPrivate) {
+      formData.append('is_private', '1');
+      const slug = options.dataSourceSlug?.trim();
+      if (slug) {
+        formData.append('data_source_slug', slug);
+      }
+    }
     return this._http.post<ProcessImportBatchResponse>(url, formData);
   }
 
@@ -138,7 +153,8 @@ export class ProcessService {
   }
 
   /**
-   * Importa procesos privados desde Excel (xlsx) con slug de fuente de datos.
+   * Importa procesos privados vía POST /processes/private-import.
+   * Reservado para otros casos; el flujo UI actual (SAMAI / Rama Judicial) usa {@link importProcesses}.
    */
   importPrivateProcesses(
     file: File,
