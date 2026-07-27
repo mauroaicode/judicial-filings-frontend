@@ -1,5 +1,6 @@
 /**
- * Fuente de datos para importación de procesos privados (GET /process-data-sources)
+ * Fuente de datos para importación (GET /process-data-sources).
+ * Slugs conocidos: judicial_branch, samai, publicaciones_procesales.
  */
 export interface ProcessDataSource {
   id: string;

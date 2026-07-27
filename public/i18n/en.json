@@ -77,6 +77,7 @@
         "clients": "Organizations",
         "importHistory": "Import history",
         "judicialSync": "Branch sync",
+        "digestPackages": "Digest packages",
         "toggleSidebar": "Toggle sidebar"
     },
     "header": {
@@ -443,8 +444,37 @@
             "privateStatsUpdated": "Processes updated:",
             "privateStatsActions": "Actions imported:",
             "confirmSubmit": "Yes, import",
+            "validationErrors": "Validation errors",
+            "rowErrorLabel": "Row {{row}}:",
             "errors": {
                 "generic": "Error importing. Please try again."
+            }
+        },
+        "actuacionesImport": {
+            "button": "Import actions",
+            "fabImportAria": "Import actions from Excel",
+            "title": "Import actions / movements",
+            "description": "Upload an Excel file with actions. The system matches each process by filing number. Missing processes are not created: they are reported so you can create them first with Import processes.",
+            "sheetHint": "Select an .xlsx file to import.",
+            "cancel": "Cancel",
+            "submit": "Import actions",
+            "submitting": "Importing...",
+            "close": "Close",
+            "successSummary": "Imported {{actions}} actions into {{processes}} process(es).",
+            "successSkipped": "{{skipped}} skipped as duplicates.",
+            "successNoMatch": "No actions were imported: the filing numbers in the Excel do not exist in the system.",
+            "statImported": "Actions imported:",
+            "statSkipped": "Skipped (already existed):",
+            "statUpdated": "Processes updated:",
+            "notFoundWarning": "{{count}} filing number(s) do not exist in the system:",
+            "notFoundListLabel": "Filing numbers not found",
+            "notFoundHint": "Create them first with Import processes, then re-import the actions.",
+            "copyNotFound": "Copy all",
+            "copyNotFoundSuccess": "Filing numbers copied to clipboard",
+            "openImportProcesses": "Go to Import processes",
+            "validationErrors": "Validation errors",
+            "errors": {
+                "generic": "Error importing actions. Please try again."
             }
         }
     },
@@ -632,6 +662,32 @@
         "tabs": {
             "all": "All",
             "unread": "Unread"
+        }
+    },
+    "digestPackages": {
+        "title": "Pending digest packages",
+        "description": "Summary of what will be sent to each organization.",
+        "badgeManual": "Manual dispatch",
+        "badgeAutoEnabled": "Can also be sent automatically after sync",
+        "kpiOrgs": "Organizations",
+        "kpiActions": "Pending actions",
+        "refresh": "Refresh",
+        "send": "Send package",
+        "sending": "Sending...",
+        "colOrg": "Organization",
+        "colPending": "Pending actions",
+        "colChannels": "Active channels",
+        "emptyTitle": "No pending digest packages",
+        "emptySubtitle": "All organizations are up to date. Come back after importing actions or running a sync.",
+        "retry": "Retry",
+        "confirmTitle": "Send digest package?",
+        "confirmMessage": "A digest will be queued for {{orgs}} organization(s), with a total of {{actions}} pending action(s). Each organization will receive the notification on its active channels.",
+        "confirmRowOrgs": "Organizations",
+        "confirmRowActions": "Pending actions",
+        "confirmFootnote": "Email delivery may take a few minutes while the queue is processed.",
+        "errors": {
+            "loadFailed": "Could not load the pending package.",
+            "sendGeneric": "Could not send the package. Please try again."
         }
     }
 }

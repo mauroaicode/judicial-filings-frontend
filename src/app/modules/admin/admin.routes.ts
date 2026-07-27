@@ -29,6 +29,11 @@ export default [
     loadChildren: () =>
       import('./judicial-sync/judicial-sync.routes').then((m) => m.default),
   },
+  {
+    path: 'digest-packages',
+    loadChildren: () =>
+      import('./digest-packages/digest-packages.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

@@ -20,6 +20,7 @@ import {
   ProcessFilter,
   ProcessResponseMeta,
   ProcessImportBatchResponse,
+  ActuacionesImportResponse,
   ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
@@ -111,26 +112,49 @@ export class ProcessesComponent {
   public importDataSources = signal<ProcessDataSource[]>([]);
   public importDataSourcesLoading = signal<boolean>(false);
 
+  /** Modal Importar actuaciones / movimientos */
+  public isActuacionesImportModalOpen = signal<boolean>(false);
+  public actuacionesImportSubmitting = signal<boolean>(false);
+  public actuacionesImportResult = signal<ActuacionesImportResponse | null>(null);
+  public actuacionesImportFile = signal<File | null>(null);
+  /** Errores de campo (422 sin errors.rows), p. ej. file / mimes */
+  public actuacionesImportFieldErrors = signal<{ file?: string }>({});
+
+  /** Slugs permitidos según modo (el backend responde 422 si no coinciden) */
+  private static readonly PRIVATE_DATA_SOURCE_SLUGS = ['publicaciones_procesales', 'samai'] as const;
+  private static readonly API_DATA_SOURCE_SLUGS = ['judicial_branch', 'samai'] as const;
+
   /** Opciones para el combobox de importación (id + nombre) */
   public importOrganizationOptions = computed(() =>
     this.importOrganizations().map((o) => ({ id: o.id, label: o.name }))
   );
 
-  /** Fuentes activas para el select (el `id` es el slug enviado al API) */
-  public importDataSourceOptions = computed(() =>
-    this.importDataSources()
-      .filter((s) => s.is_active)
-      .map((s) => ({ id: s.slug, label: s.name }))
-  );
+  /**
+   * Fuentes activas filtradas por toggle:
+   * privado → publicaciones_procesales, samai | estándar → judicial_branch, samai
+   * (`id` = slug enviado al API)
+   */
+  public importDataSourceOptions = computed(() => {
+    const allowed = this.importIsPrivate()
+      ? ProcessesComponent.PRIVATE_DATA_SOURCE_SLUGS
+      : ProcessesComponent.API_DATA_SOURCE_SLUGS;
+    return this.importDataSources()
+      .filter((s) => s.is_active && (allowed as readonly string[]).includes(s.slug))
+      .map((s) => ({ id: s.slug, label: s.name }));
+  });
 
   /** Habilita el paso siguiente (confirmación / envío visual del botón principal) */
   public importReadyToConfirm = computed(() => {
     if (this.importSubmitting()) return false;
     if (!this.importFile()) return false;
     if (!this.importOrganizationId()?.trim()) return false;
-    if (!this.importIsPrivate()) return true;
     if (this.importDataSourcesLoading()) return false;
     return !!this.importDataSourceSlug()?.trim();
+  });
+
+  public actuacionesImportReady = computed(() => {
+    if (this.actuacionesImportSubmitting()) return false;
+    return !!this.actuacionesImportFile();
   });
 
   // Filter form
@@ -766,7 +790,7 @@ export class ProcessesComponent {
   }
 
   /**
-   * Open import Excel modal and load organizations for the select
+   * Open import Excel modal and load organizations + data sources for the selects
    */
   openImportModal(): void {
     this.importFile.set(null);
@@ -777,6 +801,7 @@ export class ProcessesComponent {
     this.importDataSources.set([]);
     this.isImportModalOpen.set(true);
     this._loadImportOrganizations();
+    this._loadImportDataSources();
   }
 
   /**
@@ -820,20 +845,33 @@ export class ProcessesComponent {
 
   onImportPrivateChange(checked: boolean): void {
     this.importIsPrivate.set(checked);
-    this.importDataSourceSlug.set('');
-    if (!checked) {
-      return;
-    }
-    this._loadImportDataSources();
+    this._applyDefaultDataSourceSlug();
   }
 
   /** Éxito: import estándar (batch_id) o privado con contadores numéricos */
   isImportResultSuccess(res: ProcessImportBatchResponse): boolean {
-    const bid = res.batch_id?.trim();
-    if (bid) {
+    if (res.errors) {
+      return false;
+    }
+    const bid = res.batch_id?.trim() || res.import_batch_id?.trim();
+    if (bid && typeof res.processes_created !== 'number') {
       return true;
     }
     return typeof res.processes_created === 'number';
+  }
+
+  /** Errores por fila del Excel (`errors.rows`) para listar en el resultado */
+  getImportRowErrors(res: ProcessImportBatchResponse): { row: string; message: string }[] {
+    const rows = res.errors?.rows;
+    if (!rows || typeof rows !== 'object') {
+      return [];
+    }
+    return Object.entries(rows)
+      .map(([row, value]) => ({
+        row,
+        message: Array.isArray(value) ? value.join(' ') : String(value),
+      }))
+      .sort((a, b) => Number(a.row) - Number(b.row) || a.row.localeCompare(b.row));
   }
 
   getImportConfirmTitle(): string {
@@ -877,26 +915,24 @@ export class ProcessesComponent {
         value: organizationName,
       },
     ];
-    if (this.importIsPrivate()) {
-      const slug = this.importDataSourceSlug()?.trim();
-      if (slug) {
-        rows.push({
-          label: this._transloco.translate('processes.import.confirmDataSourceLabel'),
-          value: this._importDataSourceDisplayName(slug),
-        });
-      }
+    const slug = this.importDataSourceSlug()?.trim();
+    if (slug) {
+      rows.push({
+        label: this._transloco.translate('processes.import.confirmDataSourceLabel'),
+        value: this._importDataSourceDisplayName(slug),
+      });
     }
     return rows;
   }
 
   /**
-   * Abre el paso de confirmación (nombre de archivo + organización).
+   * Abre el paso de confirmación (nombre de archivo + organización + fuente).
    */
   openImportConfirmDialog(): void {
     const file = this.importFile();
     const organizationId = this.importOrganizationId()?.trim();
     if (!file || !organizationId) return;
-    if (this.importIsPrivate() && !this.importDataSourceSlug()?.trim()) {
+    if (!this.importDataSourceSlug()?.trim()) {
       return;
     }
 
@@ -933,45 +969,271 @@ export class ProcessesComponent {
       next: (list) => {
         this.importDataSources.set(Array.isArray(list) ? list : []);
         this.importDataSourcesLoading.set(false);
+        this._applyDefaultDataSourceSlug();
       },
       error: () => {
         this.importDataSources.set([]);
         this.importDataSourcesLoading.set(false);
+        this.importDataSourceSlug.set('');
       },
     });
+  }
+
+  /**
+   * Preselecciona fuente según modo: privado → publicaciones_procesales;
+   * estándar → judicial_branch (o la primera opción disponible).
+   */
+  private _applyDefaultDataSourceSlug(): void {
+    const options = this.importDataSourceOptions();
+    if (!options.length) {
+      this.importDataSourceSlug.set('');
+      return;
+    }
+    const preferred = this.importIsPrivate() ? 'publicaciones_procesales' : 'judicial_branch';
+    const match = options.find((o) => o.id === preferred);
+    this.importDataSourceSlug.set(match?.id ?? options[0].id);
   }
 
   private executeImportSubmit(): void {
     const file = this.importFile();
     const organizationId = this.importOrganizationId()?.trim();
-    if (!file || !organizationId) return;
+    const dataSourceSlug = this.importDataSourceSlug()?.trim();
+    if (!file || !organizationId || !dataSourceSlug) return;
 
     const isPrivate = this.importIsPrivate();
-    const dataSourceSlug = this.importDataSourceSlug()?.trim();
-    if (isPrivate && !dataSourceSlug) {
-      return;
-    }
 
     this.importSubmitting.set(true);
     this.importResult.set(null);
 
-    // Privados con SAMAI / Rama Judicial → POST /processes/import
-    // (/processes/private-import queda para otros casos)
-    this._processService
-      .importProcesses(file, organizationId, {
-        isPrivate,
-        dataSourceSlug: isPrivate ? dataSourceSlug : undefined,
-      })
-      .subscribe({
-        next: (response) => {
-          this.importResult.set(response);
-          this.importSubmitting.set(false);
-        },
-        error: (err) => {
-          const message = err.error?.message || this._transloco.translate('processes.import.errors.generic');
-          this.importResult.set({ message });
-          this.importSubmitting.set(false);
-        },
+    // Privado → POST /processes/private-import | Estándar → POST /processes/import
+    const request$ = isPrivate
+      ? this._processService.importPrivateProcesses(file, organizationId, dataSourceSlug)
+      : this._processService.importProcesses(file, organizationId, dataSourceSlug);
+
+    request$.subscribe({
+      next: (response) => {
+        this.importResult.set(response);
+        this.importSubmitting.set(false);
+      },
+      error: (err) => {
+        const body = err.error;
+        const message =
+          body?.message || this._transloco.translate('processes.import.errors.generic');
+        this.importResult.set({
+          message,
+          import_batch_id: body?.import_batch_id,
+          errors: body?.errors,
+        });
+        this.importSubmitting.set(false);
+      },
+    });
+  }
+
+  // -----------------------------------------------------------------------------------------------------
+  // Importar actuaciones / movimientos
+  // -----------------------------------------------------------------------------------------------------
+
+  openActuacionesImportFromMobileFab(): void {
+    this.closeMobileFabMenu();
+    this.openActuacionesImportModal();
+  }
+
+  openActuacionesImportModal(): void {
+    this.actuacionesImportFile.set(null);
+    this.actuacionesImportResult.set(null);
+    this.actuacionesImportFieldErrors.set({});
+    this.actuacionesImportSubmitting.set(false);
+    this.isActuacionesImportModalOpen.set(true);
+  }
+
+  closeActuacionesImportModal(): void {
+    this.isActuacionesImportModalOpen.set(false);
+    this.closeMobileFabMenu();
+    this.actuacionesImportFile.set(null);
+    this.actuacionesImportResult.set(null);
+    this.actuacionesImportFieldErrors.set({});
+    this.actuacionesImportSubmitting.set(false);
+  }
+
+  onActuacionesImportFileSelected(file: File | null): void {
+    this.actuacionesImportFile.set(file);
+    this.actuacionesImportFieldErrors.update((e) => {
+      const next = { ...e };
+      delete next.file;
+      return next;
+    });
+  }
+
+  isActuacionesImportSuccess(res: ActuacionesImportResponse): boolean {
+    if (res.errors) return false;
+    return (
+      !!res.import_batch_id ||
+      typeof res.actions_imported === 'number' ||
+      typeof res.not_found_count === 'number'
+    );
+  }
+
+  /** Import OK pero sin actuaciones (solo radicados no encontrados) */
+  isActuacionesImportNoActions(res: ActuacionesImportResponse): boolean {
+    return this.getActuacionesNotFoundNumbers(res).length > 0 && (res.actions_imported ?? 0) === 0;
+  }
+
+  getActuacionesNotFoundNumbers(res: ActuacionesImportResponse): string[] {
+    const list = res.not_found_process_numbers;
+    if (Array.isArray(list) && list.length > 0) {
+      return list;
+    }
+    return [];
+  }
+
+  getActuacionesNotFoundCount(res: ActuacionesImportResponse): number {
+    const explicit = res.not_found_count;
+    if (typeof explicit === 'number' && explicit >= 0) {
+      return explicit;
+    }
+    return this.getActuacionesNotFoundNumbers(res).length;
+  }
+
+  openImportProcessesFromActuacionesResult(): void {
+    this.closeActuacionesImportModal();
+    this.openImportModal();
+    this.importIsPrivate.set(true);
+    this._applyDefaultDataSourceSlug();
+  }
+
+  getActuacionesImportRowErrors(
+    res: ActuacionesImportResponse
+  ): { row: string; message: string }[] {
+    const rows = res.errors?.rows;
+    if (!rows || typeof rows !== 'object') {
+      return [];
+    }
+    return Object.entries(rows)
+      .map(([row, value]) => ({
+        row,
+        message: Array.isArray(value) ? value.join(' ') : String(value),
+      }))
+      .sort((a, b) => Number(a.row) - Number(b.row) || a.row.localeCompare(b.row));
+  }
+
+  getActuacionesImportSuccessMessage(res: ActuacionesImportResponse): string {
+    if (this.isActuacionesImportNoActions(res)) {
+      return this._transloco.translate('processes.actuacionesImport.successNoMatch');
+    }
+
+    let msg = this._transloco.translate('processes.actuacionesImport.successSummary', {
+      actions: res.actions_imported ?? 0,
+      processes: res.processes_updated ?? 0,
+    });
+    if ((res.actions_skipped ?? 0) > 0) {
+      msg +=
+        ' ' +
+        this._transloco.translate('processes.actuacionesImport.successSkipped', {
+          skipped: res.actions_skipped,
+        });
+    }
+    return msg;
+  }
+
+  copyActuacionesNotFoundNumbers(numbers: string[], event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const text = (numbers ?? [])
+      .map((n) => (n ?? '').replace(/\D/g, ''))
+      .filter(Boolean)
+      .join('\n');
+    if (!text) return;
+
+    if (this._copiedRadicadoToastTimer) {
+      clearTimeout(this._copiedRadicadoToastTimer);
+      this._copiedRadicadoToastTimer = undefined;
+    }
+
+    const dismiss = (): void => {
+      this.copyRadicadoToast.set(null);
+      this._copiedRadicadoToastTimer = undefined;
+    };
+
+    navigator.clipboard.writeText(text).then(() => {
+      this.copyRadicadoToast.set({
+        message: this._transloco.translate('processes.actuacionesImport.copyNotFoundSuccess'),
+        kind: 'success',
       });
+      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
+    }).catch(() => {
+      this.copyRadicadoToast.set({
+        message: this._transloco.translate('processes.copy.toastError'),
+        kind: 'error',
+      });
+      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
+    });
+  }
+
+  submitActuacionesImport(): void {
+    const file = this.actuacionesImportFile();
+    if (!file) return;
+
+    this.actuacionesImportSubmitting.set(true);
+    this.actuacionesImportResult.set(null);
+    this.actuacionesImportFieldErrors.set({});
+
+    this._processService.importActuaciones(file).subscribe({
+      next: (response) => {
+        const notFound = Array.isArray(response.not_found_process_numbers)
+          ? response.not_found_process_numbers
+          : [];
+        this.actuacionesImportResult.set({
+          ...response,
+          actions_imported: response.actions_imported ?? 0,
+          actions_skipped: response.actions_skipped ?? 0,
+          processes_updated: response.processes_updated ?? 0,
+          not_found_count: response.not_found_count ?? notFound.length,
+          not_found_process_numbers: notFound,
+        });
+        this.actuacionesImportSubmitting.set(false);
+        if ((response.actions_imported ?? 0) > 0) {
+          this.loadProcesses(1, this.pagination()?.per_page || 10);
+        }
+      },
+      error: (err) => {
+        const body = err.error as ActuacionesImportResponse | undefined;
+        const errors = body?.errors;
+        const rowErrors = errors?.rows;
+
+        if (errors && !rowErrors) {
+          this.actuacionesImportFieldErrors.set({
+            file: this._firstErrorMessage(errors.file),
+          });
+          // Si solo hay error de file, quedarse en el formulario; si no hay file error
+          // pero hay otros campos, igual mostrar message en resultado.
+          if (errors.file) {
+            this.actuacionesImportSubmitting.set(false);
+            return;
+          }
+        }
+
+        this.actuacionesImportResult.set({
+          message:
+            body?.message ||
+            this._transloco.translate('processes.actuacionesImport.errors.generic'),
+          actions_imported: 0,
+          actions_skipped: 0,
+          processes_updated: 0,
+          not_found_count: 0,
+          not_found_process_numbers: [],
+          import_batch_id: body?.import_batch_id,
+          // Forzar vista de error aunque el 422 solo traiga `message` (Excel vacío, etc.)
+          errors: errors ?? { file: body?.message || 'failed' },
+        });
+        this.actuacionesImportSubmitting.set(false);
+      },
+    });
+  }
+
+  private _firstErrorMessage(value: string | string[] | undefined): string | undefined {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value[0] : value;
   }
 }

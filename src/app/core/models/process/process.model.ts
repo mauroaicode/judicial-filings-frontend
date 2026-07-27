@@ -186,10 +186,39 @@ export interface ProcessImportBatchResponse {
   message: string;
   /** Presente en importación estándar (segundo plano) */
   batch_id?: string;
-  /** Respuesta POST /processes/private-import (reservado) o stats síncronos */
+  /** Presente en POST /processes/private-import (éxito o 422 con filas) */
+  import_batch_id?: string;
+  /** Stats síncronos de importación privada */
   processes_created?: number;
   processes_updated?: number;
   actions_imported?: number;
+  /** Errores de validación (campo o filas del Excel) */
+  errors?: {
+    rows?: Record<string, string | string[]>;
+    organization_id?: string | string[];
+    file?: string | string[];
+    data_source_slug?: string | string[];
+    [key: string]: string | string[] | Record<string, string | string[]> | undefined;
+  };
+}
+
+/**
+ * Respuesta POST /processes/actuaciones-import (éxito síncrono).
+ * No crea procesos: los radicados ausentes van en `not_found_process_numbers`.
+ */
+export interface ActuacionesImportResponse {
+  message?: string;
+  actions_imported?: number;
+  actions_skipped?: number;
+  processes_updated?: number;
+  not_found_count?: number;
+  not_found_process_numbers?: string[];
+  import_batch_id?: string;
+  errors?: {
+    rows?: Record<string, string | string[]>;
+    file?: string | string[];
+    [key: string]: string | string[] | Record<string, string | string[]> | undefined;
+  };
 }
 
 /**

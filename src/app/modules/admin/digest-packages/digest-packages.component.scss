@@ -1,0 +1,35 @@
+// Digest Packages page
+
+.dp-table-header th {
+  background-color: #4b2a7d !important;
+  color: #fff !important;
+}
+
+.dp-row td {
+  vertical-align: middle;
+}
+
+.dp-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  background: hsl(var(--p) / 0.12);
+  color: hsl(var(--p));
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: hsl(var(--s) / 0.1);
+  color: hsl(var(--s));
+}

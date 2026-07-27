@@ -8,6 +8,7 @@ import {
   ProcessResponse,
   ProcessResponseMeta,
   ProcessImportBatchResponse,
+  ActuacionesImportResponse,
   ProcessDashboardStats,
   ProcessDetailResponse,
   ActionFilter,
@@ -114,38 +115,33 @@ export class ProcessService {
   }
 
   /**
-   * Import processes from Excel file (xlsx) for a given organization.
-   * Import runs in background; user receives a report by email.
+   * Importación estándar (Rama Judicial / SAMAI) vía POST /processes/import.
+   * No usar para privados: el backend rechaza `publicaciones_procesales` aquí (422).
    *
-   * También cubre importación marcada como privada con fuente SAMAI / Rama Judicial
-   * (`is_private` + `data_source_slug`). POST /processes/private-import queda para otros casos.
-   *
-   * @param file - Excel file (.xlsx)
+   * @param file - Excel file (.xlsx / .xls)
    * @param organizationId - Organization UUID to assign the imported processes to
-   * @param options - Optional private import flags
+   * @param dataSourceSlug - `judicial_branch` | `samai`
    * @returns Observable with message and batch_id
    */
   importProcesses(
     file: File,
     organizationId: string,
-    options?: { isPrivate?: boolean; dataSourceSlug?: string }
+    dataSourceSlug?: string
   ): Observable<ProcessImportBatchResponse> {
     const url = `${environment.apiBaseUrl}/processes/import`;
     const formData = new FormData();
     formData.append('file', file, file.name);
     formData.append('organization_id', organizationId);
-    if (options?.isPrivate) {
-      formData.append('is_private', '1');
-      const slug = options.dataSourceSlug?.trim();
-      if (slug) {
-        formData.append('data_source_slug', slug);
-      }
+    const slug = dataSourceSlug?.trim();
+    if (slug) {
+      formData.append('data_source_slug', slug);
     }
     return this._http.post<ProcessImportBatchResponse>(url, formData);
   }
 
   /**
-   * Lista fuentes de datos para importación de procesos privados.
+   * Lista fuentes de datos (GET /process-data-sources).
+   * El UI filtra por modo privado vs estándar.
    */
   getProcessDataSources(): Observable<ProcessDataSource[]> {
     const url = `${environment.apiBaseUrl}/process-data-sources`;
@@ -153,20 +149,35 @@ export class ProcessService {
   }
 
   /**
-   * Importa procesos privados vía POST /processes/private-import.
-   * Reservado para otros casos; el flujo UI actual (SAMAI / Rama Judicial) usa {@link importProcesses}.
+   * Importación privada vía POST /processes/private-import
+   * (`publicaciones_procesales` | `samai`). Si se omite el slug, el backend usa
+   * `publicaciones_procesales`.
    */
   importPrivateProcesses(
     file: File,
     organizationId: string,
-    dataSourceSlug: string
+    dataSourceSlug?: string
   ): Observable<ProcessImportBatchResponse> {
     const url = `${environment.apiBaseUrl}/processes/private-import`;
     const formData = new FormData();
     formData.append('file', file, file.name);
     formData.append('organization_id', organizationId);
-    formData.append('data_source_slug', dataSourceSlug);
+    const slug = dataSourceSlug?.trim();
+    if (slug) {
+      formData.append('data_source_slug', slug);
+    }
     return this._http.post<ProcessImportBatchResponse>(url, formData);
+  }
+
+  /**
+   * Importa actuaciones / movimientos vía POST /processes/actuaciones-import.
+   * Solo envía el Excel; el backend resuelve cada fila por número de radicado.
+   */
+  importActuaciones(file: File): Observable<ActuacionesImportResponse> {
+    const url = `${environment.apiBaseUrl}/processes/actuaciones-import`;
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this._http.post<ActuacionesImportResponse>(url, formData);
   }
 
   /**

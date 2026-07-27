@@ -76,6 +76,7 @@
     "clients": "Organizaciones",
     "importHistory": "Historial importaciones",
     "judicialSync": "Sincronización Rama",
+    "digestPackages": "Consolidados",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -298,6 +299,7 @@
       "privateStatsActions": "Actuaciones importadas:",
       "confirmSubmit": "Sí, importar",
       "validationErrors": "Errores de validación",
+      "rowErrorLabel": "Fila {{row}}:",
       "stats": {
         "succeeded": "Importados correctamente",
         "failed": "Fallidos",
@@ -307,6 +309,33 @@
         "invalidFormat": "Solo se permiten archivos Excel (.xlsx).",
         "fileTooBig": "El archivo supera el tamaño máximo permitido (10 MB).",
         "generic": "Error al importar. Intente de nuevo."
+      }
+    },
+    "actuacionesImport": {
+      "button": "Importar Actuaciones",
+      "fabImportAria": "Importar actuaciones desde Excel",
+      "title": "Importar actuaciones / movimientos",
+      "description": "Suba un Excel con actuaciones. El sistema busca cada proceso por radicado. Si el proceso no existe, no se crea: se reporta al final para que lo cree primero con Importar procesos.",
+      "sheetHint": "Seleccione un archivo .xlsx para importar.",
+      "cancel": "Cancelar",
+      "submit": "Importar actuaciones",
+      "submitting": "Importando...",
+      "close": "Cerrar",
+      "successSummary": "Se importaron {{actions}} actuaciones en {{processes}} proceso(s).",
+      "successSkipped": "{{skipped}} se omitió(n) por duplicado.",
+      "successNoMatch": "No se importaron actuaciones: los radicados del Excel no existen en el sistema.",
+      "statImported": "Actuaciones importadas:",
+      "statSkipped": "Omitidas (ya existían):",
+      "statUpdated": "Procesos actualizados:",
+      "notFoundWarning": "{{count}} radicado(s) no existe(n) en el sistema:",
+      "notFoundListLabel": "Radicados no encontrados",
+      "notFoundHint": "Créelos primero con Importar procesos y luego reimporte las actuaciones.",
+      "copyNotFound": "Copiar todos",
+      "copyNotFoundSuccess": "Radicados copiados al portapapeles",
+      "openImportProcesses": "Ir a Importar procesos",
+      "validationErrors": "Errores de validación",
+      "errors": {
+        "generic": "Error al importar actuaciones. Intente de nuevo."
       }
     }
   },
@@ -665,6 +694,32 @@
     "tabs": {
       "all": "Todas",
       "unread": "No leídas"
+    }
+  },
+  "digestPackages": {
+    "title": "Paquete de consolidados pendientes",
+    "description": "Resumen de lo que se enviará a cada organización.",
+    "badgeManual": "Envío manual",
+    "badgeAutoEnabled": "También puede enviarse automático tras sync",
+    "kpiOrgs": "Organizaciones",
+    "kpiActions": "Actuaciones pendientes",
+    "refresh": "Actualizar",
+    "send": "Enviar paquete",
+    "sending": "Enviando...",
+    "colOrg": "Organización",
+    "colPending": "Actuaciones pendientes",
+    "colChannels": "Canales activos",
+    "emptyTitle": "No hay consolidados pendientes de enviar",
+    "emptySubtitle": "Todas las organizaciones están al día. Vuelve después de importar actuaciones o ejecutar una sincronización.",
+    "retry": "Reintentar",
+    "confirmTitle": "¿Enviar paquete de consolidados?",
+    "confirmMessage": "Se encolará un consolidado para {{orgs}} organización(es), con un total de {{actions}} actuación(es) pendientes. Cada organización recibirá el aviso en sus canales activos.",
+    "confirmRowOrgs": "Organizaciones",
+    "confirmRowActions": "Actuaciones pendientes",
+    "confirmFootnote": "El envío de correos puede demorar unos minutos mientras se procesa la cola.",
+    "errors": {
+      "loadFailed": "No se pudo cargar el paquete pendiente.",
+      "sendGeneric": "No se pudo enviar el paquete. Intenta de nuevo."
     }
   }
 }

@@ -40,6 +40,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'judicialSync',
     link: '/admin/judicial-sync',
   },
+  {
+    id: 'digest-packages',
+    title: 'navigation.digestPackages',
+    type: 'basic',
+    icon: 'digestPackages',
+    link: '/admin/digest-packages',
+  },
   // More items will be added here as needed
 ];
 

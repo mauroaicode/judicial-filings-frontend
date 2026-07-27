@@ -1,0 +1,185 @@
+<div class="digest-packages-page w-full space-y-6 pb-24 lg:pb-0">
+
+  <!-- Toast -->
+  @if (toastMessage(); as tm) {
+    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+      <div
+        class="alert shadow-lg border-none rounded-2xl font-semibold pointer-events-none"
+        [class.alert-success]="toastKind() === 'success'"
+        [class.alert-error]="toastKind() === 'error'"
+      >
+        @if (toastKind() === 'success') {
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+        @if (toastKind() === 'error') {
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+        <span>{{ tm }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Page header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="min-w-0">
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+          {{ 'digestPackages.title' | transloco }}
+        </h1>
+        @if (preview(); as p) {
+          @if (p.auto_digest_enabled) {
+            <span class="badge badge-outline badge-info text-xs font-semibold">
+              {{ 'digestPackages.badgeAutoEnabled' | transloco }}
+            </span>
+          } @else {
+            <span class="badge badge-outline badge-warning text-xs font-semibold">
+              {{ 'digestPackages.badgeManual' | transloco }}
+            </span>
+          }
+        }
+      </div>
+      <p class="mt-1 text-sm text-base-content/65">
+        {{ 'digestPackages.description' | transloco }}
+      </p>
+    </div>
+
+    <div class="flex shrink-0 flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-toolbar-tall rounded-xl border border-base-200 gap-2"
+        [disabled]="loading() || sending()"
+        (click)="loadPreview()"
+      >
+        @if (loading()) {
+          <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        }
+        {{ 'digestPackages.refresh' | transloco }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-sm btn-toolbar-tall rounded-xl gap-2 font-bold"
+        [disabled]="isEmpty() || loading() || sending()"
+        (click)="openConfirm()"
+      >
+        @if (sending()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          {{ 'digestPackages.sending' | transloco }}
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          {{ 'digestPackages.send' | transloco }}
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI summary cards -->
+  @if (!loading() && !loadError() && preview(); as p) {
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
+        <div class="card-body p-4 gap-1">
+          <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            {{ 'digestPackages.kpiOrgs' | transloco }}
+          </p>
+          <p class="text-3xl font-extrabold tabular-nums text-primary">{{ p.organizations_count }}</p>
+        </div>
+      </div>
+      <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
+        <div class="card-body p-4 gap-1">
+          <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            {{ 'digestPackages.kpiActions' | transloco }}
+          </p>
+          <p class="text-3xl font-extrabold tabular-nums text-primary">{{ p.total_pending_actions }}</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Table card -->
+  <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl overflow-hidden">
+
+    <!-- Loading skeleton -->
+    @if (loading()) {
+      <div class="flex min-h-[10rem] items-center justify-center py-12">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!loading() && loadError()) {
+      <div class="flex min-h-[10rem] flex-col items-center justify-center gap-3 py-12 text-center px-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-error/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p class="text-sm font-semibold text-base-content/70">{{ 'digestPackages.errors.loadFailed' | transloco }}</p>
+        <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="loadPreview()">
+          {{ 'digestPackages.retry' | transloco }}
+        </button>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loading() && !loadError() && isEmpty()) {
+      <div class="flex min-h-[10rem] flex-col items-center justify-center gap-3 py-14 text-center px-6">
+        <div class="dp-empty-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p class="text-base font-semibold text-base-content">{{ 'digestPackages.emptyTitle' | transloco }}</p>
+        <p class="text-sm text-base-content/55 max-w-xs">{{ 'digestPackages.emptySubtitle' | transloco }}</p>
+      </div>
+    }
+
+    <!-- Data table -->
+    @if (!loading() && !loadError() && !isEmpty() && preview(); as p) {
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full text-sm">
+          <thead>
+            <tr class="dp-table-header">
+              <th class="font-semibold">{{ 'digestPackages.colOrg' | transloco }}</th>
+              <th class="font-semibold text-right w-40">{{ 'digestPackages.colPending' | transloco }}</th>
+              <th class="font-semibold">{{ 'digestPackages.colChannels' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (org of p.organizations; track org.organization_id) {
+              <tr class="dp-row">
+                <td class="font-semibold text-base-content">{{ org.organization_name }}</td>
+                <td class="text-right">
+                  <span class="dp-pending-badge">{{ org.pending_actions }}</span>
+                </td>
+                <td class="text-base-content/70 text-xs leading-relaxed">{{ formatChannels(org) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+
+  <!-- Confirmation dialog -->
+  <app-confirmation-dialog
+    [open]="confirmOpen()"
+    [title]="'digestPackages.confirmTitle' | transloco"
+    [message]="preview() ? ('digestPackages.confirmMessage' | transloco: { orgs: preview()!.organizations_count, actions: preview()!.total_pending_actions }) : ''"
+    [detailRows]="confirmDetailRows()"
+    [footnote]="'digestPackages.confirmFootnote' | transloco"
+    [confirmLabel]="'digestPackages.send' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    confirmClass="btn-primary"
+    (confirm)="onConfirmSend()"
+    (cancel)="cancelConfirm()"
+  />
+
+</div>
