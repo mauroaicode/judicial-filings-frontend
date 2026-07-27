@@ -16,11 +16,19 @@
   min-width: 2rem;
   padding: 0.125rem 0.625rem;
   border-radius: 9999px;
-  background: hsl(var(--p) / 0.12);
-  color: hsl(var(--p));
   font-size: 0.75rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+
+  &--primary {
+    background: hsl(var(--p) / 0.12);
+    color: hsl(var(--p));
+  }
+
+  &--muted {
+    background: hsl(var(--b3, var(--b2)) / 0.6);
+    color: hsl(var(--bc) / 0.5);
+  }
 }
 
 .dp-empty-icon {

@@ -45,7 +45,7 @@ export class DigestPackagesComponent implements OnInit {
 
   public isEmpty = computed(() => {
     const p = this.preview();
-    return !p || p.organizations_count === 0;
+    return !p || p.consolidates_ready === 0;
   });
 
   public confirmDetailRows = computed<ConfirmationDialogDetailRow[]>(() => {
@@ -53,8 +53,12 @@ export class DigestPackagesComponent implements OnInit {
     if (!p) return [];
     return [
       {
-        label: this._transloco.translate('digestPackages.confirmRowOrgs'),
-        value: String(p.organizations_count),
+        label: this._transloco.translate('digestPackages.confirmRowConsolidates'),
+        value: String(p.consolidates_ready),
+      },
+      {
+        label: this._transloco.translate('digestPackages.confirmRowProcesses'),
+        value: String(p.total_pending_processes),
       },
       {
         label: this._transloco.translate('digestPackages.confirmRowActions'),

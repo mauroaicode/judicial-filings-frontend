@@ -45,6 +45,9 @@
       <p class="mt-1 text-sm text-base-content/65">
         {{ 'digestPackages.description' | transloco }}
       </p>
+      <p class="mt-0.5 text-xs text-base-content/45 italic">
+        {{ 'digestPackages.tableSubtitle' | transloco }}
+      </p>
     </div>
 
     <div class="flex shrink-0 flex-wrap items-center gap-2">
@@ -84,13 +87,22 @@
 
   <!-- KPI summary cards -->
   @if (!loading() && !loadError() && preview(); as p) {
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <!-- KPI principal -->
+      <div class="card bg-primary text-primary-content shadow-sm rounded-2xl">
+        <div class="card-body p-4 gap-1">
+          <p class="text-xs font-semibold uppercase tracking-wide opacity-70">
+            {{ 'digestPackages.kpiConsolidates' | transloco }}
+          </p>
+          <p class="text-3xl font-extrabold tabular-nums">{{ p.consolidates_ready }}</p>
+        </div>
+      </div>
       <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
         <div class="card-body p-4 gap-1">
           <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
-            {{ 'digestPackages.kpiOrgs' | transloco }}
+            {{ 'digestPackages.kpiProcesses' | transloco }}
           </p>
-          <p class="text-3xl font-extrabold tabular-nums text-primary">{{ p.organizations_count }}</p>
+          <p class="text-3xl font-extrabold tabular-nums text-base-content">{{ p.total_pending_processes }}</p>
         </div>
       </div>
       <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
@@ -98,7 +110,7 @@
           <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
             {{ 'digestPackages.kpiActions' | transloco }}
           </p>
-          <p class="text-3xl font-extrabold tabular-nums text-primary">{{ p.total_pending_actions }}</p>
+          <p class="text-3xl font-extrabold tabular-nums text-base-content/60">{{ p.total_pending_actions }}</p>
         </div>
       </div>
     </div>
@@ -147,7 +159,8 @@
           <thead>
             <tr class="dp-table-header">
               <th class="font-semibold">{{ 'digestPackages.colOrg' | transloco }}</th>
-              <th class="font-semibold text-right w-40">{{ 'digestPackages.colPending' | transloco }}</th>
+              <th class="font-semibold text-right w-32">{{ 'digestPackages.colProcesses' | transloco }}</th>
+              <th class="font-semibold text-right w-32">{{ 'digestPackages.colActions' | transloco }}</th>
               <th class="font-semibold">{{ 'digestPackages.colChannels' | transloco }}</th>
             </tr>
           </thead>
@@ -156,7 +169,10 @@
               <tr class="dp-row">
                 <td class="font-semibold text-base-content">{{ org.organization_name }}</td>
                 <td class="text-right">
-                  <span class="dp-pending-badge">{{ org.pending_actions }}</span>
+                  <span class="dp-pending-badge dp-pending-badge--primary">{{ org.pending_processes }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="dp-pending-badge dp-pending-badge--muted">{{ org.pending_actions }}</span>
                 </td>
                 <td class="text-base-content/70 text-xs leading-relaxed">{{ formatChannels(org) }}</td>
               </tr>
@@ -172,7 +188,7 @@
   <app-confirmation-dialog
     [open]="confirmOpen()"
     [title]="'digestPackages.confirmTitle' | transloco"
-    [message]="preview() ? ('digestPackages.confirmMessage' | transloco: { orgs: preview()!.organizations_count, actions: preview()!.total_pending_actions }) : ''"
+    [message]="preview() ? ('digestPackages.confirmMessage' | transloco: { consolidates: preview()!.consolidates_ready, processes: preview()!.total_pending_processes }) : ''"
     [detailRows]="confirmDetailRows()"
     [footnote]="'digestPackages.confirmFootnote' | transloco"
     [confirmLabel]="'digestPackages.send' | transloco"
