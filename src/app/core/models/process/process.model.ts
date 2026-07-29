@@ -204,15 +204,20 @@ export interface ProcessImportBatchResponse {
 
 /**
  * Respuesta POST /processes/actuaciones-import (éxito síncrono).
- * No crea procesos: los radicados ausentes van en `not_found_process_numbers`.
+ * Los radicados sin proceso coincidente se guardan en el repositorio histórico;
+ * cuando se cree el proceso más adelante, el historial se carga automáticamente.
  */
 export interface ActuacionesImportResponse {
   message?: string;
   actions_imported?: number;
   actions_skipped?: number;
+  /** Actuaciones guardadas en repositorio (radicado aún sin proceso en BD) */
+  actions_stored_unassigned?: number;
   processes_updated?: number;
-  not_found_count?: number;
-  not_found_process_numbers?: string[];
+  /** Cantidad de radicados distintos en el repositorio pendiente */
+  unassigned_count?: number;
+  /** Lista de esos radicados */
+  unassigned_process_numbers?: string[];
   import_batch_id?: string;
   errors?: {
     rows?: Record<string, string | string[]>;

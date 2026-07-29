@@ -42,13 +42,14 @@
   isolation: isolate;
   transform: translateZ(0);
 
-  /* En lg el alto lo limita flex del card; antes usábamos solo scroll de página */
+  /* Viewport de scroll explícito: evita colapso a altura 0 con flex + overflow-hidden + solo max-height */
   max-height: min(70vh, 720px);
+  min-height: 12rem;
 
   @media (min-width: 1024px) {
-    max-height: none;
+    max-height: min(62vh, 640px);
+    min-height: 16rem;
     flex: 1 1 auto;
-    min-height: 0;
   }
 
   & > table {

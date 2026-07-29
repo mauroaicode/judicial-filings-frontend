@@ -739,9 +739,7 @@
       <h3 class="text-lg font-bold text-base-content">
         {{ 'processes.actuacionesImport.title' | transloco }}
       </h3>
-      <p class="mt-2 text-sm text-base-content/70">
-        {{ 'processes.actuacionesImport.description' | transloco }}
-      </p>
+      <p class="mt-2 text-sm text-base-content/70" [innerHTML]="'processes.actuacionesImport.description' | transloco"></p>
       <p class="mt-1 text-xs text-base-content/55 lg:hidden">
         {{ 'processes.actuacionesImport.sheetHint' | transloco }}
       </p>
@@ -762,19 +760,20 @@
       } @else {
         @let res = actuacionesImportResult()!;
         @if (isActuacionesImportSuccess(res)) {
+          <!-- Banner de éxito / solo-repositorio -->
           <div
             class="alert mt-4 border-none shadow-sm"
-            [class.alert-success]="!isActuacionesImportNoActions(res)"
-            [class.actuaciones-import-banner--empty]="isActuacionesImportNoActions(res)"
+            [class.alert-success]="(res.actions_imported ?? 0) > 0"
+            [class.actuaciones-import-banner--empty]="isActuacionesImportOnlyUnassigned(res)"
           >
-            @if (!isActuacionesImportNoActions(res)) {
+            @if ((res.actions_imported ?? 0) > 0) {
               <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            @if (isActuacionesImportNoActions(res)) {
+            @if (isActuacionesImportOnlyUnassigned(res)) {
               <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0 h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
             }
             <div class="flex min-w-0 flex-1 flex-col gap-1 text-sm">
@@ -797,24 +796,26 @@
               }
             </div>
           </div>
-          @if (getActuacionesNotFoundCount(res) > 0) {
+
+          <!-- Panel de radicados guardados en repositorio (informativo, no es error) -->
+          @if (getActuacionesUnassignedCount(res) > 0) {
             <div class="actuaciones-not-found-panel mt-3">
               <div class="actuaciones-not-found-panel__header">
                 <div class="actuaciones-not-found-panel__icon" aria-hidden="true">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                   </svg>
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-semibold leading-snug text-base-content">
-                    {{
-                      'processes.actuacionesImport.notFoundWarning' | transloco: { count: getActuacionesNotFoundCount(res) }
-                    }}
+                    {{ 'processes.actuacionesImport.unassignedWarning' | transloco: {
+                        stored: res.actions_stored_unassigned ?? 0,
+                        count: getActuacionesUnassignedCount(res)
+                      } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.unassignedHint' | transloco }}
                   </p>
                 </div>
               </div>
@@ -822,12 +823,12 @@
               <div class="actuaciones-not-found-panel__list-card">
                 <div class="actuaciones-not-found-panel__list-toolbar">
                   <span class="text-xs font-semibold uppercase tracking-wide text-base-content/55">
-                    {{ 'processes.actuacionesImport.notFoundListLabel' | transloco }}
+                    {{ 'processes.actuacionesImport.unassignedListLabel' | transloco }}
                   </span>
                   <button
                     type="button"
                     class="btn btn-ghost btn-xs h-7 min-h-0 gap-1 rounded-lg border border-warning/25 bg-warning/5 px-2 normal-case text-warning hover:bg-warning/10 hover:border-warning/35"
-                    (click)="copyActuacionesNotFoundNumbers(getActuacionesNotFoundNumbers(res), $event)"
+                    (click)="copyActuacionesNotFoundNumbers(getActuacionesUnassignedNumbers(res), $event)"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
@@ -836,7 +837,7 @@
                   </button>
                 </div>
                 <ul class="actuaciones-not-found-panel__list">
-                  @for (num of getActuacionesNotFoundNumbers(res); track num) {
+                  @for (num of getActuacionesUnassignedNumbers(res); track num) {
                     <li class="actuaciones-not-found-panel__item">
                       <span class="min-w-0 flex-1 break-all font-mono text-xs leading-snug text-base-content/85">
                         {{ num | processNumber }}
@@ -855,17 +856,6 @@
                   }
                 </ul>
               </div>
-
-              <p class="actuaciones-not-found-panel__hint">
-                {{ 'processes.actuacionesImport.notFoundHint' | transloco }}
-              </p>
-              <button
-                type="button"
-                class="btn btn-outline btn-sm mt-3 w-full border-warning/30 bg-base-100 text-warning hover:bg-warning/10 hover:border-warning/40 lg:w-auto"
-                (click)="openImportProcessesFromActuacionesResult()"
-              >
-                {{ 'processes.actuacionesImport.openImportProcesses' | transloco }}
-              </button>
             </div>
           }
         } @else {
@@ -989,10 +979,10 @@
 
   <!-- Data Table (custom: expandible instances + tooltips; scroll interno + header visible en lg) -->
   <div
-    class="card bg-base-100 shadow-sm processes-table-card flex flex-col lg:min-h-0 lg:max-h-[calc(100dvh-13rem)]"
+    class="card bg-base-100 shadow-sm processes-table-card flex flex-col"
   >
-    <!-- En móvil sin flex-1/min-h-0: el scroll es el de la página (evita “scroll atrapado”). En lg el flex limita alto para la tabla. -->
-    <div class="card-body p-0 flex flex-col lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+    <!-- Scroll interno solo en .process-list-table (max-height). Evita colapsar la tabla con overflow-hidden + min-h-0. -->
+    <div class="card-body p-0 flex flex-col">
       @if (loading()) {
         <div class="flex flex-1 min-h-[12rem] items-center justify-center py-12">
           <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -1016,7 +1006,7 @@
           <p class="text-base-content/70">{{ 'processes.table.empty' | transloco }}</p>
         </div>
       } @else {
-        <div class="flex flex-col w-full lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+        <div class="flex flex-col w-full">
           <!-- Vista móvil: tarjetas — sin overflow interno; desplazamiento = scroll del documento -->
           <div class="lg:hidden w-full max-w-full min-w-0 overflow-x-hidden px-3 pb-3 pt-1 space-y-4 bg-base-100/60">
             @for (process of processes(); track process.id) {
@@ -1287,7 +1277,7 @@
               </div>
             }
           </div>
-          <div class="hidden lg:block process-list-table w-full flex-1 min-h-0 lg:min-h-0">
+          <div class="hidden lg:block process-list-table w-full">
           <table class="table table-zebra" style="min-width: 1320px;">
             <thead style="background-color: #4B2A7D; color: #ffffff;">
               <tr>

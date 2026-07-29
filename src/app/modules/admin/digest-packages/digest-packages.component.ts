@@ -5,7 +5,6 @@ import {
   inject,
   OnInit,
   signal,
-  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -26,7 +25,6 @@ import {
   imports: [CommonModule, TranslocoPipe, ConfirmationDialogComponent],
   templateUrl: './digest-packages.component.html',
   styleUrls: ['./digest-packages.component.scss'],
-  encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DigestPackagesComponent implements OnInit {

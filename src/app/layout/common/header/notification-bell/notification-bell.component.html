@@ -3,7 +3,7 @@
     #notificationBellTrigger
     tabindex="0"
     role="button"
-    class="btn btn-ghost btn-circle relative group transition-all duration-200 notification-bell-trigger focus:outline-none focus-visible:outline-none"
+    class="btn btn-ghost btn-circle border-0 shadow-none relative group transition-all duration-200 notification-bell-trigger focus:outline-none focus-visible:outline-none"
     [class.has-count]="newCount() > 0"
     [attr.aria-label]="'header.notifications' | transloco"
     (click)="onDropdownOpen()"

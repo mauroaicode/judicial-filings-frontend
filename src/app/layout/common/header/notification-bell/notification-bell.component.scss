@@ -1,18 +1,16 @@
 .notification-bell-trigger {
-  border: 1px solid transparent;
-  box-shadow: none;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .notification-bell-trigger:focus,
 .notification-bell-trigger:focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
 }
 
 .notification-bell-trigger.has-count {
-  background-color: var(--color-base-100);
-  border-color: var(--color-base-300);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  background-color: transparent;
 }
 
 .notification-row {

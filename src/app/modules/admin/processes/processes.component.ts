@@ -1069,29 +1069,24 @@ export class ProcessesComponent {
     return (
       !!res.import_batch_id ||
       typeof res.actions_imported === 'number' ||
-      typeof res.not_found_count === 'number'
+      typeof res.unassigned_count === 'number'
     );
   }
 
-  /** Import OK pero sin actuaciones (solo radicados no encontrados) */
-  isActuacionesImportNoActions(res: ActuacionesImportResponse): boolean {
-    return this.getActuacionesNotFoundNumbers(res).length > 0 && (res.actions_imported ?? 0) === 0;
+  /** Import OK pero todas las actuaciones fueron al repositorio (ningún proceso existía) */
+  isActuacionesImportOnlyUnassigned(res: ActuacionesImportResponse): boolean {
+    return (res.actions_imported ?? 0) === 0 && (res.unassigned_count ?? 0) > 0;
   }
 
-  getActuacionesNotFoundNumbers(res: ActuacionesImportResponse): string[] {
-    const list = res.not_found_process_numbers;
-    if (Array.isArray(list) && list.length > 0) {
-      return list;
-    }
-    return [];
+  getActuacionesUnassignedNumbers(res: ActuacionesImportResponse): string[] {
+    const list = res.unassigned_process_numbers;
+    return Array.isArray(list) && list.length > 0 ? list : [];
   }
 
-  getActuacionesNotFoundCount(res: ActuacionesImportResponse): number {
-    const explicit = res.not_found_count;
-    if (typeof explicit === 'number' && explicit >= 0) {
-      return explicit;
-    }
-    return this.getActuacionesNotFoundNumbers(res).length;
+  getActuacionesUnassignedCount(res: ActuacionesImportResponse): number {
+    const explicit = res.unassigned_count;
+    if (typeof explicit === 'number' && explicit >= 0) return explicit;
+    return this.getActuacionesUnassignedNumbers(res).length;
   }
 
   openImportProcessesFromActuacionesResult(): void {
@@ -1105,9 +1100,7 @@ export class ProcessesComponent {
     res: ActuacionesImportResponse
   ): { row: string; message: string }[] {
     const rows = res.errors?.rows;
-    if (!rows || typeof rows !== 'object') {
-      return [];
-    }
+    if (!rows || typeof rows !== 'object') return [];
     return Object.entries(rows)
       .map(([row, value]) => ({
         row,
@@ -1117,20 +1110,24 @@ export class ProcessesComponent {
   }
 
   getActuacionesImportSuccessMessage(res: ActuacionesImportResponse): string {
-    if (this.isActuacionesImportNoActions(res)) {
-      return this._transloco.translate('processes.actuacionesImport.successNoMatch');
+    const imported = res.actions_imported ?? 0;
+    const unassignedCount = this.getActuacionesUnassignedCount(res);
+
+    if (imported === 0 && unassignedCount > 0) {
+      return this._transloco.translate('processes.actuacionesImport.successOnlyUnassigned', {
+        stored: res.actions_stored_unassigned ?? 0,
+        count: unassignedCount,
+      });
     }
 
     let msg = this._transloco.translate('processes.actuacionesImport.successSummary', {
-      actions: res.actions_imported ?? 0,
+      actions: imported,
       processes: res.processes_updated ?? 0,
     });
     if ((res.actions_skipped ?? 0) > 0) {
-      msg +=
-        ' ' +
-        this._transloco.translate('processes.actuacionesImport.successSkipped', {
-          skipped: res.actions_skipped,
-        });
+      msg += ' ' + this._transloco.translate('processes.actuacionesImport.successSkipped', {
+        skipped: res.actions_skipped,
+      });
     }
     return msg;
   }
@@ -1181,16 +1178,17 @@ export class ProcessesComponent {
 
     this._processService.importActuaciones(file).subscribe({
       next: (response) => {
-        const notFound = Array.isArray(response.not_found_process_numbers)
-          ? response.not_found_process_numbers
+        const unassigned = Array.isArray(response.unassigned_process_numbers)
+          ? response.unassigned_process_numbers
           : [];
         this.actuacionesImportResult.set({
           ...response,
           actions_imported: response.actions_imported ?? 0,
           actions_skipped: response.actions_skipped ?? 0,
+          actions_stored_unassigned: response.actions_stored_unassigned ?? 0,
           processes_updated: response.processes_updated ?? 0,
-          not_found_count: response.not_found_count ?? notFound.length,
-          not_found_process_numbers: notFound,
+          unassigned_count: response.unassigned_count ?? unassigned.length,
+          unassigned_process_numbers: unassigned,
         });
         this.actuacionesImportSubmitting.set(false);
         if ((response.actions_imported ?? 0) > 0) {
@@ -1200,18 +1198,13 @@ export class ProcessesComponent {
       error: (err) => {
         const body = err.error as ActuacionesImportResponse | undefined;
         const errors = body?.errors;
-        const rowErrors = errors?.rows;
 
-        if (errors && !rowErrors) {
+        if (errors && !errors.rows && errors.file) {
           this.actuacionesImportFieldErrors.set({
             file: this._firstErrorMessage(errors.file),
           });
-          // Si solo hay error de file, quedarse en el formulario; si no hay file error
-          // pero hay otros campos, igual mostrar message en resultado.
-          if (errors.file) {
-            this.actuacionesImportSubmitting.set(false);
-            return;
-          }
+          this.actuacionesImportSubmitting.set(false);
+          return;
         }
 
         this.actuacionesImportResult.set({
@@ -1220,11 +1213,11 @@ export class ProcessesComponent {
             this._transloco.translate('processes.actuacionesImport.errors.generic'),
           actions_imported: 0,
           actions_skipped: 0,
+          actions_stored_unassigned: 0,
           processes_updated: 0,
-          not_found_count: 0,
-          not_found_process_numbers: [],
+          unassigned_count: 0,
+          unassigned_process_numbers: [],
           import_batch_id: body?.import_batch_id,
-          // Forzar vista de error aunque el 422 solo traiga `message` (Excel vacío, etc.)
           errors: errors ?? { file: body?.message || 'failed' },
         });
         this.actuacionesImportSubmitting.set(false);

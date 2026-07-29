@@ -20,7 +20,7 @@
   <div class="flex items-center gap-2 px-4 md:px-6">
 
     <!-- Messages -->
-    <button type="button" class="btn btn-ghost btn-sm relative" [attr.aria-label]="'header.messages' | transloco">
+    <button type="button" class="btn btn-ghost btn-circle btn-sm border-0 shadow-none" [attr.aria-label]="'header.messages' | transloco">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -34,7 +34,7 @@
 
     <!-- User Menu -->
     <div class="dropdown dropdown-end">
-      <label tabindex="0" class="btn btn-ghost btn-circle avatar" [attr.aria-label]="'header.userMenu' | transloco">
+      <label tabindex="0" class="btn btn-ghost btn-circle avatar border-0 shadow-none" [attr.aria-label]="'header.userMenu' | transloco">
         <div class="w-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center">
           @if (currentUser(); as user) {
           <span class="text-sm font-semibold">
