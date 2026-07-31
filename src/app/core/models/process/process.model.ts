@@ -203,6 +203,27 @@ export interface ProcessImportBatchResponse {
 }
 
 /**
+ * Motivo por el que una actuación del Excel no se insertó.
+ * Hoy el backend solo emite "duplicate".
+ */
+export type ActuacionSkipReason = 'duplicate';
+
+/**
+ * Fila del Excel omitida en POST /processes/actuaciones-import.
+ */
+export interface ProcessActuacionSkippedItem {
+  process_number: string;
+  action: string;
+  annotation: string | null;
+  /** YYYY-MM-DD */
+  registration_date: string | null;
+  court: string | null;
+  /** Fila del Excel (1 = encabezados) */
+  excel_row: number;
+  reason: ActuacionSkipReason;
+}
+
+/**
  * Respuesta POST /processes/actuaciones-import (éxito síncrono).
  * Los radicados sin proceso coincidente se guardan en el repositorio histórico;
  * cuando se cree el proceso más adelante, el historial se carga automáticamente.
@@ -218,6 +239,8 @@ export interface ActuacionesImportResponse {
   unassigned_count?: number;
   /** Lista de esos radicados */
   unassigned_process_numbers?: string[];
+  /** Detalle de filas omitidas por duplicado (debe coincidir con actions_skipped) */
+  skipped_actions?: ProcessActuacionSkippedItem[];
   import_batch_id?: string;
   errors?: {
     rows?: Record<string, string | string[]>;

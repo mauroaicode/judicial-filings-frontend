@@ -778,7 +778,11 @@
             }
             <div class="flex min-w-0 flex-1 flex-col gap-1 text-sm">
               <span>{{ getActuacionesImportSuccessMessage(res) }}</span>
-              @if ((res.actions_imported ?? 0) > 0 || (res.actions_skipped ?? 0) > 0) {
+              @if (
+                (res.actions_imported ?? 0) > 0 ||
+                (res.actions_skipped ?? 0) > 0 ||
+                (res.actions_stored_unassigned ?? 0) > 0
+              ) {
                 <ul class="mt-1 list-none space-y-0.5 pl-0">
                   <li>
                     <span class="font-semibold">{{ 'processes.actuacionesImport.statImported' | transloco }}</span>
@@ -788,6 +792,12 @@
                     <span class="font-semibold">{{ 'processes.actuacionesImport.statSkipped' | transloco }}</span>
                     {{ res.actions_skipped ?? 0 }}
                   </li>
+                  @if ((res.actions_stored_unassigned ?? 0) > 0) {
+                    <li>
+                      <span class="font-semibold">{{ 'processes.actuacionesImport.statStoredUnassigned' | transloco }}</span>
+                      {{ res.actions_stored_unassigned ?? 0 }}
+                    </li>
+                  }
                   <li>
                     <span class="font-semibold">{{ 'processes.actuacionesImport.statUpdated' | transloco }}</span>
                     {{ res.processes_updated ?? 0 }}
@@ -796,6 +806,77 @@
               }
             </div>
           </div>
+
+          <!-- Actuaciones omitidas por duplicado (informativo, no es error) -->
+          @if ((res.actions_skipped ?? 0) > 0 && getActuacionesSkippedActions(res).length > 0) {
+            <div class="actuaciones-skipped-panel mt-3">
+              <button
+                type="button"
+                class="actuaciones-skipped-panel__toggle"
+                (click)="toggleActuacionesSkippedOpen()"
+                [attr.aria-expanded]="actuacionesSkippedOpen()"
+              >
+                <div class="actuaciones-skipped-panel__icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1 text-left">
+                  <p class="text-sm font-semibold leading-snug text-base-content">
+                    {{ 'processes.actuacionesImport.skippedTitle' | transloco: { count: res.actions_skipped ?? 0 } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.skippedHint' | transloco: { count: res.actions_skipped ?? 0 } }}
+                  </p>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0 text-base-content/45 transition-transform"
+                  [class.rotate-180]="actuacionesSkippedOpen()"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              @if (actuacionesSkippedOpen()) {
+                <div class="actuaciones-skipped-panel__body">
+                  <div class="overflow-x-auto">
+                    <table class="table table-xs w-full">
+                      <thead>
+                        <tr>
+                          <th class="whitespace-nowrap">{{ 'processes.actuacionesImport.skippedColRow' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColRadicado' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColAction' | transloco }}</th>
+                          <th class="whitespace-nowrap">{{ 'processes.actuacionesImport.skippedColDate' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColCourt' | transloco }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of getActuacionesSkippedActions(res); track item.excel_row + '-' + item.process_number + '-' + item.action) {
+                          <tr>
+                            <td class="font-mono tabular-nums text-base-content/70">{{ item.excel_row }}</td>
+                            <td class="font-mono text-xs whitespace-nowrap">{{ item.process_number | processNumber }}</td>
+                            <td>
+                              <span class="text-xs leading-snug">{{ item.action }}</span>
+                              @if (item.annotation) {
+                                <p class="mt-0.5 text-[11px] leading-snug text-base-content/50">{{ item.annotation }}</p>
+                              }
+                            </td>
+                            <td class="whitespace-nowrap text-xs">{{ item.registration_date || '—' }}</td>
+                            <td class="text-xs text-base-content/70">{{ item.court || '—' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            </div>
+          }
 
           <!-- Panel de radicados guardados en repositorio (informativo, no es error) -->
           @if (getActuacionesUnassignedCount(res) > 0) {

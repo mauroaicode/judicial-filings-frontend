@@ -21,6 +21,7 @@ import {
   ProcessResponseMeta,
   ProcessImportBatchResponse,
   ActuacionesImportResponse,
+  ProcessActuacionSkippedItem,
   ProcessDashboardStats,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
@@ -119,6 +120,8 @@ export class ProcessesComponent {
   public actuacionesImportFile = signal<File | null>(null);
   /** Errores de campo (422 sin errors.rows), p. ej. file / mimes */
   public actuacionesImportFieldErrors = signal<{ file?: string }>({});
+  /** Sección expandible de actuaciones omitidas (duplicados) */
+  public actuacionesSkippedOpen = signal<boolean>(false);
 
   /** Slugs permitidos según modo (el backend responde 422 si no coinciden) */
   private static readonly PRIVATE_DATA_SOURCE_SLUGS = ['publicaciones_procesales', 'samai'] as const;
@@ -1043,6 +1046,7 @@ export class ProcessesComponent {
     this.actuacionesImportResult.set(null);
     this.actuacionesImportFieldErrors.set({});
     this.actuacionesImportSubmitting.set(false);
+    this.actuacionesSkippedOpen.set(false);
     this.isActuacionesImportModalOpen.set(true);
   }
 
@@ -1053,6 +1057,7 @@ export class ProcessesComponent {
     this.actuacionesImportResult.set(null);
     this.actuacionesImportFieldErrors.set({});
     this.actuacionesImportSubmitting.set(false);
+    this.actuacionesSkippedOpen.set(false);
   }
 
   onActuacionesImportFileSelected(file: File | null): void {
@@ -1087,6 +1092,15 @@ export class ProcessesComponent {
     const explicit = res.unassigned_count;
     if (typeof explicit === 'number' && explicit >= 0) return explicit;
     return this.getActuacionesUnassignedNumbers(res).length;
+  }
+
+  getActuacionesSkippedActions(res: ActuacionesImportResponse): ProcessActuacionSkippedItem[] {
+    const list = res.skipped_actions;
+    return Array.isArray(list) ? list : [];
+  }
+
+  toggleActuacionesSkippedOpen(): void {
+    this.actuacionesSkippedOpen.update((open) => !open);
   }
 
   openImportProcessesFromActuacionesResult(): void {
@@ -1181,15 +1195,20 @@ export class ProcessesComponent {
         const unassigned = Array.isArray(response.unassigned_process_numbers)
           ? response.unassigned_process_numbers
           : [];
+        const skipped = Array.isArray(response.skipped_actions)
+          ? response.skipped_actions
+          : [];
         this.actuacionesImportResult.set({
           ...response,
           actions_imported: response.actions_imported ?? 0,
-          actions_skipped: response.actions_skipped ?? 0,
+          actions_skipped: response.actions_skipped ?? skipped.length,
           actions_stored_unassigned: response.actions_stored_unassigned ?? 0,
           processes_updated: response.processes_updated ?? 0,
           unassigned_count: response.unassigned_count ?? unassigned.length,
           unassigned_process_numbers: unassigned,
+          skipped_actions: skipped,
         });
+        this.actuacionesSkippedOpen.set(false);
         this.actuacionesImportSubmitting.set(false);
         if ((response.actions_imported ?? 0) > 0) {
           this.loadProcesses(1, this.pagination()?.per_page || 10);
@@ -1217,6 +1236,7 @@ export class ProcessesComponent {
           processes_updated: 0,
           unassigned_count: 0,
           unassigned_process_numbers: [],
+          skipped_actions: [],
           import_batch_id: body?.import_batch_id,
           errors: errors ?? { file: body?.message || 'failed' },
         });
