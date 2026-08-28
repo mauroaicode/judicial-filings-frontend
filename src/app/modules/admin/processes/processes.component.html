@@ -878,6 +878,67 @@
             </div>
           }
 
+          <!-- Panel de radicados actualizados (encontrados en BD) -->
+          @if (getActuacionesUpdatedNumbers(res).length > 0) {
+            <div class="actuaciones-updated-panel mt-3">
+              <div class="actuaciones-updated-panel__header">
+                <div class="actuaciones-updated-panel__icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold leading-snug text-base-content">
+                    {{ 'processes.actuacionesImport.updatedWarning' | transloco: {
+                        count: getActuacionesUpdatedNumbers(res).length
+                      } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.updatedHint' | transloco }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="actuaciones-updated-panel__list-card">
+                <div class="actuaciones-updated-panel__list-toolbar">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-base-content/55">
+                    {{ 'processes.actuacionesImport.updatedListLabel' | transloco }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs h-7 min-h-0 gap-1 rounded-lg border border-success/25 bg-success/5 px-2 normal-case text-success hover:bg-success/10 hover:border-success/35"
+                    (click)="copyActuacionesUpdatedNumbers(getActuacionesUpdatedNumbers(res), $event)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                    </svg>
+                    {{ 'processes.actuacionesImport.copyUpdated' | transloco }}
+                  </button>
+                </div>
+                <ul class="actuaciones-updated-panel__list">
+                  @for (num of getActuacionesUpdatedNumbers(res); track num) {
+                    <li class="actuaciones-updated-panel__item">
+                      <span class="min-w-0 flex-1 break-all font-mono text-xs leading-snug text-base-content/85">
+                        {{ num | processNumber }}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:bg-success/10 hover:text-success"
+                        (click)="copyProcessRadicado(num, $event)"
+                        [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                        </svg>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+
           <!-- Panel de radicados guardados en repositorio (informativo, no es error) -->
           @if (getActuacionesUnassignedCount(res) > 0) {
             <div class="actuaciones-not-found-panel mt-3">

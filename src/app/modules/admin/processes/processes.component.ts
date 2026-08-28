@@ -1088,6 +1088,11 @@ export class ProcessesComponent {
     return Array.isArray(list) && list.length > 0 ? list : [];
   }
 
+  getActuacionesUpdatedNumbers(res: ActuacionesImportResponse): string[] {
+    const list = res.processes_updated_numbers;
+    return Array.isArray(list) && list.length > 0 ? list : [];
+  }
+
   getActuacionesUnassignedCount(res: ActuacionesImportResponse): number {
     const explicit = res.unassigned_count;
     if (typeof explicit === 'number' && explicit >= 0) return explicit;
@@ -1147,6 +1152,26 @@ export class ProcessesComponent {
   }
 
   copyActuacionesNotFoundNumbers(numbers: string[], event?: Event): void {
+    this._copyActuacionesProcessNumbers(
+      numbers,
+      'processes.actuacionesImport.copyNotFoundSuccess',
+      event
+    );
+  }
+
+  copyActuacionesUpdatedNumbers(numbers: string[], event?: Event): void {
+    this._copyActuacionesProcessNumbers(
+      numbers,
+      'processes.actuacionesImport.copyUpdatedSuccess',
+      event
+    );
+  }
+
+  private _copyActuacionesProcessNumbers(
+    numbers: string[],
+    successKey: string,
+    event?: Event
+  ): void {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -1169,7 +1194,7 @@ export class ProcessesComponent {
 
     navigator.clipboard.writeText(text).then(() => {
       this.copyRadicadoToast.set({
-        message: this._transloco.translate('processes.actuacionesImport.copyNotFoundSuccess'),
+        message: this._transloco.translate(successKey),
         kind: 'success',
       });
       this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
@@ -1195,6 +1220,9 @@ export class ProcessesComponent {
         const unassigned = Array.isArray(response.unassigned_process_numbers)
           ? response.unassigned_process_numbers
           : [];
+        const updatedNumbers = Array.isArray(response.processes_updated_numbers)
+          ? response.processes_updated_numbers
+          : [];
         const skipped = Array.isArray(response.skipped_actions)
           ? response.skipped_actions
           : [];
@@ -1203,7 +1231,8 @@ export class ProcessesComponent {
           actions_imported: response.actions_imported ?? 0,
           actions_skipped: response.actions_skipped ?? skipped.length,
           actions_stored_unassigned: response.actions_stored_unassigned ?? 0,
-          processes_updated: response.processes_updated ?? 0,
+          processes_updated: response.processes_updated ?? updatedNumbers.length,
+          processes_updated_numbers: updatedNumbers,
           unassigned_count: response.unassigned_count ?? unassigned.length,
           unassigned_process_numbers: unassigned,
           skipped_actions: skipped,
@@ -1234,6 +1263,7 @@ export class ProcessesComponent {
           actions_skipped: 0,
           actions_stored_unassigned: 0,
           processes_updated: 0,
+          processes_updated_numbers: [],
           unassigned_count: 0,
           unassigned_process_numbers: [],
           skipped_actions: [],

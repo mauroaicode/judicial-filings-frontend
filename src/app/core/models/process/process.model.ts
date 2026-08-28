@@ -235,6 +235,8 @@ export interface ActuacionesImportResponse {
   /** Actuaciones guardadas en repositorio (radicado aún sin proceso en BD) */
   actions_stored_unassigned?: number;
   processes_updated?: number;
+  /** Radicados matcheados/actualizados en BD (debe alinearse con processes_updated) */
+  processes_updated_numbers?: string[];
   /** Cantidad de radicados distintos en el repositorio pendiente */
   unassigned_count?: number;
   /** Lista de esos radicados */
