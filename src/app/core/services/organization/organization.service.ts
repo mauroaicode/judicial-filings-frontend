@@ -6,10 +6,14 @@ import { environment } from '@app/core/config/environment.config';
 import {
   CreateOrganizationPayload,
   Organization,
+  OrganizationDetail,
   OrganizationFilter,
   OrganizationResponse,
+  OrganizationSettings,
   OrganizationStats,
   SelectOptionsResponse,
+  UpdateOrganizationSettingsPayload,
+  UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
 
 @Injectable({
@@ -104,5 +108,49 @@ export class OrganizationService {
   updateNotificationStatus(organizationId: string, isActive: boolean): Observable<void> {
     const url = `${environment.apiBaseUrl}/organizations/${organizationId}/notifications-status`;
     return this._http.post<void>(url, { is_active: isActive });
+  }
+
+  /**
+   * Detalle de organización + settings (GET /organizations/{id})
+   */
+  getOrganization(organizationId: string): Observable<OrganizationDetail> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}`;
+    return this._http.get<OrganizationDetail | { data: OrganizationDetail }>(url).pipe(
+      map((res) => this._unwrapData(res, 'id'))
+    );
+  }
+
+  /**
+   * Settings de una organización (GET /organizations/{id}/settings)
+   */
+  getOrganizationSettings(organizationId: string): Observable<OrganizationSettings> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/settings`;
+    return this._http.get<OrganizationSettings | { data: OrganizationSettings }>(url).pipe(
+      map((res) => this._unwrapData(res, 'max_active_processes'))
+    );
+  }
+
+  /**
+   * Guardar configuración de límites (PUT /organizations/{id}/settings).
+   * `max_active_processes` debe ir siempre presente; `null` restaura el default.
+   */
+  updateOrganizationSettings(
+    organizationId: string,
+    payload: UpdateOrganizationSettingsPayload
+  ): Observable<UpdateOrganizationSettingsResponse> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/settings`;
+    return this._http
+      .put<UpdateOrganizationSettingsResponse | { data: UpdateOrganizationSettingsResponse }>(url, payload)
+      .pipe(map((res) => this._unwrapData(res, 'settings')));
+  }
+
+  private _unwrapData<T extends object>(res: T | { data: T }, key: keyof T): T {
+    if (res && typeof res === 'object' && key in res) {
+      return res as T;
+    }
+    if (res && typeof res === 'object' && 'data' in res && (res as { data: T }).data) {
+      return (res as { data: T }).data;
+    }
+    return res as T;
   }
 }

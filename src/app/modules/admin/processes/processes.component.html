@@ -1149,17 +1149,61 @@
         </div>
       } @else {
         <div class="flex flex-col w-full">
+          @if (hasSelection()) {
+            <div class="processes-selection-bar">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm btn-circle text-white/80 hover:bg-white/10 hover:text-white"
+                (click)="clearSelection()"
+                [attr.aria-label]="'processes.trash.clearSelectionAria' | transloco"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-black uppercase tracking-wide text-white leading-tight">
+                  {{ 'processes.trash.selectedCount' | transloco: { count: selectedCount() } }}
+                </p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-white/60 leading-tight mt-0.5">
+                  {{ 'processes.trash.availableActions' | transloco }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="processes-selection-bar__delete"
+                (click)="openTrashModal()"
+                [attr.aria-label]="'processes.trash.deleteAria' | transloco"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {{ 'processes.trash.delete' | transloco }}
+              </button>
+            </div>
+          }
           <!-- Vista móvil: tarjetas — sin overflow interno; desplazamiento = scroll del documento -->
           <div class="lg:hidden w-full max-w-full min-w-0 overflow-x-hidden px-3 pb-3 pt-1 space-y-4 bg-base-100/60">
             @for (process of processes(); track process.id) {
               <div
                 class="card border border-base-200 shadow-sm overflow-hidden rounded-xl bg-base-100 transition-shadow hover:shadow-md"
                 [class.border-primary/30]="isExpanded(process)"
+                [class.processes-card-selected]="isRowSelected(process)"
                 (click)="toggleExpand(process)"
               >
                 <div class="bg-base-200/50 px-3 py-3 flex justify-between items-start gap-2 border-b border-base-200">
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <label class="flex items-center shrink-0" (click)="$event.stopPropagation()">
+                        <input
+                          type="checkbox"
+                          class="checkbox checkbox-sm checkbox-primary processes-select-checkbox"
+                          [checked]="isParentSelected(process)"
+                          [indeterminate]="isParentIndeterminate(process)"
+                          (click)="toggleParentSelection(process, $event)"
+                          [attr.aria-label]="'processes.trash.selectRowAria' | transloco"
+                        />
+                      </label>
                       <span class="text-[11px] font-semibold text-base-content/45 tabular-nums">{{ process.index }}</span>
                       <div class="flex items-start gap-1.5 min-w-0 flex-1">
                         <span class="font-bold text-primary text-sm break-all leading-snug">{{ process.process_number | processNumber }}</span>
@@ -1346,12 +1390,23 @@
                 @if (isExpanded(process) && process.instances && process.instances.length > 0) {
                   <div class="bg-primary/5 p-3 space-y-3 border-t border-base-200 border-l-4 border-l-primary" (click)="$event.stopPropagation()">
                     @for (instance of process.instances; track instance.id) {
-                      <div class="bg-base-100 rounded-lg p-3 shadow-sm border border-base-200">
+                      <div class="bg-base-100 rounded-lg p-3 shadow-sm border border-base-200" [class.processes-card-selected]="isInstanceSelected(process, instance.id)">
                         <div class="flex justify-between items-start gap-2 mb-2">
                           <div class="min-w-0 flex-1">
-                            <p class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0.5">
-                              {{ 'processes.card.instanceTitle' | transloco: { n: instance.index } }}
-                            </p>
+                            <div class="flex items-center gap-2 mb-0.5">
+                              <label class="flex items-center shrink-0" (click)="$event.stopPropagation()">
+                                <input
+                                  type="checkbox"
+                                  class="checkbox checkbox-sm checkbox-primary processes-select-checkbox"
+                                  [checked]="isInstanceSelected(process, instance.id)"
+                                  (click)="toggleInstanceSelection(process, instance, $event)"
+                                  [attr.aria-label]="'processes.trash.selectInstanceAria' | transloco"
+                                />
+                              </label>
+                              <p class="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mb-0">
+                                {{ 'processes.card.instanceTitle' | transloco: { n: instance.index } }}
+                              </p>
+                            </div>
                             <div class="flex items-start gap-1.5 min-w-0">
                               <span class="font-bold text-primary text-sm break-all leading-snug">{{ instance.process_number | processNumber }}</span>
                               <button
@@ -1423,7 +1478,18 @@
           <table class="table table-zebra" style="min-width: 1320px;">
             <thead style="background-color: #4B2A7D; color: #ffffff;">
               <tr>
-                <th style="width: 48px;" class="text-center"></th>
+                <th class="text-center processes-select-col">
+                  <div class="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm processes-select-checkbox processes-select-checkbox--header"
+                      [checked]="isAllPageSelected()"
+                      [indeterminate]="isPagePartiallySelected()"
+                      (click)="toggleSelectAllPage($event)"
+                      [attr.aria-label]="'processes.trash.selectAllAria' | transloco"
+                    />
+                  </div>
+                </th>
                 @for (column of columns; track column.key) {
                   <th
                     [class.sticky-col-radicado]="column.key === 'process_number'"
@@ -1443,6 +1509,7 @@
                 <tr
                   class="cursor-pointer group process-table-main-row"
                   [class.process-row-hovered]="hoveredRowId() === process.id"
+                  [class.is-selected]="isRowSelected(process)"
                   [class.rounded-b-none]="isExpanded(process) && process.instances?.length"
                   [class.border-b-0]="isExpanded(process) && process.instances?.length"
                   [class.bg-base-200/30]="isExpanded(process) && process.instances?.length"
@@ -1451,28 +1518,36 @@
                   (click)="toggleExpand(process)"
                   (dblclick)="onRowDblClick(process, $event)"
                 >
-                  <td class="text-center align-middle p-2">
-                    @if (process.has_multiple_instances && process.instances && process.instances.length > 1) {
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs btn-square"
-                        (click)="toggleExpand(process); $event.stopPropagation()"
-                        [attr.aria-expanded]="isExpanded(process)"
-                        [attr.aria-label]="isExpanded(process) ? 'Colapsar' : 'Expandir'"
-                      >
-                        @if (isExpanded(process)) {
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        } @else {
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        }
-                      </button>
-                    } @else {
-                      <span class="opacity-0 group-hover:opacity-30">–</span>
-                    }
+                  <td class="text-center align-middle p-2 processes-select-col" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-center gap-0.5">
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm checkbox-primary processes-select-checkbox"
+                        [checked]="isParentSelected(process)"
+                        [indeterminate]="isParentIndeterminate(process)"
+                        (click)="toggleParentSelection(process, $event)"
+                        [attr.aria-label]="'processes.trash.selectRowAria' | transloco"
+                      />
+                      @if (process.has_multiple_instances && process.instances && process.instances.length > 1) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs btn-square"
+                          (click)="toggleExpand(process); $event.stopPropagation()"
+                          [attr.aria-expanded]="isExpanded(process)"
+                          [attr.aria-label]="isExpanded(process) ? 'Colapsar' : 'Expandir'"
+                        >
+                          @if (isExpanded(process)) {
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          }
+                        </button>
+                      }
+                    </div>
                   </td>
                   <td class="text-center align-middle">{{ process.index }}</td>
                   <td class="sticky-col-radicado py-2.5">
@@ -1628,12 +1703,21 @@
                     <tr
                       class="cursor-pointer group process-table-instance-row border-l-4 border-secondary"
                       [class.process-row-hovered]="hoveredRowId() === instance.id"
+                      [class.is-selected]="isInstanceSelected(process, instance.id)"
                       (mouseenter)="hoveredRowId.set(instance.id)"
                       (mouseleave)="hoveredRowId.set(null)"
                       (dblclick)="onRowDblClick(instance, $event)"
                     >
-                      <td class="text-center align-middle p-2 pl-4">
-                        <span class="text-secondary/70 text-xs" aria-hidden="true">↳</span>
+                      <td class="text-center align-middle p-2 pl-3 processes-select-col" (click)="$event.stopPropagation()">
+                        <div class="flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            class="checkbox checkbox-sm checkbox-primary processes-select-checkbox"
+                            [checked]="isInstanceSelected(process, instance.id)"
+                            (click)="toggleInstanceSelection(process, instance, $event)"
+                            [attr.aria-label]="'processes.trash.selectInstanceAria' | transloco"
+                          />
+                        </div>
                       </td>
                       <td class="text-center align-middle text-base-content/70">{{ instance.index }}</td>
                       <td class="sticky-col-radicado py-2.5 text-base-content/90">
@@ -1855,5 +1939,31 @@
         </div>
       }
     </div>
+  </div>
+
+  <app-trash-processes-modal
+    [open]="trashModalOpen()"
+    [processCount]="selectedCount()"
+    [organizationOptions]="importOrganizationOptions()"
+    [organizationsLoading]="importOrganizationsLoading()"
+    [initialOrganizationId]="trashOrganizationId()"
+    [submitting]="trashSubmitting()"
+    (confirm)="onTrashOrganizationPicked($event)"
+    (cancel)="closeTrashModal()"
+  ></app-trash-processes-modal>
+
+  <div class="trash-processes-confirmation">
+    <app-confirmation-dialog
+      [open]="trashConfirmOpen()"
+      [title]="getTrashConfirmTitle()"
+      [message]="getTrashConfirmLead()"
+      [detailRows]="getTrashConfirmDetailRows()"
+      [footnote]="getTrashConfirmFootnote()"
+      [confirmLabel]="'processes.trash.confirm' | transloco"
+      [cancelLabel]="'generics.cancel' | transloco"
+      confirmClass="btn-error"
+      (confirm)="onConfirmTrash()"
+      (cancel)="onCancelTrashConfirm()"
+    ></app-confirmation-dialog>
   </div>
 </div>

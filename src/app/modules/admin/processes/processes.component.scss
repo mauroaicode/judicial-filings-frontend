@@ -34,6 +34,154 @@
   background-color: #F3F0F9 !important; // primaryLight muted hover
 }
 
+.process-list-table tbody tr.is-selected,
+.process-list-table tbody tr.is-selected td {
+  background-color: #EDE7F6 !important;
+}
+
+.process-list-table tbody tr.is-selected td.sticky-col-radicado,
+.process-list-table tbody tr.is-selected td.sticky-col-radicado::before,
+.process-list-table tbody tr.is-selected td.sticky-col-radicado .sticky-cell-bg {
+  background-color: #EDE7F6 !important;
+  background: #EDE7F6 !important;
+}
+
+.processes-select-col {
+  width: 4.5rem;
+  min-width: 4.5rem;
+  max-width: 4.5rem;
+}
+
+.processes-select-checkbox.checkbox {
+  --input-color: #4b2a7d;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.15rem !important;
+  height: 1.15rem !important;
+  min-width: 1.15rem !important;
+  min-height: 1.15rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+  display: inline-grid !important;
+  place-content: center;
+  border: 2px solid #4b2a7d !important;
+  border-radius: 0.3rem !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  color: #4b2a7d;
+
+  &::before,
+  &::after {
+    display: none !important;
+    content: none !important;
+    background-image: none !important;
+  }
+
+  &:checked,
+  &:indeterminate {
+    background-color: #4b2a7d !important;
+    border-color: #4b2a7d !important;
+    background-image: none !important;
+  }
+
+  &:checked::after {
+    display: block !important;
+    content: '' !important;
+    width: 0.38rem;
+    height: 0.62rem;
+    margin-top: -0.12rem;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    background: none !important;
+  }
+
+  &:indeterminate::after {
+    display: block !important;
+    content: '' !important;
+    width: 0.55rem;
+    height: 2px;
+    border: 0;
+    border-radius: 1px;
+    background: #ffffff !important;
+    transform: none;
+  }
+}
+
+.processes-select-checkbox--header.checkbox {
+  border-color: #ffffff !important;
+  background-color: transparent !important;
+
+  &:checked,
+  &:indeterminate {
+    background-color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+
+  &:checked::after {
+    border-color: #4b2a7d;
+  }
+
+  &:indeterminate::after {
+    background: #4b2a7d !important;
+  }
+}
+
+.processes-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem 0.7rem 0.85rem;
+  background: #4b2a7d;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.processes-selection-bar__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0 0.95rem;
+  margin-left: 0.25rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #4b2a7d;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #f3f0f9;
+    color: #3b1f63;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.processes-card-selected {
+  border-color: rgb(75 42 125 / 0.45) !important;
+  box-shadow: 0 0 0 1px rgb(75 42 125 / 0.18);
+  background-color: #f7f4fb !important;
+}
+
 .process-list-table {
   overflow-x: auto !important;
   overflow-y: auto !important;
@@ -228,7 +376,8 @@
 }
 
 // Confirmación de import Excel: debe verse por encima del bottom sheet (.modal DaisyUI ~9999)
-.import-excel-confirmation dialog.modal.modal-open {
+.import-excel-confirmation dialog.modal.modal-open,
+.trash-processes-confirmation dialog.modal.modal-open {
   z-index: 11000 !important;
 }
 

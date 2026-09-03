@@ -278,6 +278,7 @@
             "contactPerson": "Contact Person",
             "status": "Status",
             "notifications": "Notifications",
+            "processes": "Processes",
             "active": "Active",
             "inactive": "Inactive",
             "createdAt": "Created At"
@@ -325,6 +326,33 @@
             "confirmDeactivateTitle": "Deactivate notifications",
             "confirmActivateMessage": "Do you want to activate notifications for organization \"{{name}}\"?",
             "confirmDeactivateMessage": "Do you want to deactivate notifications for organization \"{{name}}\"?"
+        },
+        "settings": {
+            "configure": "Configure",
+            "configureAria": "Configure organization",
+            "closeAria": "Close configuration",
+            "modalTitle": "Organization settings",
+            "modalSubtitle": "Review the organization details and adjust the active filings limit.",
+            "loading": "Loading settings…",
+            "retry": "Retry",
+            "tabInfo": "Information",
+            "tabSettings": "Settings",
+            "activeProcesses": "Active filings",
+            "effectiveLimit": "Effective limit",
+            "unlimited": "Unlimited",
+            "limitTitle": "Active filings limit",
+            "limitDescription": "Sets how many active filings this organization may have. The server validates the limit when registering or importing.",
+            "useDefault": "Use the system default",
+            "usingDefault": "Using the system default: {{value}}",
+            "systemDefault": "System default: {{value}}",
+            "limitInputLabel": "Active filings limit",
+            "limitPlaceholder": "E.g. 60",
+            "limitHint": "Integer greater than or equal to 0. Turn off the system default to set a custom limit.",
+            "usageSummary": "In use: {{used}} · Available: {{remaining}}",
+            "invalidLimit": "Enter a whole number greater than or equal to 0.",
+            "loadError": "Could not load the organization settings.",
+            "saveError": "Could not save the settings. Please try again.",
+            "toastSuccess": "Organization settings updated."
         }
     },
     "common": {
@@ -489,6 +517,35 @@
             "errors": {
                 "generic": "Error importing actions. Please try again."
             }
+        },
+        "trash": {
+            "selectAllAria": "Select all processes on this page",
+            "selectRowAria": "Select process",
+            "selectInstanceAria": "Select instance",
+            "selectedCount": "{{count}} selected",
+            "availableActions": "Actions available for processes",
+            "clearSelectionAria": "Clear selection",
+            "delete": "Delete",
+            "deleteAria": "Move to trash",
+            "modalTitle": "Move to trash",
+            "modalMessage": "{{count}} process(es) will be moved to trash for the selected organization.",
+            "modalMessageNamed": "{{count}} process(es) will be moved to trash for {{organization}}.",
+            "organizationLabel": "Which organization do you want to remove them from?",
+            "organizationPlaceholder": "Select the organization",
+            "organizationSearch": "Search organization…",
+            "organizationNoMatches": "No matches",
+            "footnote": "They can be restored later. The filing is not deleted from the system. Other organizations will not be affected.",
+            "continue": "Continue",
+            "confirm": "Move to trash",
+            "confirmCountLabel": "Processes",
+            "confirmOrganizationLabel": "Organization",
+            "submitting": "Sending...",
+            "success": "{{message}} ({{count}})",
+            "skippedAlready": "{{count}} already in trash.",
+            "skippedNotLinked": "{{count}} do not belong to this organization.",
+            "nothingTrashed": "No processes could be moved to trash.",
+            "notLinked": "No link was found with this organization.",
+            "errorGeneric": "Could not move to trash. Please try again."
         }
     },
     "common": {
@@ -576,6 +633,7 @@
             "confirmActivateMessage": "Are you sure you want to activate tracking for organization \"{{name}}\"?",
             "confirmDeactivateMessage": "Are you sure you want to deactivate tracking for organization \"{{name}}\"? Automatic update tracking will stop.",
             "roleSaved": "Organization role updated successfully.",
+            "trashFromOrg": "Move to trash",
             "roleModal": {
                 "title": "Assign organization role",
                 "subtitle": "Define whether the organization acts as plaintiff or defendant in this process",
@@ -647,6 +705,11 @@
         "error": {
             "idNotFound": "Process ID not found in route params",
             "loadError": "Error loading process detail"
+        },
+        "trash": {
+            "button": "Delete",
+            "buttonAria": "Move this process to trash",
+            "noOrganizations": "This process is not linked to any organization."
         },
         "instances": {
             "title": "Process instances",

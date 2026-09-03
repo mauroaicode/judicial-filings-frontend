@@ -1,0 +1,10 @@
+:host {
+  display: contents;
+}
+
+.org-settings-modal {
+  .tab.tab-active {
+    background-color: hsl(var(--p) / 0.12);
+    color: hsl(var(--p));
+  }
+}

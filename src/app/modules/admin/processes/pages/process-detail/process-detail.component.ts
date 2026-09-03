@@ -8,6 +8,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -18,7 +19,7 @@ import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { DataTableComponent, DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { ProcessAlertTooltipComponent } from '@app/shared/components/process-alert-tooltip/process-alert-tooltip.component';
-import { ConfirmationDialogComponent } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogDetailRow } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 
 import { ProcessService } from '@app/core/services/process/process.service';
 import {
@@ -32,11 +33,13 @@ import {
   ProcessInterestedOrganization,
   Subject,
   SaveProcessSubjectsResponse,
+  TrashProcessesResponse,
 } from '@app/core/models/process/process.model';
 import { buildTextWithHighlights } from '@app/core/utils/alert-highlight.utils';
 
 import { RoleSelectionModalComponent } from '../../components/role-selection-modal/role-selection-modal.component';
 import { SubjectFormModalComponent } from '../../components/subject-form-modal/subject-form-modal.component';
+import { TrashProcessesModalComponent } from '../../components/trash-processes-modal/trash-processes-modal.component';
 
 @Component({
   selector: 'app-process-detail',
@@ -52,6 +55,7 @@ import { SubjectFormModalComponent } from '../../components/subject-form-modal/s
     RoleSelectionModalComponent,
     SubjectFormModalComponent,
     ConfirmationDialogComponent,
+    TrashProcessesModalComponent,
   ],
   templateUrl: './process-detail.component.html',
   styleUrls: ['./process-detail.component.scss'],
@@ -133,6 +137,17 @@ export class ProcessDetailComponent {
   public confirmSubjectDeleteOpen = signal<boolean>(false);
   public selectedSubjectForDelete = signal<Subject | null>(null);
   public deletingSubjectId = signal<string | null>(null);
+
+  /** Enviar a papelera (vínculo org ↔ proceso) */
+  public trashModalOpen = signal(false);
+  public trashConfirmOpen = signal(false);
+  public trashSubmitting = signal(false);
+  public trashOrganizationId = signal('');
+  public trashLockOrganization = signal(false);
+  public trashLockedOrganizationName = signal('');
+  public trashOrganizationOptions = computed(() =>
+    this.organizations().map((org) => ({ id: org.id, label: org.name }))
+  );
 
   /** Selector de instancia en móvil */
   public showInstanceSelector = signal<boolean>(false);
@@ -264,6 +279,167 @@ export class ProcessDetailComponent {
       const id = params.get('id');
       this.loadProcessDetail(id);
     });
+  }
+
+  public openTrashModal(): void {
+    const orgs = this.organizations();
+    if (!orgs.length) {
+      this.showToast('error', this._transloco.translate('processDetail.trash.noOrganizations'));
+      return;
+    }
+
+    const queryOrgId = this._route.snapshot.queryParamMap.get('organization_id')?.trim() ?? '';
+    const fromQuery = queryOrgId ? orgs.find((org) => org.id === queryOrgId) : undefined;
+
+    this.trashSubmitting.set(false);
+
+    if (fromQuery) {
+      this.trashOrganizationId.set(fromQuery.id);
+      this.trashLockedOrganizationName.set(fromQuery.name);
+      this.trashLockOrganization.set(true);
+      this._openTrashConfirm();
+      return;
+    }
+
+    if (orgs.length === 1) {
+      this.trashOrganizationId.set(orgs[0].id);
+      this.trashLockedOrganizationName.set(orgs[0].name);
+      this.trashLockOrganization.set(true);
+      this._openTrashConfirm();
+      return;
+    }
+
+    this.trashOrganizationId.set('');
+    this.trashLockedOrganizationName.set('');
+    this.trashLockOrganization.set(false);
+    this.trashModalOpen.set(true);
+  }
+
+  public openTrashModalForOrganization(org: ProcessInterestedOrganization): void {
+    this.trashOrganizationId.set(org.id);
+    this.trashLockedOrganizationName.set(org.name);
+    this.trashLockOrganization.set(true);
+    this.trashSubmitting.set(false);
+    this._openTrashConfirm();
+  }
+
+  public closeTrashModal(): void {
+    if (this.trashSubmitting()) return;
+    this.trashModalOpen.set(false);
+  }
+
+  public onTrashOrganizationPicked(payload: { organizationId: string }): void {
+    const organizationId = payload.organizationId?.trim();
+    if (!organizationId) return;
+    const org = this.organizations().find((item) => item.id === organizationId);
+    this.trashOrganizationId.set(organizationId);
+    this.trashLockedOrganizationName.set(org?.name ?? '');
+    this.trashLockOrganization.set(false);
+    this.trashModalOpen.set(false);
+    this._openTrashConfirm();
+  }
+
+  private _openTrashConfirm(): void {
+    if (!this.process() || !this.trashOrganizationId().trim()) return;
+    this.trashConfirmOpen.set(true);
+  }
+
+  public getTrashConfirmTitle(): string {
+    return this._transloco.translate('processes.trash.modalTitle');
+  }
+
+  public getTrashConfirmLead(): string {
+    if (!this.trashConfirmOpen()) return '';
+    return this._transloco.translate('processes.trash.modalMessageNamed', {
+      count: 1,
+      organization: this._trashOrganizationDisplayName(),
+    });
+  }
+
+  public getTrashConfirmFootnote(): string {
+    if (!this.trashConfirmOpen()) return '';
+    return this._transloco.translate('processes.trash.footnote');
+  }
+
+  public getTrashConfirmDetailRows(): ConfirmationDialogDetailRow[] {
+    if (!this.trashConfirmOpen()) return [];
+    return [
+      {
+        label: this._transloco.translate('processes.trash.confirmCountLabel'),
+        value: '1',
+      },
+      {
+        label: this._transloco.translate('processes.trash.confirmOrganizationLabel'),
+        value: this._trashOrganizationDisplayName(),
+      },
+    ];
+  }
+
+  public onCancelTrashConfirm(): void {
+    this.trashConfirmOpen.set(false);
+  }
+
+  public onConfirmTrash(): void {
+    const process = this.process();
+    const organizationId = this.trashOrganizationId().trim();
+    if (!process || !organizationId) return;
+
+    this.trashConfirmOpen.set(false);
+    this.trashSubmitting.set(true);
+    this._processService.trashProcess(process.id, { organization_id: organizationId }).subscribe({
+      next: (response) => {
+        this.trashSubmitting.set(false);
+        this._showTrashResultToast(response);
+        setTimeout(() => {
+          this._router.navigate(['/admin', 'processes']);
+        }, 1200);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.trashSubmitting.set(false);
+        this.showToast('error', this._trashErrorMessage(err));
+      },
+    });
+  }
+
+  private _trashOrganizationDisplayName(): string {
+    const name = this.trashLockedOrganizationName().trim();
+    if (name) return name;
+    const organizationId = this.trashOrganizationId().trim();
+    const org = this.organizations().find((item) => item.id === organizationId);
+    return org?.name?.trim() || organizationId;
+  }
+
+  private _showTrashResultToast(response: TrashProcessesResponse): void {
+    const skipped = response.skipped ?? [];
+    const already = skipped.filter((item) => item.reason === 'already_trashed').length;
+    const notLinked = skipped.filter((item) => item.reason === 'not_linked').length;
+    const parts: string[] = [
+      this._transloco.translate('processes.trash.success', {
+        message: response.message,
+        count: response.trashed_count,
+      }),
+    ];
+    if (already > 0) {
+      parts.push(this._transloco.translate('processes.trash.skippedAlready', { count: already }));
+    }
+    if (notLinked > 0) {
+      parts.push(this._transloco.translate('processes.trash.skippedNotLinked', { count: notLinked }));
+    }
+    this.showToast('success', parts.join(' '));
+  }
+
+  private _trashErrorMessage(err: HttpErrorResponse): string {
+    const body = err.error as { message?: string } | undefined;
+    if (typeof body?.message === 'string' && body.message.trim()) {
+      return body.message;
+    }
+    if (err.status === 404) {
+      return this._transloco.translate('processes.trash.notLinked');
+    }
+    if (err.status === 422) {
+      return this._transloco.translate('processes.trash.nothingTrashed');
+    }
+    return this._transloco.translate('processes.trash.errorGeneric');
   }
 
   public openOrganizationRoleModal(org: ProcessInterestedOrganization): void {

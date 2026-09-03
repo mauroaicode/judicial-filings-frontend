@@ -17,6 +17,12 @@ export interface Organization {
   updated_at: string;
   password?: string; // Generated password returned by backend
   is_receiving_notifications: boolean;
+  /** Límite efectivo (override o default del sistema). `null` = ilimitado. */
+  max_active_processes?: number | null;
+  /** Default global del sistema (`.env`). `null` = ilimitado. */
+  default_max_active_processes?: number | null;
+  /** Radicados activos distintos de la organización. */
+  active_processes_count?: number;
 }
 
 /**
@@ -111,4 +117,54 @@ export interface CreateOrganizationPayload {
   email?: string | null;
   contact_person?: string | null;
   generate_password?: boolean;
+}
+
+/**
+ * Configuración de límites de radicados de una organización.
+ * GET /organizations/{id} → `settings` y PUT /organizations/{id}/settings
+ */
+export interface OrganizationSettings {
+  organization_id?: string;
+  max_active_processes: number | null;
+  max_active_processes_configured: number | null;
+  default_max_active_processes: number | null;
+  remaining_slots: number | null;
+  active_processes_count?: number;
+}
+
+/**
+ * Detalle de organización para el modal de configuración.
+ * GET /organizations/{id}
+ */
+export interface OrganizationDetail {
+  id: string;
+  name: string;
+  slug: string;
+  type: 'natural' | 'juridical' | string;
+  type_label: string;
+  identification: string | null;
+  email: string | null;
+  phone: string | null;
+  address?: string | null;
+  contact_person: string | null;
+  is_active: boolean;
+  active_processes_count: number;
+  settings: OrganizationSettings;
+}
+
+/**
+ * Payload PUT /organizations/{id}/settings
+ * La key `max_active_processes` debe ir siempre presente.
+ * `null` quita el override y vuelve al default del sistema.
+ */
+export interface UpdateOrganizationSettingsPayload {
+  max_active_processes: number | null;
+}
+
+/**
+ * Respuesta PUT /organizations/{id}/settings
+ */
+export interface UpdateOrganizationSettingsResponse {
+  message: string;
+  settings: OrganizationSettings;
 }

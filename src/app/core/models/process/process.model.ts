@@ -502,3 +502,30 @@ export interface BulkRoleUpdateResponse {
   no_alerts: BulkRoleUpdateAlert;
   failed: BulkRoleUpdateFailure;
 }
+
+/**
+ * Soft-delete del vínculo organización ↔ proceso (papelera).
+ * No borra el radicado ni afecta a otras organizaciones.
+ */
+export type TrashSkippedReason = 'already_trashed' | 'not_linked';
+
+export interface TrashProcessesPayload {
+  organization_id: string;
+  process_ids: string[];
+}
+
+export interface TrashProcessPayload {
+  organization_id: string;
+}
+
+export interface TrashSkippedItem {
+  process_id: string;
+  reason: TrashSkippedReason;
+}
+
+export interface TrashProcessesResponse {
+  message: string;
+  trashed_count: number;
+  trashed_ids: string[];
+  skipped?: TrashSkippedItem[];
+}

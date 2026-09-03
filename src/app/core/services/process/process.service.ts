@@ -19,6 +19,9 @@ import {
   BulkRoleUpdateResponse,
   SubjectUpsertPayload,
   SaveProcessSubjectsResponse,
+  TrashProcessesPayload,
+  TrashProcessPayload,
+  TrashProcessesResponse,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 
@@ -334,5 +337,23 @@ export class ProcessService {
       process_ids: processIds,
       lawyer_role: role,
     });
+  }
+
+  /**
+   * Enviar varios procesos a papelera (soft-delete del vínculo org ↔ proceso).
+   * DELETE /processes con body `{ organization_id, process_ids }`.
+   */
+  trashProcesses(payload: TrashProcessesPayload): Observable<TrashProcessesResponse> {
+    const url = `${environment.apiBaseUrl}/processes`;
+    return this._http.delete<TrashProcessesResponse>(url, { body: payload });
+  }
+
+  /**
+   * Enviar un proceso a papelera desde el detalle.
+   * DELETE /processes/{id} con body `{ organization_id }`.
+   */
+  trashProcess(processId: string, payload: TrashProcessPayload): Observable<TrashProcessesResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}`;
+    return this._http.delete<TrashProcessesResponse>(url, { body: payload });
   }
 }

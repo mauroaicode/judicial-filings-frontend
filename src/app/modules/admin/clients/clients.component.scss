@@ -36,6 +36,7 @@
 // Anchos columnas fijas (# + nombre) — el segundo `left` debe coincidir con el ancho del #
 $clients-sticky-index-width: 64px;
 $clients-sticky-name-min: 240px;
+$clients-sticky-actions-width: 88px;
 $clients-sticky-base: #ffffff;
 $clients-sticky-zebra: #f4f5f9;
 /** Hover opaco (sin alpha): si no, al hacer scroll se ve el texto de las columnas detrás */
@@ -86,9 +87,23 @@ $clients-hover-bg: #ebeaf3;
       0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
   }
 
+  thead th.clients-sticky-actions {
+    position: sticky !important;
+    right: 0 !important;
+    top: 0 !important;
+    z-index: 621 !important;
+    min-width: $clients-sticky-actions-width !important;
+    max-width: $clients-sticky-actions-width !important;
+    width: $clients-sticky-actions-width !important;
+    box-shadow:
+      -2px 0 4px rgba(0, 0, 0, 0.1),
+      0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+  }
+
   /** Capa opaca bajo el texto (mismo patrón que procesos / radicado) */
   tbody td.clients-sticky-index,
-  tbody td.clients-sticky-name {
+  tbody td.clients-sticky-name,
+  tbody td.clients-sticky-actions {
     position: sticky !important;
     isolation: isolate !important;
     backface-visibility: hidden !important;
@@ -128,8 +143,20 @@ $clients-hover-bg: #ebeaf3;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
   }
 
+  tbody td.clients-sticky-actions {
+    right: 0 !important;
+    z-index: 503 !important;
+    background-color: $clients-sticky-base !important;
+    background: $clients-sticky-base !important;
+    min-width: $clients-sticky-actions-width !important;
+    max-width: $clients-sticky-actions-width !important;
+    width: $clients-sticky-actions-width !important;
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
   tbody tr:nth-child(2n) td.clients-sticky-index,
-  tbody tr:nth-child(2n) td.clients-sticky-name {
+  tbody tr:nth-child(2n) td.clients-sticky-name,
+  tbody tr:nth-child(2n) td.clients-sticky-actions {
     background-color: $clients-sticky-zebra !important;
     background: $clients-sticky-zebra !important;
 
@@ -139,7 +166,8 @@ $clients-hover-bg: #ebeaf3;
   }
 
   tbody tr.clients-table-row-hover:hover td.clients-sticky-index,
-  tbody tr.clients-table-row-hover:hover td.clients-sticky-name {
+  tbody tr.clients-table-row-hover:hover td.clients-sticky-name,
+  tbody tr.clients-table-row-hover:hover td.clients-sticky-actions {
     background-color: $clients-hover-bg !important;
     background: $clients-hover-bg !important;
 
@@ -152,7 +180,7 @@ $clients-hover-bg: #ebeaf3;
     transition: background-color 0.15s ease;
     cursor: default;
 
-    &:hover td:not(.clients-sticky-index):not(.clients-sticky-name) {
+    &:hover td:not(.clients-sticky-index):not(.clients-sticky-name):not(.clients-sticky-actions) {
       background-color: $clients-hover-bg !important;
     }
   }

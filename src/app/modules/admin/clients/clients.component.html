@@ -367,6 +367,12 @@
                     </dt>
                     <dd class="mt-0.5 text-base-content/90 break-words">{{ org.address ?? '–' }}</dd>
                   </div>
+                  <div class="min-w-0">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                      {{ 'clients.table.processes' | transloco }}
+                    </dt>
+                    <dd class="mt-0.5 tabular-nums text-base-content">{{ formatProcessesCell(org) }}</dd>
+                  </div>
                 </dl>
                 <div
                   class="mt-4 pt-3 border-t border-base-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
@@ -380,10 +386,27 @@
                       (click)="$event.preventDefault(); onToggleNotifications(org)"
                     />
                   </div>
-                  <p class="text-xs text-base-content/55 tabular-nums sm:text-end">
-                    {{ 'clients.table.createdAt' | transloco }}:
-                    <span class="text-base-content/80">{{ formatDate(org.created_at) }}</span>
-                  </p>
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs text-base-content/55 tabular-nums">
+                      {{ 'clients.table.createdAt' | transloco }}:
+                      <span class="text-base-content/80">{{ formatDate(org.created_at) }}</span>
+                    </p>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-circle text-primary"
+                      (click)="openSettingsModal(org)"
+                      [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                      [title]="'clients.settings.configure' | transloco"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>
@@ -392,7 +415,7 @@
 
         <!-- Escritorio: tabla con scroll horizontal -->
         <div class="hidden lg:block overflow-x-auto w-full clients-table">
-          <table class="table table-zebra clients-table-grid" style="min-width: 1140px;">
+          <table class="table table-zebra clients-table-grid" style="min-width: 1320px;">
             <thead class="clients-table-head">
               <tr>
                 <th class="clients-sticky-index text-center">{{ 'clients.table.index' | transloco }}</th>
@@ -403,9 +426,11 @@
                 <th class="clients-col-phone text-left">{{ 'clients.table.phone' | transloco }}</th>
                 <th class="text-left" style="width: 200px;">{{ 'clients.table.email' | transloco }}</th>
                 <th class="text-left" style="width: 160px;">{{ 'clients.table.contactPerson' | transloco }}</th>
+                <th class="text-center" style="width: 110px;">{{ 'clients.table.processes' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.notifications' | transloco }}</th>
                 <th class="text-center" style="width: 100px;">{{ 'clients.table.status' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.createdAt' | transloco }}</th>
+                <th class="clients-sticky-actions text-center">{{ 'common.actions' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -419,6 +444,9 @@
                   <td class="clients-col-phone align-middle text-base-content/90 whitespace-nowrap">{{ org.phone ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.email ?? '–' }}</td>
                   <td class="align-middle text-base-content/90">{{ org.contact_person ?? '–' }}</td>
+                  <td class="text-center align-middle tabular-nums whitespace-nowrap font-medium">
+                    {{ formatProcessesCell(org) }}
+                  </td>
                   <td class="text-center align-middle">
                     <input
                       type="checkbox"
@@ -437,6 +465,23 @@
                     </span>
                   </td>
                   <td class="text-center align-middle whitespace-nowrap">{{ formatDate(org.created_at) }}</td>
+                  <td class="clients-sticky-actions text-center align-middle">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
+                      (click)="openSettingsModal(org)"
+                      [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                      [title]="'clients.settings.configure' | transloco"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                        />
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -911,6 +956,14 @@
       </div>
     </div>
   </dialog>
+
+  @if (settingsModalOpen() && settingsOrganizationId(); as settingsOrgId) {
+    <app-organization-settings-modal
+      [organizationId]="settingsOrgId"
+      (closed)="closeSettingsModal()"
+      (saved)="onSettingsSaved($event)"
+    />
+  }
 
   <!-- Confirmación toggle notificaciones -->
   <app-confirmation-dialog

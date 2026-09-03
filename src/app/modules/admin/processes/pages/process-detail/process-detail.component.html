@@ -47,11 +47,25 @@
             <h1 class="text-2xl font-bold text-base-content min-w-0">
               {{ 'processDetail.title' | transloco }}
             </h1>
-            <span
-              [class]="'badge badge-sm font-bold uppercase shrink-0 ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
-            >
-              {{ initialStatusLabel() || process()!.status_label }}
-            </span>
+            <div class="flex items-center gap-2 shrink-0">
+              @if (hasOrganizations()) {
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                  (click)="openTrashModal()"
+                  [attr.aria-label]="'processDetail.trash.buttonAria' | transloco"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              }
+              <span
+                [class]="'badge badge-sm font-bold uppercase shrink-0 ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
+              >
+                {{ initialStatusLabel() || process()!.status_label }}
+              </span>
+            </div>
           </div>
 
           <div class="detail-header-card p-4 sm:p-6 bg-base-100 border border-base-200 rounded-2xl shadow-sm relative mb-6 sm:mb-7">
@@ -97,11 +111,26 @@
               </div>
             </div>
             @if (process()) {
-              <span
-                [class]="'badge badge-sm font-bold uppercase shrink-0 hidden sm:inline-flex self-start ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
-              >
-                {{ initialStatusLabel() || process()!.status_label }}
-              </span>
+              <div class="flex items-start gap-2 shrink-0">
+                @if (hasOrganizations()) {
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm text-error hover:bg-error/10 font-bold normal-case gap-1.5"
+                    (click)="openTrashModal()"
+                    [attr.aria-label]="'processDetail.trash.buttonAria' | transloco"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="hidden sm:inline">{{ 'processDetail.trash.button' | transloco }}</span>
+                  </button>
+                }
+                <span
+                  [class]="'badge badge-sm font-bold uppercase shrink-0 hidden sm:inline-flex self-start ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
+                >
+                  {{ initialStatusLabel() || process()!.status_label }}
+                </span>
+              </div>
             }
           </div>
 
@@ -341,24 +370,33 @@
                               <p class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider mb-1.5">
                                 {{ 'processDetail.organizations.trackingStatus' | transloco }}
                               </p>
-                              <button
-                                type="button"
-                                (click)="openOrganizationStatusConfirm(org)"
-                                [disabled]="updatingOrganizationStatusId() === org.id"
-                                class="btn btn-ghost btn-xs h-7 min-h-7 px-0 font-bold normal-case hover:bg-transparent disabled:opacity-50"
-                                [class.text-error]="isOrganizationActive(org)"
-                                [class.text-success]="isOrganizationInactive(org)"
-                              >
-                                @if (updatingOrganizationStatusId() === org.id) {
-                                  <span class="loading loading-spinner loading-xs"></span>
-                                } @else {
-                                  {{
-                                    isOrganizationActive(org)
-                                      ? ('processDetail.organizations.deactivateTracking' | transloco)
-                                      : ('processDetail.organizations.activateTracking' | transloco)
-                                  }}
-                                }
-                              </button>
+                              <div class="flex flex-col items-start gap-0.5">
+                                <button
+                                  type="button"
+                                  (click)="openOrganizationStatusConfirm(org)"
+                                  [disabled]="updatingOrganizationStatusId() === org.id"
+                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 font-bold normal-case hover:bg-transparent disabled:opacity-50"
+                                  [class.text-error]="isOrganizationActive(org)"
+                                  [class.text-success]="isOrganizationInactive(org)"
+                                >
+                                  @if (updatingOrganizationStatusId() === org.id) {
+                                    <span class="loading loading-spinner loading-xs"></span>
+                                  } @else {
+                                    {{
+                                      isOrganizationActive(org)
+                                        ? ('processDetail.organizations.deactivateTracking' | transloco)
+                                        : ('processDetail.organizations.activateTracking' | transloco)
+                                    }}
+                                  }
+                                </button>
+                                <button
+                                  type="button"
+                                  (click)="openTrashModalForOrganization(org)"
+                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 text-error font-bold normal-case hover:bg-transparent"
+                                >
+                                  {{ 'processDetail.organizations.trashFromOrg' | transloco }}
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -902,6 +940,31 @@
       confirmClass="btn-neutral"
       (confirm)="onConfirmOrganizationStatusChange()"
       (cancel)="onCancelOrganizationStatusChange()"
+    ></app-confirmation-dialog>
+
+    <app-trash-processes-modal
+      [open]="trashModalOpen()"
+      [processCount]="1"
+      [organizationOptions]="trashOrganizationOptions()"
+      [initialOrganizationId]="trashOrganizationId()"
+      [submitting]="trashSubmitting()"
+      [lockOrganization]="trashLockOrganization()"
+      [lockedOrganizationName]="trashLockedOrganizationName()"
+      (confirm)="onTrashOrganizationPicked($event)"
+      (cancel)="closeTrashModal()"
+    ></app-trash-processes-modal>
+
+    <app-confirmation-dialog
+      [open]="trashConfirmOpen()"
+      [title]="getTrashConfirmTitle()"
+      [message]="getTrashConfirmLead()"
+      [detailRows]="getTrashConfirmDetailRows()"
+      [footnote]="getTrashConfirmFootnote()"
+      [confirmLabel]="'processes.trash.confirm' | transloco"
+      [cancelLabel]="'generics.cancel' | transloco"
+      confirmClass="btn-error"
+      (confirm)="onConfirmTrash()"
+      (cancel)="onCancelTrashConfirm()"
     ></app-confirmation-dialog>
   </div>
 </div>

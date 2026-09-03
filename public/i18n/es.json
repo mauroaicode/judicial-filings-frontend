@@ -350,6 +350,35 @@
       "errors": {
         "generic": "Error al importar actuaciones. Intente de nuevo."
       }
+    },
+    "trash": {
+      "selectAllAria": "Seleccionar todos los procesos de esta página",
+      "selectRowAria": "Seleccionar proceso",
+      "selectInstanceAria": "Seleccionar instancia",
+      "selectedCount": "{{count}} seleccionados",
+      "availableActions": "Acciones disponibles para procesos",
+      "clearSelectionAria": "Limpiar selección",
+      "delete": "Eliminar",
+      "deleteAria": "Enviar a papelera",
+      "modalTitle": "Enviar a papelera",
+      "modalMessage": "Se enviarán a papelera {{count}} proceso(s) de la organización que elijas.",
+      "modalMessageNamed": "Se enviarán a papelera {{count}} proceso(s) de {{organization}}.",
+      "organizationLabel": "¿De qué organización deseas eliminar?",
+      "organizationPlaceholder": "Seleccione la organización",
+      "organizationSearch": "Buscar organización…",
+      "organizationNoMatches": "No hay coincidencias",
+      "footnote": "Podrán restaurarse después. El radicado no se borra del sistema. Otras organizaciones no se verán afectadas.",
+      "continue": "Continuar",
+      "confirm": "Enviar a papelera",
+      "confirmCountLabel": "Procesos",
+      "confirmOrganizationLabel": "Organización",
+      "submitting": "Enviando...",
+      "success": "{{message}} ({{count}})",
+      "skippedAlready": "{{count}} ya estaba(n) en papelera.",
+      "skippedNotLinked": "{{count}} no pertenece(n) a esta organización.",
+      "nothingTrashed": "Ningún proceso se pudo enviar a papelera.",
+      "notLinked": "No se encontró el vínculo con esta organización.",
+      "errorGeneric": "No se pudo enviar a papelera. Intente de nuevo."
     }
   },
   "table": {
@@ -404,6 +433,7 @@
       "contactPerson": "Persona de contacto",
       "status": "Estado",
       "notifications": "Notificaciones",
+      "processes": "Procesos",
       "active": "Activo",
       "inactive": "Inactivo",
       "createdAt": "Fecha de Creación"
@@ -451,6 +481,33 @@
       "confirmDeactivateTitle": "Desactivar notificaciones",
       "confirmActivateMessage": "¿Desea activar las notificaciones para la organización \"{{name}}\"?",
       "confirmDeactivateMessage": "¿Desea desactivar las notificaciones para la organización \"{{name}}\"?"
+    },
+    "settings": {
+      "configure": "Configurar",
+      "configureAria": "Configurar organización",
+      "closeAria": "Cerrar configuración",
+      "modalTitle": "Configuración de la organización",
+      "modalSubtitle": "Consulte los datos y ajuste el límite de radicados activos.",
+      "loading": "Cargando configuración…",
+      "retry": "Reintentar",
+      "tabInfo": "Información",
+      "tabSettings": "Configuraciones",
+      "activeProcesses": "Radicados activos",
+      "effectiveLimit": "Límite efectivo",
+      "unlimited": "Ilimitado",
+      "limitTitle": "Límite de radicados activos",
+      "limitDescription": "Define cuántos radicados activos puede tener esta organización. La validación al registrar o importar la hace el servidor.",
+      "useDefault": "Usar valor por defecto del sistema",
+      "usingDefault": "Usando valor por defecto del sistema: {{value}}",
+      "systemDefault": "Valor por defecto del sistema: {{value}}",
+      "limitInputLabel": "Límite de radicados activos",
+      "limitPlaceholder": "Ej: 60",
+      "limitHint": "Entero mayor o igual a 0. Desactive el valor por defecto para definir un límite propio.",
+      "usageSummary": "En uso: {{used}} · Disponibles: {{remaining}}",
+      "invalidLimit": "Ingrese un número entero mayor o igual a 0.",
+      "loadError": "No se pudo cargar la configuración de la organización.",
+      "saveError": "No se pudo guardar la configuración. Intente de nuevo.",
+      "toastSuccess": "Configuración de la organización actualizada."
     }
   },
   "historialImportaciones": {
@@ -601,6 +658,7 @@
       "confirmActivateMessage": "¿Está seguro de activar el seguimiento para la organización \"{{name}}\"?",
       "confirmDeactivateMessage": "¿Está seguro de desactivar el seguimiento para la organización \"{{name}}\"? Ya no se realizará seguimiento automático de las actualizaciones.",
       "roleSaved": "Rol de la organización actualizado exitosamente.",
+      "trashFromOrg": "Enviar a papelera",
       "roleModal": {
         "title": "Asignar rol de la organización",
         "subtitle": "Define si la organización actúa como demandante o demandado en este proceso",
@@ -673,6 +731,11 @@
       "idNotFound": "ID del proceso no encontrado en los parámetros de la ruta",
       "loadError": "Error al cargar el detalle del proceso"
     },
+    "trash": {
+      "button": "Eliminar",
+      "buttonAria": "Enviar este proceso a papelera",
+      "noOrganizations": "Este proceso no está vinculado a ninguna organización."
+    },
     "instances": {
       "title": "Instancias del proceso",
       "subtitle": "Selecciona una instancia para consultar sus actuaciones",
@@ -694,7 +757,8 @@
     "cancel": "Cancelar",
     "save": "Guardar",
     "saving": "Guardando...",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "loading": "Cargando..."
   },
   "notifications": {
     "title": "Notificaciones",

@@ -9,6 +9,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -23,6 +24,7 @@ import {
   ActuacionesImportResponse,
   ProcessActuacionSkippedItem,
   ProcessDashboardStats,
+  TrashProcessesResponse,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 import { Organization } from '@app/core/models/organization/organization.model';
@@ -36,6 +38,7 @@ import {
   ConfirmationDialogComponent,
   ConfirmationDialogDetailRow,
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { TrashProcessesModalComponent } from './components/trash-processes-modal/trash-processes-modal.component';
 
 @Component({
   selector: 'app-processes',
@@ -50,6 +53,7 @@ import {
     SearchableSelectComponent,
     ProcessNumberPipe,
     ConfirmationDialogComponent,
+    TrashProcessesModalComponent,
   ],
   templateUrl: './processes.component.html',
   styleUrls: ['./processes.component.scss'],
@@ -83,6 +87,29 @@ export class ProcessesComponent {
   public expandedProcessIds = signal<Set<string>>(new Set());
   /** ID de fila bajo hover (para resaltar) */
   public hoveredRowId = signal<string | null>(null);
+
+  /** Filas padre seleccionadas (página actual). Si tiene `instances`, implica todos sus UUID. */
+  public selectedParentIds = signal<Set<string>>(new Set());
+  /** Instancias sueltas (cuando el padre no está marcado completo). */
+  public selectedInstanceIds = signal<Set<string>>(new Set());
+
+  public selectedProcessIds = computed(() => this._collectSelectedProcessIds());
+  public selectedCount = computed(() => this.selectedProcessIds().length);
+  public hasSelection = computed(() => this.selectedCount() > 0);
+  public isAllPageSelected = computed(() => {
+    const list = this.processes();
+    if (!list.length) return false;
+    const parents = this.selectedParentIds();
+    return list.every((p) => parents.has(p.id));
+  });
+  public isPagePartiallySelected = computed(
+    () => this.hasSelection() && !this.isAllPageSelected()
+  );
+
+  public trashModalOpen = signal(false);
+  public trashConfirmOpen = signal(false);
+  public trashSubmitting = signal(false);
+  public trashOrganizationId = signal('');
 
   /** Menú del FAB móvil (+): muestra acciones (p. ej. Importar Excel) */
   public mobileFabMenuOpen = signal<boolean>(false);
@@ -485,6 +512,8 @@ export class ProcessesComponent {
 
     this._updateQueryParams(filters, false);
 
+    this.clearSelection();
+
     this._processService.getProcesses(filters).subscribe({
       next: (response) => {
         this.processes.set(response.data);
@@ -740,6 +769,315 @@ export class ProcessesComponent {
       event.stopPropagation();
     }
     this._router.navigate(['/admin', 'processes', row.id]);
+  }
+
+  /**
+   * UUID de instancia a enviar al API según la selección actual.
+   * Padre con `instances` → todos los `instances[].id`. Padre sin instancias → `id` de la fila.
+   */
+  private _collectSelectedProcessIds(): string[] {
+    const ids = new Set<string>();
+    const parents = this.selectedParentIds();
+    const instances = this.selectedInstanceIds();
+
+    for (const process of this.processes()) {
+      if (parents.has(process.id)) {
+        if (process.instances?.length) {
+          for (const instance of process.instances) {
+            ids.add(instance.id);
+          }
+        } else {
+          ids.add(process.id);
+        }
+        continue;
+      }
+      if (process.instances?.length) {
+        for (const instance of process.instances) {
+          if (instances.has(instance.id)) {
+            ids.add(instance.id);
+          }
+        }
+      }
+    }
+
+    return [...ids];
+  }
+
+  clearSelection(): void {
+    this.selectedParentIds.set(new Set());
+    this.selectedInstanceIds.set(new Set());
+  }
+
+  isParentSelected(process: Process): boolean {
+    return this.selectedParentIds().has(process.id);
+  }
+
+  isParentIndeterminate(process: Process): boolean {
+    if (this.selectedParentIds().has(process.id)) return false;
+    const list = process.instances;
+    if (!list?.length) return false;
+    const selected = this.selectedInstanceIds();
+    const count = list.filter((item) => selected.has(item.id)).length;
+    return count > 0 && count < list.length;
+  }
+
+  isInstanceSelected(process: Process, instanceId: string): boolean {
+    if (this.selectedParentIds().has(process.id)) return true;
+    return this.selectedInstanceIds().has(instanceId);
+  }
+
+  isRowSelected(process: Process): boolean {
+    if (this.selectedParentIds().has(process.id)) return true;
+    if (!process.instances?.length) return false;
+    const selected = this.selectedInstanceIds();
+    return process.instances.some((item) => selected.has(item.id));
+  }
+
+  toggleParentSelection(process: Process, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const nextParents = new Set(this.selectedParentIds());
+    const nextInstances = new Set(this.selectedInstanceIds());
+    if (nextParents.has(process.id)) {
+      nextParents.delete(process.id);
+      process.instances?.forEach((item) => nextInstances.delete(item.id));
+    } else {
+      nextParents.add(process.id);
+      process.instances?.forEach((item) => nextInstances.delete(item.id));
+    }
+    this.selectedParentIds.set(nextParents);
+    this.selectedInstanceIds.set(nextInstances);
+  }
+
+  toggleInstanceSelection(process: Process, instance: ProcessInstance, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const nextParents = new Set(this.selectedParentIds());
+    const nextInstances = new Set(this.selectedInstanceIds());
+    const instanceIds = process.instances?.map((item) => item.id) ?? [];
+
+    if (nextParents.has(process.id)) {
+      nextParents.delete(process.id);
+      for (const id of instanceIds) {
+        if (id !== instance.id) {
+          nextInstances.add(id);
+        }
+      }
+    } else if (nextInstances.has(instance.id)) {
+      nextInstances.delete(instance.id);
+    } else {
+      nextInstances.add(instance.id);
+      const allSelected =
+        instanceIds.length > 0 && instanceIds.every((id) => nextInstances.has(id));
+      if (allSelected) {
+        nextParents.add(process.id);
+        instanceIds.forEach((id) => nextInstances.delete(id));
+      }
+    }
+
+    this.selectedParentIds.set(nextParents);
+    this.selectedInstanceIds.set(nextInstances);
+  }
+
+  toggleSelectAllPage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (this.isAllPageSelected()) {
+      this.clearSelection();
+      return;
+    }
+    const nextParents = new Set<string>();
+    for (const process of this.processes()) {
+      nextParents.add(process.id);
+    }
+    this.selectedParentIds.set(nextParents);
+    this.selectedInstanceIds.set(new Set());
+  }
+
+  openTrashModal(): void {
+    if (this.selectedCount() < 1) return;
+    this.trashSubmitting.set(false);
+
+    const proceed = (): void => {
+      const guessed = this._guessOrganizationIdFromFilter();
+      this.trashOrganizationId.set(guessed);
+      if (guessed) {
+        this._openTrashConfirm();
+        return;
+      }
+      this.trashModalOpen.set(true);
+    };
+
+    if (this.importOrganizations().length) {
+      proceed();
+      return;
+    }
+    this._loadImportOrganizationsForTrash(proceed);
+  }
+
+  closeTrashModal(): void {
+    if (this.trashSubmitting()) return;
+    this.trashModalOpen.set(false);
+  }
+
+  onTrashOrganizationPicked(payload: { organizationId: string }): void {
+    const organizationId = payload.organizationId?.trim();
+    if (!organizationId) return;
+    this.trashOrganizationId.set(organizationId);
+    this.trashModalOpen.set(false);
+    this._openTrashConfirm();
+  }
+
+  private _openTrashConfirm(): void {
+    if (this.selectedCount() < 1 || !this.trashOrganizationId().trim()) return;
+    this.trashConfirmOpen.set(true);
+  }
+
+  getTrashConfirmTitle(): string {
+    return this._transloco.translate('processes.trash.modalTitle');
+  }
+
+  getTrashConfirmLead(): string {
+    if (!this.trashConfirmOpen()) return '';
+    return this._transloco.translate('processes.trash.modalMessageNamed', {
+      count: this.selectedCount(),
+      organization: this._trashOrganizationDisplayName(),
+    });
+  }
+
+  getTrashConfirmFootnote(): string {
+    if (!this.trashConfirmOpen()) return '';
+    return this._transloco.translate('processes.trash.footnote');
+  }
+
+  getTrashConfirmDetailRows(): ConfirmationDialogDetailRow[] {
+    if (!this.trashConfirmOpen()) return [];
+    return [
+      {
+        label: this._transloco.translate('processes.trash.confirmCountLabel'),
+        value: String(this.selectedCount()),
+      },
+      {
+        label: this._transloco.translate('processes.trash.confirmOrganizationLabel'),
+        value: this._trashOrganizationDisplayName(),
+      },
+    ];
+  }
+
+  onCancelTrashConfirm(): void {
+    this.trashConfirmOpen.set(false);
+  }
+
+  onConfirmTrash(): void {
+    const processIds = this.selectedProcessIds();
+    const organizationId = this.trashOrganizationId().trim();
+    if (!processIds.length || !organizationId) return;
+
+    this.trashConfirmOpen.set(false);
+    this.trashSubmitting.set(true);
+    this._processService
+      .trashProcesses({
+        organization_id: organizationId,
+        process_ids: processIds,
+      })
+      .subscribe({
+        next: (response) => {
+          this.trashSubmitting.set(false);
+          this.clearSelection();
+          this._showTrashResultToast(response);
+          const page = this.pagination()?.current_page || 1;
+          const perPage = this.pagination()?.per_page || 10;
+          this.loadProcesses(page, perPage);
+          this.loadDashboardStats();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.trashSubmitting.set(false);
+          this._showPageToast(this._trashErrorMessage(err), 'error');
+        },
+      });
+  }
+
+  private _loadImportOrganizationsForTrash(afterLoad?: () => void): void {
+    this.importOrganizationsLoading.set(true);
+    this._organizationService.getOrganizations({ per_page: 500 }).subscribe({
+      next: (response) => {
+        this.importOrganizations.set(response.data);
+        this.importOrganizationsLoading.set(false);
+        afterLoad?.();
+      },
+      error: () => {
+        this.importOrganizationsLoading.set(false);
+      },
+    });
+  }
+
+  private _trashOrganizationDisplayName(): string {
+    const organizationId = this.trashOrganizationId().trim();
+    const org = this.importOrganizations().find((item) => item.id === organizationId);
+    const name = org?.name?.trim();
+    return name || organizationId;
+  }
+
+  private _guessOrganizationIdFromFilter(): string {
+    const query = String(this.filterForm.value.organization ?? '')
+      .trim()
+      .toLowerCase();
+    if (!query) return '';
+    const orgs = this.importOrganizations();
+    const exact = orgs.filter((org) => org.name.trim().toLowerCase() === query);
+    if (exact.length === 1) return exact[0].id;
+    const partial = orgs.filter((org) => org.name.trim().toLowerCase().includes(query));
+    if (partial.length === 1) return partial[0].id;
+    return '';
+  }
+
+  private _showTrashResultToast(response: TrashProcessesResponse): void {
+    const skipped = response.skipped ?? [];
+    const already = skipped.filter((item) => item.reason === 'already_trashed').length;
+    const notLinked = skipped.filter((item) => item.reason === 'not_linked').length;
+    const parts: string[] = [
+      this._transloco.translate('processes.trash.success', {
+        message: response.message,
+        count: response.trashed_count,
+      }),
+    ];
+    if (already > 0) {
+      parts.push(this._transloco.translate('processes.trash.skippedAlready', { count: already }));
+    }
+    if (notLinked > 0) {
+      parts.push(this._transloco.translate('processes.trash.skippedNotLinked', { count: notLinked }));
+    }
+    this._showPageToast(parts.join(' '), 'success', skipped.length ? 5000 : 2800);
+  }
+
+  private _trashErrorMessage(err: HttpErrorResponse): string {
+    const body = err.error as { message?: string } | undefined;
+    if (typeof body?.message === 'string' && body.message.trim()) {
+      return body.message;
+    }
+    if (err.status === 404) {
+      return this._transloco.translate('processes.trash.notLinked');
+    }
+    if (err.status === 422) {
+      return this._transloco.translate('processes.trash.nothingTrashed');
+    }
+    return this._transloco.translate('processes.trash.errorGeneric');
+  }
+
+  private _showPageToast(
+    message: string,
+    kind: 'success' | 'error',
+    durationMs = 2800
+  ): void {
+    if (this._copiedRadicadoToastTimer) {
+      clearTimeout(this._copiedRadicadoToastTimer);
+      this._copiedRadicadoToastTimer = undefined;
+    }
+    this.copyRadicadoToast.set({ message, kind });
+    this._copiedRadicadoToastTimer = setTimeout(() => {
+      this.copyRadicadoToast.set(null);
+      this._copiedRadicadoToastTimer = undefined;
+    }, durationMs);
   }
 
   toggleMobileFabMenu(): void {

@@ -19,9 +19,11 @@ import {
   OrganizationResponseMeta,
   OrganizationStats,
   SelectOption,
+  UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { ConfirmationDialogComponent } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { OrganizationSettingsModalComponent } from './components/organization-settings-modal/organization-settings-modal.component';
 
 @Component({
   selector: 'app-clients',
@@ -32,6 +34,7 @@ import { ConfirmationDialogComponent } from '@app/shared/components/confirmation
     TranslocoPipe,
     DateRangePickerComponent,
     ConfirmationDialogComponent,
+    OrganizationSettingsModalComponent,
   ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
@@ -85,6 +88,9 @@ export class ClientsComponent {
   public notifyingOrg = signal<Organization | null>(null);
   /** Modal confirmación notificaciones */
   public confirmNotificationOpen = signal<boolean>(false);
+  /** Modal configuración rápida de organización */
+  public settingsModalOpen = signal<boolean>(false);
+  public settingsOrganizationId = signal<string | null>(null);
   private _toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public filterForm: FormGroup = this._fb.group({
@@ -342,6 +348,48 @@ export class ClientsComponent {
 
   getTypeLabel(value: string): string {
     return this.typeOptions().find((o) => o.value === value)?.label ?? value;
+  }
+
+  formatProcessesCell(org: Organization): string {
+    if (org.active_processes_count === undefined && org.max_active_processes === undefined) {
+      return '–';
+    }
+    const count = org.active_processes_count ?? 0;
+    if (org.max_active_processes === null || org.max_active_processes === undefined) {
+      return `${count} / ∞`;
+    }
+    return `${count} / ${org.max_active_processes}`;
+  }
+
+  openSettingsModal(org: Organization): void {
+    this.settingsOrganizationId.set(org.id);
+    this.settingsModalOpen.set(true);
+  }
+
+  closeSettingsModal(): void {
+    this.settingsModalOpen.set(false);
+    this.settingsOrganizationId.set(null);
+  }
+
+  onSettingsSaved(response: UpdateOrganizationSettingsResponse): void {
+    const settings = response.settings;
+    const organizationId = settings.organization_id ?? this.settingsOrganizationId();
+    this.organizations.update((orgs) =>
+      orgs.map((org) =>
+        org.id === organizationId
+          ? {
+              ...org,
+              max_active_processes: settings.max_active_processes,
+              default_max_active_processes: settings.default_max_active_processes,
+              active_processes_count: settings.active_processes_count ?? org.active_processes_count,
+            }
+          : org
+      )
+    );
+    this.closeSettingsModal();
+    this.showSuccessToast(
+      response.message || this._transloco.translate('clients.settings.toastSuccess')
+    );
   }
 
   isJuridical(): boolean {
