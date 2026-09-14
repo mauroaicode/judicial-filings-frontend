@@ -74,6 +74,7 @@
     "navigation": {
         "dashboard": "Dashboard",
         "processes": "Processes",
+        "manualRegistrations": "Manual registrations",
         "clients": "Organizations",
         "importHistory": "Import history",
         "judicialSync": "Branch sync",
@@ -224,6 +225,65 @@
             "technicalBadge": "Technical / SQL",
             "businessBadge": "Validation",
             "close": "Close"
+        }
+    },
+    "manualRegistrations": {
+        "title": "Manual registrations",
+        "description": "Filings the lawyer could not add. Digitize with private Excel import or Actuaciones, then mark the request as resolved.",
+        "empty": "No requests match the current filters.",
+        "copied": "Copied to clipboard",
+        "loadError": "Could not load the manual registration queue.",
+        "resolveRegistered": "Request marked as registered.",
+        "resolveRejected": "Request rejected.",
+        "resolveError": "Could not update the request.",
+        "filters": {
+            "fabAria": "Show or hide search filters",
+            "title": "Search filters",
+            "status": "Status",
+            "reason": "Reason",
+            "reasonAll": "All",
+            "organization": "Organization",
+            "organizationPlaceholder": "Partial match on name",
+            "processNumber": "Filing number",
+            "processNumberPlaceholder": "Partial match",
+            "search": "Apply filters",
+            "reset": "Clear filters"
+        },
+        "status": {
+            "pending": "Pending",
+            "registered": "Registered",
+            "rejected": "Rejected"
+        },
+        "reason": {
+            "notFound": "Not found",
+            "private": "Private",
+            "allPrivate": "All instances private"
+        },
+        "lawyerRole": {
+            "plaintiff": "Plaintiff",
+            "defendant": "Defendant"
+        },
+        "table": {
+            "processNumber": "Filing number",
+            "organization": "Organization",
+            "requestedBy": "Requested by",
+            "reason": "Reason",
+            "pendingHistory": "Pending history",
+            "pendingHistoryHint": "{{count}} actuaciones in the repository, waiting to be linked",
+            "createdAt": "Date",
+            "status": "Status"
+        },
+        "actions": {
+            "importPrivate": "Import private Excel",
+            "importActuaciones": "Import actuaciones",
+            "markRegistered": "Mark registered",
+            "reject": "Reject"
+        },
+        "confirm": {
+            "registeredTitle": "Mark as registered",
+            "registeredMessage": "Confirm that you already digitized or imported this filing. The request will leave the pending queue.",
+            "rejectedTitle": "Reject request",
+            "rejectedMessage": "The request will be marked as rejected and leave the pending queue."
         }
     },
     "table": {
@@ -421,6 +481,8 @@
             "dataOrigin": "Origin",
             "originPrivate": "Private",
             "originJudicial": "Judicial",
+            "originManual": "Manual",
+            "originManualTooltip": "Uploaded manually",
             "multipleInstances": "Multiple instances",
             "createdAt": "Created",
             "lastActivityDate": "Last filing activity"
@@ -756,6 +818,10 @@
         "colProcesses": "Processes",
         "colActions": "Actions",
         "colChannels": "Active channels",
+        "colRowActions": "Actions",
+        "discard": "Discard",
+        "discardConfirmTitle": "Discard the digest for {{organization_name}}?",
+        "discardConfirmMessage": "No email will be sent. The {{pending_actions}} pending actions will no longer be part of the package.",
         "emptyTitle": "No pending digest packages",
         "emptySubtitle": "All organizations are up to date. Come back after importing actions or running a sync.",
         "retry": "Retry",
@@ -767,7 +833,8 @@
         "confirmFootnote": "Email delivery may take a few minutes while the queue is processed.",
         "errors": {
             "loadFailed": "Could not load the pending package.",
-            "sendGeneric": "Could not send the package. Please try again."
+            "sendGeneric": "Could not send the package. Please try again.",
+            "discardGeneric": "Could not discard the digest. Please try again."
         }
     }
 }

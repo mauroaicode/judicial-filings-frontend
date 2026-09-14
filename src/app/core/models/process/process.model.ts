@@ -14,6 +14,8 @@ export interface ProcessInstance {
   /** Fuente cuando el proceso es privado (p. ej. SAMAI) */
   data_source_slug?: string | null;
   data_source_name?: string | null;
+  /** Alta hecha por digitación/Excel (no consulta automática). */
+  is_manual_sync?: boolean;
   has_multiple_instances: boolean;
   status_label: string;
   created_at: string;
@@ -48,6 +50,8 @@ export interface Process {
   /** Fuente cuando el proceso es privado (p. ej. SAMAI) */
   data_source_slug?: string | null;
   data_source_name?: string | null;
+  /** Alta hecha por digitación/Excel (no consulta automática). */
+  is_manual_sync?: boolean;
   has_multiple_instances: boolean;
   status_label: string;
   created_at: string;
@@ -264,6 +268,8 @@ export interface ProcessDashboardStats {
   outdated_processes: number;
   critical_alert_processes: number;
   early_attention_processes: number;
+  /** Cola de altas manuales pendientes (Edwin). */
+  pending_manual_registrations?: number;
 }
 
 // -----------------------------------------------------------------------------------------------------
@@ -289,6 +295,10 @@ export interface ProcessDetail {
   location: string;
   filing_content: string | null;
   is_private: boolean;
+  /** Alta hecha por digitación/Excel (no consulta automática). */
+  is_manual_sync?: boolean;
+  data_source_slug?: string | null;
+  data_source_name?: string | null;
   has_multiple_instances: boolean;
   last_api_update: string;
   status_label: string;

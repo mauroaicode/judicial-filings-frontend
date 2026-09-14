@@ -21,3 +21,10 @@ export interface DigestPackageSendResult {
   organizations_queued: number;
   message: string;
 }
+
+export interface DigestPackageDiscardResult {
+  organization_id: string;
+  organization_name: string;
+  actions_discarded: number;
+  message: string;
+}

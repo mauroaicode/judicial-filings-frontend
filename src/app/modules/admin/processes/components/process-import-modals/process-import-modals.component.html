@@ -1,0 +1,527 @@
+@if (copyToast(); as ct) {
+  <div class="toast toast-end toast-bottom z-[10050] pointer-events-none">
+    <div
+      class="alert shadow-lg border-none rounded-2xl font-bold pointer-events-none"
+      [class.alert-success]="ct.kind === 'success'"
+      [class.bg-success]="ct.kind === 'success'"
+      [class.text-success-content]="ct.kind === 'success'"
+      [class.alert-error]="ct.kind === 'error'"
+    >
+      <span>{{ ct.message }}</span>
+    </div>
+  </div>
+}
+
+  <!-- Import Excel: usa bottom sheet modular (app-bottom-sheet-modal) -->
+  <app-bottom-sheet-modal
+    [open]="isImportModalOpen()"
+    [backdropAriaLabel]="'processes.import.close' | transloco"
+    (dismiss)="closeImportModal()"
+  >
+    <div class="bottom-sheet-body">
+      <h3 class="text-lg font-bold text-base-content">
+        {{ 'processes.import.title' | transloco }}
+      </h3>
+      <p class="mt-2 text-sm text-base-content/70">
+        {{ 'processes.import.description' | transloco }}
+      </p>
+      <p class="mt-1 text-xs text-base-content/55 lg:hidden">
+        {{ 'processes.import.sheetHint' | transloco }}
+      </p>
+
+      @if (!importResult()) {
+        <div class="form-control mb-4 mt-4">
+          <label class="label">
+            <span class="label-text">{{ 'processes.import.organizationLabel' | transloco }}</span>
+          </label>
+          <app-searchable-select
+            [(value)]="importOrganizationId"
+            [options]="importOrganizationOptions()"
+            [placeholder]="'processes.import.organizationPlaceholder' | transloco"
+            [searchPlaceholder]="'processes.import.organizationSearch' | transloco"
+            [noResultsText]="'processes.import.organizationNoMatches' | transloco"
+            [disabled]="importSubmitting()"
+            [loading]="importOrganizationsLoading()"
+          ></app-searchable-select>
+        </div>
+
+        <div class="form-control mb-4 mt-2">
+          <label class="label cursor-pointer justify-start gap-3 py-2">
+            <input
+              type="checkbox"
+              class="toggle toggle-primary"
+              [checked]="importIsPrivate()"
+              [disabled]="importSubmitting()"
+              (change)="onImportPrivateChange($any($event.target).checked)"
+            />
+            <span class="label-text">{{ 'processes.import.privateToggle' | transloco }}</span>
+          </label>
+        </div>
+
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">{{ 'processes.import.dataSourceLabel' | transloco }}</span>
+          </label>
+          <select
+            class="select select-bordered w-full min-h-12"
+            [value]="importDataSourceSlug()"
+            [disabled]="importSubmitting() || importDataSourcesLoading()"
+            (change)="importDataSourceSlug.set($any($event.target).value)"
+          >
+            <option value="" disabled>
+              {{ 'processes.import.dataSourcePlaceholder' | transloco }}
+            </option>
+            @for (opt of importDataSourceOptions(); track opt.id) {
+              <option [value]="opt.id">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <app-file-drop-zone
+          [accept]="'.xlsx'"
+          [maxSizeMb]="10"
+          [disabled]="importSubmitting()"
+          [value]="importFile()"
+          (fileChange)="onImportFileSelected($event)"
+        ></app-file-drop-zone>
+      } @else {
+        @let res = importResult()!;
+        <div
+          class="alert mt-4"
+          [class.alert-success]="isImportResultSuccess(res)"
+          [class.alert-error]="!isImportResultSuccess(res)"
+        >
+          @if (isImportResultSuccess(res)) {
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          @if (!isImportResultSuccess(res)) {
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          <div class="flex min-w-0 flex-1 flex-col gap-2">
+            <span>{{ res.message }}</span>
+            @if (isImportResultSuccess(res) && typeof res.processes_created === 'number') {
+              <ul class="mt-1 list-none space-y-1 pl-0 text-sm">
+                <li>
+                  <span class="font-semibold">{{ 'processes.import.privateStatsCreated' | transloco }}</span>
+                  {{ res.processes_created }}
+                </li>
+                @if (typeof res.processes_updated === 'number') {
+                  <li>
+                    <span class="font-semibold">{{ 'processes.import.privateStatsUpdated' | transloco }}</span>
+                    {{ res.processes_updated }}
+                  </li>
+                }
+                @if (typeof res.actions_imported === 'number') {
+                  <li>
+                    <span class="font-semibold">{{ 'processes.import.privateStatsActions' | transloco }}</span>
+                    {{ res.actions_imported }}
+                  </li>
+                }
+              </ul>
+            }
+            @if (!isImportResultSuccess(res) && getImportRowErrors(res).length > 0) {
+              <div class="mt-2">
+                <p class="text-sm font-semibold">{{ 'processes.import.validationErrors' | transloco }}</p>
+                <ul class="mt-1 max-h-48 list-none space-y-1 overflow-y-auto pl-0 text-sm">
+                  @for (rowErr of getImportRowErrors(res); track rowErr.row) {
+                    <li class="leading-snug">
+                      <span class="font-semibold">{{ 'processes.import.rowErrorLabel' | transloco: { row: rowErr.row } }}</span>
+                      {{ rowErr.message }}
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (!importResult() && !importConfirmOpen()) {
+      <div
+        class="bottom-sheet-footer shrink-0 border-t border-base-200 bg-base-100 px-4 py-4 sm:px-6 lg:flex lg:justify-end lg:gap-2 lg:rounded-b-2xl lg:border-t-0 lg:pt-0 lg:shadow-none"
+      >
+        <button
+          type="button"
+          class="btn btn-ghost mb-2 w-full lg:mb-0 lg:w-auto"
+          [disabled]="importSubmitting()"
+          (click)="closeImportModal()"
+        >
+          {{ 'processes.import.cancel' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-toolbar-tall w-full min-h-[3rem] rounded-xl font-bold normal-case lg:min-h-0 lg:w-auto lg:px-8"
+          [disabled]="!importReadyToConfirm()"
+          (click)="openImportConfirmDialog()"
+        >
+          @if (importSubmitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            {{ 'processes.import.submitting' | transloco }}
+          } @else {
+            {{ 'processes.import.importProcesses' | transloco }}
+          }
+        </button>
+      </div>
+    }
+    @if (importResult()) {
+      <div class="bottom-sheet-footer shrink-0 border-t border-base-200 px-4 py-4 sm:px-6 lg:rounded-b-2xl">
+        <button type="button" class="btn btn-primary w-full lg:w-auto lg:float-right rounded-xl font-bold normal-case" (click)="closeImportModal()">
+          {{ 'processes.import.close' | transloco }}
+        </button>
+      </div>
+    }
+  </app-bottom-sheet-modal>
+
+  <app-bottom-sheet-modal
+    [open]="isActuacionesImportModalOpen()"
+    [backdropAriaLabel]="'processes.actuacionesImport.close' | transloco"
+    (dismiss)="closeActuacionesImportModal()"
+  >
+    <div class="bottom-sheet-body">
+      <h3 class="text-lg font-bold text-base-content">
+        {{ 'processes.actuacionesImport.title' | transloco }}
+      </h3>
+      <p class="mt-2 text-sm text-base-content/70" [innerHTML]="'processes.actuacionesImport.description' | transloco"></p>
+      <p class="mt-1 text-xs text-base-content/55 lg:hidden">
+        {{ 'processes.actuacionesImport.sheetHint' | transloco }}
+      </p>
+
+      @if (!actuacionesImportResult()) {
+        <div class="mt-4">
+          <app-file-drop-zone
+            [accept]="'.xlsx'"
+            [maxSizeMb]="10"
+            [disabled]="actuacionesImportSubmitting()"
+            [value]="actuacionesImportFile()"
+            (fileChange)="onActuacionesImportFileSelected($event)"
+          ></app-file-drop-zone>
+          @if (actuacionesImportFieldErrors().file; as fileErr) {
+            <p class="mt-2 text-sm text-error">{{ fileErr }}</p>
+          }
+        </div>
+      } @else {
+        @let res = actuacionesImportResult()!;
+        @if (isActuacionesImportSuccess(res)) {
+          <!-- Banner de éxito / solo-repositorio -->
+          <div
+            class="alert mt-4 border-none shadow-sm"
+            [class.alert-success]="(res.actions_imported ?? 0) > 0"
+            [class.actuaciones-import-banner--empty]="isActuacionesImportOnlyUnassigned(res)"
+          >
+            @if ((res.actions_imported ?? 0) > 0) {
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            @if (isActuacionesImportOnlyUnassigned(res)) {
+              <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0 h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            }
+            <div class="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+              <span>{{ getActuacionesImportSuccessMessage(res) }}</span>
+              @if (
+                (res.actions_imported ?? 0) > 0 ||
+                (res.actions_skipped ?? 0) > 0 ||
+                (res.actions_stored_unassigned ?? 0) > 0
+              ) {
+                <ul class="mt-1 list-none space-y-0.5 pl-0">
+                  <li>
+                    <span class="font-semibold">{{ 'processes.actuacionesImport.statImported' | transloco }}</span>
+                    {{ res.actions_imported ?? 0 }}
+                  </li>
+                  <li>
+                    <span class="font-semibold">{{ 'processes.actuacionesImport.statSkipped' | transloco }}</span>
+                    {{ res.actions_skipped ?? 0 }}
+                  </li>
+                  @if ((res.actions_stored_unassigned ?? 0) > 0) {
+                    <li>
+                      <span class="font-semibold">{{ 'processes.actuacionesImport.statStoredUnassigned' | transloco }}</span>
+                      {{ res.actions_stored_unassigned ?? 0 }}
+                    </li>
+                  }
+                  <li>
+                    <span class="font-semibold">{{ 'processes.actuacionesImport.statUpdated' | transloco }}</span>
+                    {{ res.processes_updated ?? 0 }}
+                  </li>
+                </ul>
+              }
+            </div>
+          </div>
+
+          <!-- Actuaciones omitidas por duplicado (informativo, no es error) -->
+          @if ((res.actions_skipped ?? 0) > 0 && getActuacionesSkippedActions(res).length > 0) {
+            <div class="actuaciones-skipped-panel mt-3">
+              <button
+                type="button"
+                class="actuaciones-skipped-panel__toggle"
+                (click)="toggleActuacionesSkippedOpen()"
+                [attr.aria-expanded]="actuacionesSkippedOpen()"
+              >
+                <div class="actuaciones-skipped-panel__icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1 text-left">
+                  <p class="text-sm font-semibold leading-snug text-base-content">
+                    {{ 'processes.actuacionesImport.skippedTitle' | transloco: { count: res.actions_skipped ?? 0 } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.skippedHint' | transloco: { count: res.actions_skipped ?? 0 } }}
+                  </p>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0 text-base-content/45 transition-transform"
+                  [class.rotate-180]="actuacionesSkippedOpen()"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              @if (actuacionesSkippedOpen()) {
+                <div class="actuaciones-skipped-panel__body">
+                  <div class="overflow-x-auto">
+                    <table class="table table-xs w-full">
+                      <thead>
+                        <tr>
+                          <th class="whitespace-nowrap">{{ 'processes.actuacionesImport.skippedColRow' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColRadicado' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColAction' | transloco }}</th>
+                          <th class="whitespace-nowrap">{{ 'processes.actuacionesImport.skippedColDate' | transloco }}</th>
+                          <th>{{ 'processes.actuacionesImport.skippedColCourt' | transloco }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of getActuacionesSkippedActions(res); track item.excel_row + '-' + item.process_number + '-' + item.action) {
+                          <tr>
+                            <td class="font-mono tabular-nums text-base-content/70">{{ item.excel_row }}</td>
+                            <td class="font-mono text-xs whitespace-nowrap">{{ item.process_number | processNumber }}</td>
+                            <td>
+                              <span class="text-xs leading-snug">{{ item.action }}</span>
+                              @if (item.annotation) {
+                                <p class="mt-0.5 text-[11px] leading-snug text-base-content/50">{{ item.annotation }}</p>
+                              }
+                            </td>
+                            <td class="whitespace-nowrap text-xs">{{ item.registration_date || '—' }}</td>
+                            <td class="text-xs text-base-content/70">{{ item.court || '—' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Panel de radicados actualizados (encontrados en BD) -->
+          @if (getActuacionesUpdatedNumbers(res).length > 0) {
+            <div class="actuaciones-updated-panel mt-3">
+              <div class="actuaciones-updated-panel__header">
+                <div class="actuaciones-updated-panel__icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold leading-snug text-base-content">
+                    {{ 'processes.actuacionesImport.updatedWarning' | transloco: {
+                        count: getActuacionesUpdatedNumbers(res).length
+                      } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.updatedHint' | transloco }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="actuaciones-updated-panel__list-card">
+                <div class="actuaciones-updated-panel__list-toolbar">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-base-content/55">
+                    {{ 'processes.actuacionesImport.updatedListLabel' | transloco }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs h-7 min-h-0 gap-1 rounded-lg border border-success/25 bg-success/5 px-2 normal-case text-success hover:bg-success/10 hover:border-success/35"
+                    (click)="copyActuacionesUpdatedNumbers(getActuacionesUpdatedNumbers(res), $event)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                    </svg>
+                    {{ 'processes.actuacionesImport.copyUpdated' | transloco }}
+                  </button>
+                </div>
+                <ul class="actuaciones-updated-panel__list">
+                  @for (num of getActuacionesUpdatedNumbers(res); track num) {
+                    <li class="actuaciones-updated-panel__item">
+                      <span class="min-w-0 flex-1 break-all font-mono text-xs leading-snug text-base-content/85">
+                        {{ num | processNumber }}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:bg-success/10 hover:text-success"
+                        (click)="copyProcessRadicado(num, $event)"
+                        [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                        </svg>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+
+          <!-- Panel de radicados guardados en repositorio (informativo, no es error) -->
+          @if (getActuacionesUnassignedCount(res) > 0) {
+            <div class="actuaciones-not-found-panel mt-3">
+              <div class="actuaciones-not-found-panel__header">
+                <div class="actuaciones-not-found-panel__icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold leading-snug text-base-content">
+                    {{ 'processes.actuacionesImport.unassignedWarning' | transloco: {
+                        stored: res.actions_stored_unassigned ?? 0,
+                        count: getActuacionesUnassignedCount(res)
+                      } }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-base-content/60">
+                    {{ 'processes.actuacionesImport.unassignedHint' | transloco }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="actuaciones-not-found-panel__list-card">
+                <div class="actuaciones-not-found-panel__list-toolbar">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-base-content/55">
+                    {{ 'processes.actuacionesImport.unassignedListLabel' | transloco }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs h-7 min-h-0 gap-1 rounded-lg border border-warning/25 bg-warning/5 px-2 normal-case text-warning hover:bg-warning/10 hover:border-warning/35"
+                    (click)="copyActuacionesNotFoundNumbers(getActuacionesUnassignedNumbers(res), $event)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                    </svg>
+                    {{ 'processes.actuacionesImport.copyNotFound' | transloco }}
+                  </button>
+                </div>
+                <ul class="actuaciones-not-found-panel__list">
+                  @for (num of getActuacionesUnassignedNumbers(res); track num) {
+                    <li class="actuaciones-not-found-panel__item">
+                      <span class="min-w-0 flex-1 break-all font-mono text-xs leading-snug text-base-content/85">
+                        {{ num | processNumber }}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:bg-warning/10 hover:text-warning"
+                        (click)="copyProcessRadicado(num, $event)"
+                        [attr.aria-label]="'processes.copy.tooltip' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                        </svg>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="alert alert-error mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+              <span>{{ res.message || ('processes.actuacionesImport.errors.generic' | transloco) }}</span>
+              @if (getActuacionesImportRowErrors(res).length > 0) {
+                <div class="mt-1">
+                  <p class="text-sm font-semibold">{{ 'processes.actuacionesImport.validationErrors' | transloco }}</p>
+                  <ul class="mt-1 max-h-48 list-none space-y-1 overflow-y-auto pl-0 text-sm">
+                    @for (rowErr of getActuacionesImportRowErrors(res); track rowErr.row) {
+                      <li class="leading-snug">{{ rowErr.message }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (!actuacionesImportResult()) {
+      <div
+        class="bottom-sheet-footer shrink-0 border-t border-base-200 bg-base-100 px-4 py-4 sm:px-6 lg:flex lg:justify-end lg:gap-2 lg:rounded-b-2xl lg:border-t-0 lg:pt-0 lg:shadow-none"
+      >
+        <button
+          type="button"
+          class="btn btn-ghost mb-2 w-full lg:mb-0 lg:w-auto"
+          [disabled]="actuacionesImportSubmitting()"
+          (click)="closeActuacionesImportModal()"
+        >
+          {{ 'processes.actuacionesImport.cancel' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-toolbar-tall w-full min-h-[3rem] rounded-xl font-bold normal-case lg:min-h-0 lg:w-auto lg:px-8"
+          [disabled]="!actuacionesImportReady()"
+          (click)="submitActuacionesImport()"
+        >
+          @if (actuacionesImportSubmitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            {{ 'processes.actuacionesImport.submitting' | transloco }}
+          } @else {
+            {{ 'processes.actuacionesImport.submit' | transloco }}
+          }
+        </button>
+      </div>
+    }
+    @if (actuacionesImportResult()) {
+      <div class="bottom-sheet-footer shrink-0 border-t border-base-200 px-4 py-4 sm:px-6 lg:rounded-b-2xl">
+        <button
+          type="button"
+          class="btn btn-primary w-full lg:w-auto lg:float-right rounded-xl font-bold normal-case"
+          (click)="closeActuacionesImportModal()"
+        >
+          {{ 'processes.actuacionesImport.close' | transloco }}
+        </button>
+      </div>
+    }
+  </app-bottom-sheet-modal>
+
+  <div class="import-excel-confirmation">
+    <app-confirmation-dialog
+      [open]="importConfirmOpen()"
+      [title]="getImportConfirmTitle()"
+      [message]="getImportConfirmLead()"
+      [detailRows]="getImportConfirmDetailRows()"
+      [footnote]="getImportConfirmFootnote()"
+      [confirmLabel]="'processes.import.confirmSubmit' | transloco"
+      [cancelLabel]="'common.cancel' | transloco"
+      confirmClass="btn-primary"
+      (confirm)="onConfirmImportSubmit()"
+      (cancel)="onCancelImportConfirm()"
+    ></app-confirmation-dialog>
+  </div>
+

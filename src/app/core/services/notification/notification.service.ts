@@ -3,12 +3,14 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, catchError, of, tap } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
 import { AppNotification, NotificationResponse, UnreadCountResponse } from '@app/core/models/notification/notification.model';
+import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationService {
     private _httpClient = inject(HttpClient);
+    private _manualRegistrationService = inject(ManualRegistrationService);
 
     // State
     private _notifications = signal<AppNotification[]>([]);
@@ -96,16 +98,24 @@ export class NotificationService {
     handleIncomingNotification(payload: any): void {
         const inner = typeof payload?.data === 'object' && payload.data !== null ? payload.data : {};
 
+        const typeCandidates = [inner.type, payload?.notification_type, payload?.type];
         const businessType =
-            (typeof inner.type === 'string' && inner.type) ||
-            (typeof payload?.type === 'string' && payload.type) ||
-            (typeof payload?.notification_type === 'string' && payload.notification_type) ||
-            '';
+            typeCandidates.find(
+                (value): value is string =>
+                    typeof value === 'string' && value.trim().length > 0 && !value.includes('\\')
+            ) || '';
 
-        /** Id del recurso (p. ej. lote de importación en `import-report`); no usar `payload.id` (id de la notificación). */
+        /** Id del recurso (lote de importación, solicitud de alta manual, etc.). No usar `payload.id`. */
         const resourceId =
+            (typeof inner.request_id === 'string' && inner.request_id) ||
+            (typeof payload?.request_id === 'string' && payload.request_id) ||
             (typeof inner.id === 'string' && inner.id) ||
             (typeof payload?.id_resource === 'string' && payload.id_resource) ||
+            '';
+
+        const requestId =
+            (typeof inner.request_id === 'string' && inner.request_id) ||
+            (typeof payload?.request_id === 'string' && payload.request_id) ||
             '';
 
         const newNotification: AppNotification = {
@@ -119,6 +129,10 @@ export class NotificationService {
                 type: String(businessType),
                 id: String(resourceId),
                 status: String(inner.status ?? payload?.status ?? ''),
+                request_id: requestId || undefined,
+                process_number: String(inner.process_number ?? payload?.process_number ?? '') || undefined,
+                organization_name: String(inner.organization_name ?? payload?.organization_name ?? '') || undefined,
+                url: String(inner.url ?? payload?.url ?? '') || undefined,
             },
             read_at: null,
             opened_at: null,
@@ -130,5 +144,10 @@ export class NotificationService {
         this._notifications.update((current) => [newNotification, ...current]);
         this._unreadCount.update((count) => count + 1);
         this._newCount.update((count) => count + 1);
+
+        const normalizedType = String(businessType).trim().toLowerCase().replace(/_/g, '-');
+        if (normalizedType === 'manual-registration-requested') {
+            this._manualRegistrationService.refreshPendingCount();
+        }
     }
 }

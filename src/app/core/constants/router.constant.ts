@@ -1,6 +1,7 @@
 export const ROUTES_ADMIN = {
   DASHBOARD: '/admin/dashboard',
   PROCESSES: '/admin/processes',
+  MANUAL_REGISTRATIONS: '/admin/manual-registrations',
   ORGANIZATIONS: '/admin/organizations',
   SIGN_IN: '/sign-in',
   SIGN_OUT: '/sign-out',

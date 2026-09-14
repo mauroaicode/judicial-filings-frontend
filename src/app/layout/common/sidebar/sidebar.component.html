@@ -179,8 +179,11 @@
                 (blur)="hideNavTooltip()"
               >
                 @if (item.icon) {
-                  <span class="flex flex-shrink-0 items-center justify-center">
+                  <span class="relative flex flex-shrink-0 items-center justify-center">
                     <app-sidebar-icon [icon]="item.icon" />
+                    @if (item.badge && !isOpen()) {
+                      <span class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-error"></span>
+                    }
                   </span>
                 }
                 <span class="flex-1 font-semibold" [class.hidden]="!isOpen()">{{ item.title | transloco }}</span>

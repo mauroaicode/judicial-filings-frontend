@@ -2,7 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
-import { DigestPackagePreview, DigestPackageSendResult } from '@app/core/models/digest-package/digest-package.model';
+import {
+  DigestPackageDiscardResult,
+  DigestPackagePreview,
+  DigestPackageSendResult,
+} from '@app/core/models/digest-package/digest-package.model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,5 +26,15 @@ export class DigestPackageService {
   /** POST /api/admin/digest-packages/send — encola un consolidado por org */
   send(): Observable<DigestPackageSendResult> {
     return this._http.post<DigestPackageSendResult>(`${this._base}/send`, null);
+  }
+
+  /**
+   * DELETE /api/admin/digest-packages/organizations/{organizationId}
+   * Marca como ya notificadas las actuaciones elegibles de esa org. No envía correo.
+   */
+  discardOrganization(organizationId: string): Observable<DigestPackageDiscardResult> {
+    return this._http.delete<DigestPackageDiscardResult>(
+      `${this._base}/organizations/${organizationId}`,
+    );
   }
 }

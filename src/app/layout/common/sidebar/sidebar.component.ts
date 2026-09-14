@@ -15,6 +15,7 @@ import { filter } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { NavigationService } from '@app/core/navigation/navigation.service';
 import { NavigationItem } from '@app/core/models/navigation/navigation-item.model';
+import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
 import { SidebarIconComponent } from './sidebar-icon.component';
 import { STORAGE } from '@app/core/constants/storage.constant';
 import { environment } from '@app/core/config/environment.config';
@@ -30,6 +31,7 @@ import { environment } from '@app/core/config/environment.config';
 })
 export class SidebarComponent {
   private _navigationService = inject(NavigationService);
+  private _manualRegistrationService = inject(ManualRegistrationService);
   private _router = inject(Router);
   private _transloco = inject(TranslocoService);
   private _document = inject(DOCUMENT);
@@ -46,8 +48,28 @@ export class SidebarComponent {
   /** Muestra tooltips solo en escritorio con el menú cerrado */
   public showCollapsedTooltips = computed(() => !this.isOpen() && !this.isMobile());
 
-  // Navigation items
-  public navigation = computed(() => this._navigationService.filteredNavigation());
+  // Navigation items (badge de altas manuales pendientes)
+  public navigation = computed(() => {
+    const nav = this._navigationService.filteredNavigation();
+    const pending = this._manualRegistrationService.pendingCount();
+    return {
+      default: nav.default.map((item) => {
+        if (item.id !== 'manual-registrations') {
+          return item;
+        }
+        if (pending <= 0) {
+          return { ...item, badge: undefined };
+        }
+        return {
+          ...item,
+          badge: {
+            title: pending > 99 ? '99+' : String(pending),
+            classes: 'badge-error text-error-content border-error font-bold',
+          },
+        };
+      }),
+    };
+  });
 
   // Menu title from environment
   public menuTitle = environment.menuTitle;
@@ -62,6 +84,7 @@ export class SidebarComponent {
   public selectedMenuId = signal<string | null>(null);
 
   constructor() {
+    this._manualRegistrationService.refreshPendingCount();
     this._syncSelectedMenuFromUrl(this._router.url);
 
     this._router.events

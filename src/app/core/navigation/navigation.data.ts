@@ -20,6 +20,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     link: '/admin/processes',
   },
   {
+    id: 'manual-registrations',
+    title: 'navigation.manualRegistrations',
+    type: 'basic',
+    icon: 'manualRegistrations',
+    link: '/admin/manual-registrations',
+  },
+  {
     id: 'organizations',
     title: 'navigation.clients',
     type: 'basic',

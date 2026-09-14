@@ -73,6 +73,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "processes": "Procesos",
+    "manualRegistrations": "Altas manuales",
     "clients": "Organizaciones",
     "importHistory": "Historial importaciones",
     "judicialSync": "Sincronización Rama",
@@ -244,6 +245,8 @@
       "dataOrigin": "Origen",
       "originPrivate": "Privada",
       "originJudicial": "Judicial",
+      "originManual": "Manual",
+      "originManualTooltip": "Subido manualmente",
       "multipleInstances": "Múltiples instancias",
       "createdAt": "Fecha de Creación",
       "lastActivityDate": "Fecha Ultima Actuación"
@@ -579,6 +582,65 @@
       "close": "Cerrar"
     }
   },
+  "manualRegistrations": {
+    "title": "Altas manuales",
+    "description": "Radicados que el abogado no pudo agregar. Digita con Importar Excel privado o Actuaciones y marca la solicitud como resuelta.",
+    "empty": "No hay solicitudes con los filtros actuales.",
+    "copied": "Copiado al portapapeles",
+    "loadError": "No se pudo cargar la cola de altas manuales.",
+    "resolveRegistered": "Solicitud marcada como registrada.",
+    "resolveRejected": "Solicitud rechazada.",
+    "resolveError": "No se pudo actualizar la solicitud.",
+    "filters": {
+      "fabAria": "Abrir o cerrar filtros de búsqueda",
+      "title": "Filtros de Búsqueda",
+      "status": "Estado",
+      "reason": "Motivo",
+      "reasonAll": "Todos",
+      "organization": "Organización",
+      "organizationPlaceholder": "Coincidencia parcial en el nombre",
+      "processNumber": "Radicado",
+      "processNumberPlaceholder": "Coincidencia parcial",
+      "search": "Filtrar",
+      "reset": "Limpiar Filtros"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "registered": "Registrado",
+      "rejected": "Rechazado"
+    },
+    "reason": {
+      "notFound": "No encontrado",
+      "private": "Privado",
+      "allPrivate": "Todas las instancias privadas"
+    },
+    "lawyerRole": {
+      "plaintiff": "Demandante",
+      "defendant": "Demandado"
+    },
+    "table": {
+      "processNumber": "Número de Radicación",
+      "organization": "Organización",
+      "requestedBy": "Solicitante",
+      "reason": "Motivo",
+      "pendingHistory": "Histórico pendiente",
+      "pendingHistoryHint": "{{count}} actuaciones en repositorio, pendientes de asociar",
+      "createdAt": "Fecha",
+      "status": "Estado"
+    },
+    "actions": {
+      "importPrivate": "Importar Excel privado",
+      "importActuaciones": "Importar actuaciones",
+      "markRegistered": "Marcar registrado",
+      "reject": "Rechazar"
+    },
+    "confirm": {
+      "registeredTitle": "Marcar como registrado",
+      "registeredMessage": "Confirma que ya digitaste o importaste este radicado. La solicitud saldrá de la cola de pendientes.",
+      "rejectedTitle": "Rechazar solicitud",
+      "rejectedMessage": "La solicitud se marcará como rechazada y saldrá de la cola de pendientes."
+    }
+  },
   "gestionProcesos": {
     "filters": {
       "plaintiff": "Demandante",
@@ -789,6 +851,10 @@
     "colProcesses": "Procesos",
     "colActions": "Actuaciones",
     "colChannels": "Canales activos",
+    "colRowActions": "Acciones",
+    "discard": "Descartar",
+    "discardConfirmTitle": "¿Descartar el consolidado de {{organization_name}}?",
+    "discardConfirmMessage": "No se enviará correo. Las {{pending_actions}} actuaciones pendientes dejarán de formar parte del paquete.",
     "emptyTitle": "No hay consolidados pendientes de enviar",
     "emptySubtitle": "Todas las organizaciones están al día. Vuelve después de importar actuaciones o ejecutar una sincronización.",
     "retry": "Reintentar",
@@ -800,7 +866,8 @@
     "confirmFootnote": "El envío de correos puede demorar unos minutos mientras se procesa la cola.",
     "errors": {
       "loadFailed": "No se pudo cargar el paquete pendiente.",
-      "sendGeneric": "No se pudo enviar el paquete. Intenta de nuevo."
+      "sendGeneric": "No se pudo enviar el paquete. Intenta de nuevo.",
+      "discardGeneric": "No se pudo descartar el consolidado. Intenta de nuevo."
     }
   }
 }

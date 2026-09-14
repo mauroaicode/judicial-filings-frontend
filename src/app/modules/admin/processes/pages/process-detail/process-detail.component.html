@@ -106,6 +106,16 @@
                         [leftAligned]="true"
                       ></app-process-alert-tooltip>
                     }
+                    @if (process()!.is_manual_sync === true) {
+                      <span
+                        class="tooltip tooltip-bottom"
+                        [attr.data-tip]="'processes.table.originManualTooltip' | transloco"
+                      >
+                        <span class="badge badge-outline badge-warning badge-sm font-bold uppercase text-[0.65rem] leading-tight">
+                          {{ 'processes.table.originManual' | transloco }}
+                        </span>
+                      </span>
+                    }
                   </div>
                 }
               </div>

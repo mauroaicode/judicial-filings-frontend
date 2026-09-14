@@ -4,9 +4,15 @@
 export interface NotificationData {
     title: string;
     description: string;
-    type: string; // e.g., 'import-report'
+    type: string; // e.g., 'import-report' | 'manual-registration-requested'
     id: string;   // Recource related ID (like batch import UUID)
     status: string;
+    /** UUID de solicitud de alta manual (Edwin). */
+    request_id?: string;
+    process_number?: string;
+    organization_name?: string;
+    /** Ruta admin sugerida por el backend, p. ej. `/admin/manual-registrations`. */
+    url?: string;
 }
 
 /**

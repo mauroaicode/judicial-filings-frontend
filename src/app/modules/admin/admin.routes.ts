@@ -13,6 +13,11 @@ export default [
     loadChildren: () =>
       import('./processes/processes.routes').then((m) => m.default),
   },
+  {
+    path: 'manual-registrations',
+    loadChildren: () =>
+      import('./manual-registrations/manual-registrations.routes').then((m) => m.default),
+  },
   // Organizations
   {
     path: 'organizations',

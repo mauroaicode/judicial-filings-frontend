@@ -54,7 +54,7 @@
       <button
         type="button"
         class="btn btn-ghost btn-sm btn-toolbar-tall rounded-xl border border-base-200 gap-2"
-        [disabled]="loading() || sending()"
+        [disabled]="loading() || sending() || discarding()"
         (click)="loadPreview()"
       >
         @if (loading()) {
@@ -69,7 +69,7 @@
       <button
         type="button"
         class="btn btn-primary btn-sm btn-toolbar-tall rounded-xl gap-2 font-bold"
-        [disabled]="isEmpty() || loading() || sending()"
+        [disabled]="isEmpty() || loading() || sending() || discarding()"
         (click)="openConfirm()"
       >
         @if (sending()) {
@@ -162,6 +162,7 @@
               <th class="font-semibold text-right w-32">{{ 'digestPackages.colProcesses' | transloco }}</th>
               <th class="font-semibold text-right w-32">{{ 'digestPackages.colActions' | transloco }}</th>
               <th class="font-semibold">{{ 'digestPackages.colChannels' | transloco }}</th>
+              <th class="font-semibold text-right w-28">{{ 'digestPackages.colRowActions' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
@@ -175,6 +176,16 @@
                   <span class="dp-pending-badge dp-pending-badge--muted">{{ org.pending_actions }}</span>
                 </td>
                 <td class="text-base-content/70 text-xs leading-relaxed">{{ formatChannels(org) }}</td>
+                <td class="text-right">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-error font-bold normal-case hover:bg-error/10"
+                    [disabled]="sending() || discarding()"
+                    (click)="openDiscardConfirm(org)"
+                  >
+                    {{ 'digestPackages.discard' | transloco }}
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
@@ -184,7 +195,7 @@
 
   </div>
 
-  <!-- Confirmation dialog -->
+  <!-- Confirmation dialog: send package -->
   <app-confirmation-dialog
     [open]="confirmOpen()"
     [title]="'digestPackages.confirmTitle' | transloco"
@@ -196,6 +207,18 @@
     confirmClass="btn-primary"
     (confirm)="onConfirmSend()"
     (cancel)="cancelConfirm()"
+  />
+
+  <!-- Confirmation dialog: discard organization digest -->
+  <app-confirmation-dialog
+    [open]="discardConfirmOpen()"
+    [title]="discardTarget() ? ('digestPackages.discardConfirmTitle' | transloco: { organization_name: discardTarget()!.organization_name }) : ''"
+    [message]="discardTarget() ? ('digestPackages.discardConfirmMessage' | transloco: { pending_actions: discardTarget()!.pending_actions }) : ''"
+    [confirmLabel]="'digestPackages.discard' | transloco"
+    [cancelLabel]="'common.cancel' | transloco"
+    confirmClass="btn-error"
+    (confirm)="onConfirmDiscard()"
+    (cancel)="cancelDiscardConfirm()"
   />
 
 </div>

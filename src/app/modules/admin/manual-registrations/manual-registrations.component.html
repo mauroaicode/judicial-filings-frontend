@@ -1,0 +1,402 @@
+<div class="w-full space-y-6 pb-24 lg:pb-0">
+  @if (copiedMessage(); as copied) {
+    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+      <div class="alert alert-success shadow-lg">
+        <span class="font-bold">{{ copied }}</span>
+      </div>
+    </div>
+  }
+
+  @if (toastMessage(); as tm) {
+    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+      <div
+        class="alert shadow-lg"
+        [class.alert-success]="toastKind() === 'success'"
+        [class.alert-error]="toastKind() === 'error'"
+      >
+        <span class="font-medium">{{ tm }}</span>
+      </div>
+    </div>
+  }
+
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+        {{ 'manualRegistrations.title' | transloco }}
+      </h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        {{ 'manualRegistrations.description' | transloco }}
+      </p>
+    </div>
+    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
+        [ngClass]="
+          showFilters()
+            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
+        "
+        (click)="toggleFilters()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        <span class="font-bold">{{ 'manualRegistrations.filters.title' | transloco }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="lg:hidden fixed bottom-6 right-4 z-[60] flex flex-col gap-3 items-end" role="group">
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
+      [ngClass]="
+        showFilters() ? 'bg-primary text-primary-content border-primary' : 'bg-base-100 text-primary border-primary/20'
+      "
+      (click)="toggleFilters()"
+      [attr.aria-label]="'manualRegistrations.filters.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  @if (showFilters()) {
+    <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">{{ 'manualRegistrations.filters.title' | transloco }}</h2>
+        <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" autocomplete="off">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'manualRegistrations.filters.status' | transloco }}</span>
+            </label>
+            <select class="select select-bordered select-sm w-full" formControlName="status">
+              <option value="pending">{{ 'manualRegistrations.status.pending' | transloco }}</option>
+              <option value="registered">{{ 'manualRegistrations.status.registered' | transloco }}</option>
+              <option value="rejected">{{ 'manualRegistrations.status.rejected' | transloco }}</option>
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'manualRegistrations.filters.reason' | transloco }}</span>
+            </label>
+            <select class="select select-bordered select-sm w-full" formControlName="reason">
+              <option value="">{{ 'manualRegistrations.filters.reasonAll' | transloco }}</option>
+              <option value="not_found">{{ 'manualRegistrations.reason.notFound' | transloco }}</option>
+              <option value="private">{{ 'manualRegistrations.reason.private' | transloco }}</option>
+              <option value="all_private">{{ 'manualRegistrations.reason.allPrivate' | transloco }}</option>
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'manualRegistrations.filters.organization' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              formControlName="organization"
+              [placeholder]="'manualRegistrations.filters.organizationPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'manualRegistrations.filters.processNumber' | transloco }}</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              formControlName="process_number"
+              [placeholder]="'manualRegistrations.filters.processNumberPlaceholder' | transloco"
+              autocomplete="off"
+            />
+          </div>
+        </form>
+        <div class="card-actions mt-4 justify-end gap-4">
+          <button
+            type="button"
+            class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+            (click)="resetFilters()"
+          >
+            {{ 'manualRegistrations.filters.reset' | transloco }}
+          </button>
+          <button type="button" class="btn-standard-search" (click)="applyFilters()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {{ 'manualRegistrations.filters.search' | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-16">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      }
+
+      @if (!loading() && items().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center px-6">
+          <p class="text-base-content/60">{{ 'manualRegistrations.empty' | transloco }}</p>
+        </div>
+      }
+
+      @if (!loading() && items().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="table table-zebra manual-registrations-table">
+            <thead>
+              <tr>
+                <th>{{ 'manualRegistrations.table.processNumber' | transloco }}</th>
+                <th>{{ 'manualRegistrations.table.organization' | transloco }}</th>
+                <th>{{ 'manualRegistrations.table.requestedBy' | transloco }}</th>
+                <th>{{ 'manualRegistrations.table.reason' | transloco }}</th>
+                <th class="text-center">{{ 'manualRegistrations.table.pendingHistory' | transloco }}</th>
+                <th class="text-center">{{ 'manualRegistrations.table.createdAt' | transloco }}</th>
+                <th class="text-center">{{ 'manualRegistrations.table.status' | transloco }}</th>
+                <th class="text-right min-w-[12rem]">{{ 'common.actions' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.id) {
+                <tr
+                  class="manual-registrations-row"
+                  [attr.data-request-id]="item.id"
+                  [class.manual-registrations-row-hover]="hoveredRowId() === item.id"
+                  [class.manual-registrations-row-highlight]="highlightedRequestId() === item.id"
+                  (mouseenter)="hoveredRowId.set(item.id)"
+                  (mouseleave)="hoveredRowId.set(null)"
+                >
+                  <td class="align-middle">
+                    <div class="inline-flex items-center gap-1 max-w-full group/radicado">
+                      <span class="font-semibold text-primary text-sm whitespace-nowrap">
+                        {{ item.process_number | processNumber }}
+                      </span>
+                      <span class="tooltip tooltip-right" [attr.data-tip]="'processes.copy.tooltip' | transloco">
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs btn-circle text-primary/50 hover:text-primary"
+                          (click)="copyToClipboard(item.process_number, $event)"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="max-w-[200px] align-middle">
+                    <div class="text-sm text-base-content/90 truncate" [title]="item.organization_name || ''">
+                      {{ item.organization_name || '–' }}
+                    </div>
+                  </td>
+                  <td class="align-middle min-w-[11rem]">
+                    <div class="text-sm font-medium text-base-content leading-tight">
+                      {{ item.requested_by_name || '–' }}
+                    </div>
+                    <div class="text-xs text-base-content/60 tabular-nums mt-0.5">
+                      {{ item.requested_by_identification || '–' }}
+                    </div>
+                    @if (item.lawyer_role) {
+                      <div class="text-[11px] text-base-content/50 mt-0.5">
+                        {{ lawyerRoleLabel(item.lawyer_role) }}
+                      </div>
+                    }
+                  </td>
+                  <td class="align-middle max-w-[220px]">
+                    <span class="text-sm text-base-content/90 leading-snug">
+                      {{ item.reason_label || '–' }}
+                    </span>
+                  </td>
+                  <td class="text-center align-middle">
+                    @if (item.unassigned_actions_count > 0) {
+                      <span
+                        class="badge badge-warning badge-outline whitespace-nowrap text-[11px] font-semibold"
+                        [attr.title]="'manualRegistrations.table.pendingHistoryHint' | transloco: { count: item.unassigned_actions_count }"
+                      >
+                        {{ item.unassigned_actions_count }}
+                      </span>
+                    } @else {
+                      <span class="text-sm text-base-content/40">–</span>
+                    }
+                  </td>
+                  <td class="text-center align-middle text-sm whitespace-nowrap">
+                    {{ formatDate(item.created_at) }}
+                  </td>
+                  <td class="text-center align-middle">
+                    <span
+                      class="badge font-medium uppercase text-[11px] leading-tight tracking-normal whitespace-nowrap"
+                      [ngClass]="getStatusClass(item.status)"
+                    >
+                      {{ ('manualRegistrations.status.' + item.status) | transloco }}
+                    </span>
+                  </td>
+                  <td class="text-right align-middle">
+                    @if (item.status === 'pending') {
+                      <div class="flex flex-col items-stretch gap-1.5 sm:items-end">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline btn-primary px-3 py-1.5 leading-tight h-auto min-h-0"
+                          (click)="goToPrivateImport(item)"
+                        >
+                          {{ 'manualRegistrations.actions.importPrivate' | transloco }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-ghost px-3 py-1.5 leading-tight h-auto min-h-0"
+                          (click)="goToActuacionesImport()"
+                        >
+                          {{ 'manualRegistrations.actions.importActuaciones' | transloco }}
+                        </button>
+                        <div class="flex flex-wrap justify-end gap-1.5">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-primary px-3 py-1.5 leading-tight h-auto min-h-0"
+                            [disabled]="resolving()"
+                            (click)="openResolveConfirm(item, 'registered')"
+                          >
+                            {{ 'manualRegistrations.actions.markRegistered' | transloco }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-ghost text-error px-3 py-1.5 leading-tight h-auto min-h-0"
+                            [disabled]="resolving()"
+                            (click)="openResolveConfirm(item, 'rejected')"
+                          >
+                            {{ 'manualRegistrations.actions.reject' | transloco }}
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <span class="text-sm text-base-content/40">–</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (pagination(); as paginationInfo) {
+          <div class="manual-registrations-pagination border-t border-base-300 bg-base-100 shrink-0">
+            <div class="manual-registrations-pagination__results">
+              {{ 'table.showing' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.from }}</span>
+              {{ 'table.to' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.to }}</span>
+              {{ 'table.of' | transloco }}
+              <span class="font-semibold tabular-nums">{{ paginationInfo.total }}</span>
+              {{ 'table.results' | transloco }}
+            </div>
+            <div class="manual-registrations-pagination__controls join">
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                [disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
+              >
+                ««
+              </button>
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                [disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
+              >
+                «
+              </button>
+              @for (page of getPageNumbers(); track page) {
+                <button
+                  type="button"
+                  class="join-item btn btn-sm"
+                  [class.btn-active]="page === paginationInfo.current_page"
+                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
+                >
+                  {{ page }}
+                </button>
+              }
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
+              >
+                »
+              </button>
+              <button
+                type="button"
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
+              >
+                »»
+              </button>
+            </div>
+            <div class="manual-registrations-pagination__per-page">
+              <select
+                class="select select-bordered select-sm"
+                [value]="paginationInfo.per_page"
+                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+                    {{ size }} {{ 'table.perPage' | transloco }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <app-confirmation-dialog
+    [open]="confirmOpen()"
+    [title]="getConfirmTitle()"
+    [message]="getConfirmMessage()"
+    [detailRows]="getConfirmDetailRows()"
+    [confirmLabel]="getConfirmLabel()"
+    [cancelLabel]="'common.cancel' | transloco"
+    [confirmClass]="getConfirmClass()"
+    (confirm)="onConfirmResolve()"
+    (cancel)="onCancelResolve()"
+  ></app-confirmation-dialog>
+
+  <app-process-import-modals />
+</div>

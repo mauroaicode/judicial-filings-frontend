@@ -52,6 +52,9 @@ export class AuthenticatedLayoutComponent {
     if (path.includes('/admin/processes')) {
       return 'processes.title';
     }
+    if (path.includes('/admin/manual-registrations')) {
+      return 'manualRegistrations.title';
+    }
     if (path.includes('/admin/organizations')) {
       return 'clients.title';
     }

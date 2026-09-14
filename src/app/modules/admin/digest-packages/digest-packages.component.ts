@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DigestPackageService } from '@app/core/services/digest-package/digest-package.service';
 import {
+  DigestPackageDiscardResult,
   DigestPackageOrganization,
   DigestPackagePreview,
   DigestPackageSendResult,
@@ -35,7 +36,10 @@ export class DigestPackagesComponent implements OnInit {
   public loading = signal<boolean>(true);
   public loadError = signal<boolean>(false);
   public sending = signal<boolean>(false);
+  public discarding = signal<boolean>(false);
   public confirmOpen = signal<boolean>(false);
+  public discardConfirmOpen = signal<boolean>(false);
+  public discardTarget = signal<DigestPackageOrganization | null>(null);
 
   public toastMessage = signal<string | null>(null);
   public toastKind = signal<'success' | 'error'>('success');
@@ -106,6 +110,40 @@ export class DigestPackagesComponent implements OnInit {
         const msg =
           err?.error?.message ||
           this._transloco.translate('digestPackages.errors.sendGeneric');
+        this._showToast(msg, 'error');
+      },
+    });
+  }
+
+  openDiscardConfirm(org: DigestPackageOrganization): void {
+    this.discardTarget.set(org);
+    this.discardConfirmOpen.set(true);
+  }
+
+  cancelDiscardConfirm(): void {
+    this.discardConfirmOpen.set(false);
+    this.discardTarget.set(null);
+  }
+
+  onConfirmDiscard(): void {
+    const org = this.discardTarget();
+    if (!org) return;
+
+    this.discardConfirmOpen.set(false);
+    this.discarding.set(true);
+    this._service.discardOrganization(org.organization_id).subscribe({
+      next: (result: DigestPackageDiscardResult) => {
+        this.discarding.set(false);
+        this.discardTarget.set(null);
+        this._showToast(result.message, 'success');
+        this.loadPreview();
+      },
+      error: (err) => {
+        this.discarding.set(false);
+        this.discardTarget.set(null);
+        const msg =
+          err?.error?.message ||
+          this._transloco.translate('digestPackages.errors.discardGeneric');
         this._showToast(msg, 'error');
       },
     });

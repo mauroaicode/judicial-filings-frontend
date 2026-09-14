@@ -114,7 +114,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
                 (data: any) => {
                     console.log('Nueva notificación recibida por WS:', data);
                     this._notificationService.handleIncomingNotification(data);
-                    this.showToast(data.title || 'Nueva Notificación', data.description || 'Tienes una nueva actualización.');
+                    const inner = typeof data?.data === 'object' && data.data !== null ? data.data : {};
+                    const title = inner.title || data.title || 'Nueva Notificación';
+                    const description = inner.description || data.description || 'Tienes una nueva actualización.';
+                    this.showToast(title, description);
                 }
             );
 

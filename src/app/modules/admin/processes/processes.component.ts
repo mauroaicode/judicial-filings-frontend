@@ -6,6 +6,7 @@ import {
   inject,
   Injector,
   signal,
+  viewChild,
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
@@ -15,30 +16,26 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ProcessService } from '@app/core/services/process/process.service';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
+import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
 import {
   Process,
   ProcessInstance,
   ProcessFilter,
   ProcessResponseMeta,
-  ProcessImportBatchResponse,
-  ActuacionesImportResponse,
-  ProcessActuacionSkippedItem,
   ProcessDashboardStats,
   TrashProcessesResponse,
 } from '@app/core/models/process/process.model';
-import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 import { Organization } from '@app/core/models/organization/organization.model';
 import { DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
-import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/file-drop-zone.component';
 import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
-import { SearchableSelectComponent } from '@app/shared/components/searchable-select/searchable-select.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import {
   ConfirmationDialogComponent,
   ConfirmationDialogDetailRow,
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { TrashProcessesModalComponent } from './components/trash-processes-modal/trash-processes-modal.component';
+import { ProcessImportModalsComponent } from './components/process-import-modals/process-import-modals.component';
 
 @Component({
   selector: 'app-processes',
@@ -48,12 +45,11 @@ import { TrashProcessesModalComponent } from './components/trash-processes-modal
     ReactiveFormsModule,
     TranslocoPipe,
     DateRangePickerComponent,
-    FileDropZoneComponent,
     BottomSheetModalComponent,
-    SearchableSelectComponent,
     ProcessNumberPipe,
     ConfirmationDialogComponent,
     TrashProcessesModalComponent,
+    ProcessImportModalsComponent,
   ],
   templateUrl: './processes.component.html',
   styleUrls: ['./processes.component.scss'],
@@ -65,6 +61,7 @@ export class ProcessesComponent {
 
   private _processService = inject(ProcessService);
   private _organizationService = inject(OrganizationService);
+  private _manualRegistrationService = inject(ManualRegistrationService);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
   private _fb = inject(FormBuilder);
@@ -121,71 +118,15 @@ export class ProcessesComponent {
   /** Radicado asociado al listado (referencia visual en el bottom sheet). */
   public partyListSheetProcessNumber = signal<string>('');
 
-  // Import modal state
-  public isImportModalOpen = signal<boolean>(false);
-  public importSubmitting = signal<boolean>(false);
-  public importResult = signal<ProcessImportBatchResponse | null>(null);
-  public importFile = signal<File | null>(null);
-  /** Selected organization for import (required) */
-  public importOrganizationId = signal<string>('');
-  /** Diálogo de confirmación antes de enviar archivo al API */
-  public importConfirmOpen = signal<boolean>(false);
-  /** Organizations list for import select */
+  public importModals = viewChild(ProcessImportModalsComponent);
+
+  /** Organizations list for trash picker (reused from import org dropdown) */
   public importOrganizations = signal<Organization[]>([]);
   public importOrganizationsLoading = signal<boolean>(false);
 
-  /** Importación como procesos privados + fuente de datos */
-  public importIsPrivate = signal<boolean>(false);
-  public importDataSourceSlug = signal<string>('');
-  public importDataSources = signal<ProcessDataSource[]>([]);
-  public importDataSourcesLoading = signal<boolean>(false);
-
-  /** Modal Importar actuaciones / movimientos */
-  public isActuacionesImportModalOpen = signal<boolean>(false);
-  public actuacionesImportSubmitting = signal<boolean>(false);
-  public actuacionesImportResult = signal<ActuacionesImportResponse | null>(null);
-  public actuacionesImportFile = signal<File | null>(null);
-  /** Errores de campo (422 sin errors.rows), p. ej. file / mimes */
-  public actuacionesImportFieldErrors = signal<{ file?: string }>({});
-  /** Sección expandible de actuaciones omitidas (duplicados) */
-  public actuacionesSkippedOpen = signal<boolean>(false);
-
-  /** Slugs permitidos según modo (el backend responde 422 si no coinciden) */
-  private static readonly PRIVATE_DATA_SOURCE_SLUGS = ['publicaciones_procesales', 'samai'] as const;
-  private static readonly API_DATA_SOURCE_SLUGS = ['judicial_branch', 'samai'] as const;
-
-  /** Opciones para el combobox de importación (id + nombre) */
   public importOrganizationOptions = computed(() =>
     this.importOrganizations().map((o) => ({ id: o.id, label: o.name }))
   );
-
-  /**
-   * Fuentes activas filtradas por toggle:
-   * privado → publicaciones_procesales, samai | estándar → judicial_branch, samai
-   * (`id` = slug enviado al API)
-   */
-  public importDataSourceOptions = computed(() => {
-    const allowed = this.importIsPrivate()
-      ? ProcessesComponent.PRIVATE_DATA_SOURCE_SLUGS
-      : ProcessesComponent.API_DATA_SOURCE_SLUGS;
-    return this.importDataSources()
-      .filter((s) => s.is_active && (allowed as readonly string[]).includes(s.slug))
-      .map((s) => ({ id: s.slug, label: s.name }));
-  });
-
-  /** Habilita el paso siguiente (confirmación / envío visual del botón principal) */
-  public importReadyToConfirm = computed(() => {
-    if (this.importSubmitting()) return false;
-    if (!this.importFile()) return false;
-    if (!this.importOrganizationId()?.trim()) return false;
-    if (this.importDataSourcesLoading()) return false;
-    return !!this.importDataSourceSlug()?.trim();
-  });
-
-  public actuacionesImportReady = computed(() => {
-    if (this.actuacionesImportSubmitting()) return false;
-    return !!this.actuacionesImportFile();
-  });
 
   // Filter form
   public filterForm: FormGroup = this._fb.group({
@@ -286,6 +227,7 @@ export class ProcessesComponent {
     this._loadFiltersFromQueryParams();
     this.loadDashboardStats();
     this.loadProcesses();
+    this._openImportFromQueryParams();
   }
 
   /**
@@ -296,6 +238,7 @@ export class ProcessesComponent {
     this._processService.getDashboardStats().subscribe({
       next: (stats) => {
         this.dashboardStats.set(stats);
+        this._manualRegistrationService.setPendingCount(stats.pending_manual_registrations);
         this.dashboardStatsLoading.set(false);
       },
       error: (error) => {
@@ -330,6 +273,34 @@ export class ProcessesComponent {
     if (ratio >= 0.7) return 'critical';
     if (ratio >= 0.35) return 'warning';
     return 'healthy';
+  }
+
+  /**
+   * Deep link desde Altas manuales: abre el Excel privado o el import de actuaciones.
+   */
+  private _openImportFromQueryParams(): void {
+    const params = this._activatedRoute.snapshot.queryParamMap;
+    const openImport = params.get('openImport');
+    const openActuaciones = params.get('openActuaciones');
+    const organizationId = params.get('organization_id')?.trim() || '';
+
+    if (openImport !== 'private' && openActuaciones !== '1' && openActuaciones !== 'true') {
+      return;
+    }
+
+    afterNextRender(
+      () => {
+        if (openImport === 'private') {
+          this.openImportModal({
+            isPrivate: true,
+            organizationId: organizationId || undefined,
+          });
+          return;
+        }
+        this.openActuacionesImportModal();
+      },
+      { injector: this._injector },
+    );
   }
 
   /**
@@ -1130,249 +1101,9 @@ export class ProcessesComponent {
     this.openImportModal();
   }
 
-  /**
-   * Open import Excel modal and load organizations + data sources for the selects
-   */
-  openImportModal(): void {
-    this.importFile.set(null);
-    this.importResult.set(null);
-    this.importOrganizationId.set('');
-    this.importIsPrivate.set(false);
-    this.importDataSourceSlug.set('');
-    this.importDataSources.set([]);
-    this.isImportModalOpen.set(true);
-    this._loadImportOrganizations();
-    this._loadImportDataSources();
+  openImportModal(options?: { isPrivate?: boolean; organizationId?: string }): void {
+    this.importModals()?.openExcel(options);
   }
-
-  /**
-   * Load organizations for the import modal select (all, no pagination limit for dropdown)
-   */
-  private _loadImportOrganizations(): void {
-    this.importOrganizationsLoading.set(true);
-    this._organizationService.getOrganizations({ per_page: 500 }).subscribe({
-      next: (response) => {
-        this.importOrganizations.set(response.data);
-        this.importOrganizationsLoading.set(false);
-      },
-      error: () => {
-        this.importOrganizationsLoading.set(false);
-      },
-    });
-  }
-
-  /**
-   * Close import Excel modal (y el menú del FAB móvil, si estuviera abierto)
-   */
-  closeImportModal(): void {
-    this.isImportModalOpen.set(false);
-    this.closeMobileFabMenu();
-    this.importConfirmOpen.set(false);
-    this.importFile.set(null);
-    this.importResult.set(null);
-    this.importOrganizationId.set('');
-    this.importIsPrivate.set(false);
-    this.importDataSourceSlug.set('');
-    this.importDataSources.set([]);
-    this.importSubmitting.set(false);
-  }
-
-  /**
-   * Handle file selected from drop zone
-   */
-  onImportFileSelected(file: File | null): void {
-    this.importFile.set(file);
-  }
-
-  onImportPrivateChange(checked: boolean): void {
-    this.importIsPrivate.set(checked);
-    this._applyDefaultDataSourceSlug();
-  }
-
-  /** Éxito: import estándar (batch_id) o privado con contadores numéricos */
-  isImportResultSuccess(res: ProcessImportBatchResponse): boolean {
-    if (res.errors) {
-      return false;
-    }
-    const bid = res.batch_id?.trim() || res.import_batch_id?.trim();
-    if (bid && typeof res.processes_created !== 'number') {
-      return true;
-    }
-    return typeof res.processes_created === 'number';
-  }
-
-  /** Errores por fila del Excel (`errors.rows`) para listar en el resultado */
-  getImportRowErrors(res: ProcessImportBatchResponse): { row: string; message: string }[] {
-    const rows = res.errors?.rows;
-    if (!rows || typeof rows !== 'object') {
-      return [];
-    }
-    return Object.entries(rows)
-      .map(([row, value]) => ({
-        row,
-        message: Array.isArray(value) ? value.join(' ') : String(value),
-      }))
-      .sort((a, b) => Number(a.row) - Number(b.row) || a.row.localeCompare(b.row));
-  }
-
-  getImportConfirmTitle(): string {
-    return this._transloco.translate('processes.import.confirmTitle');
-  }
-
-  getImportConfirmLead(): string {
-    if (!this.importConfirmOpen()) {
-      return '';
-    }
-    const key = this.importIsPrivate()
-      ? 'processes.import.confirmMessagePrivate'
-      : 'processes.import.confirmMessage';
-    return this._transloco.translate(key);
-  }
-
-  getImportConfirmFootnote(): string {
-    if (!this.importConfirmOpen()) {
-      return '';
-    }
-    const key = this.importIsPrivate()
-      ? 'processes.import.confirmFootnotePrivate'
-      : 'processes.import.confirmFootnote';
-    return this._transloco.translate(key);
-  }
-
-  getImportConfirmDetailRows(): ConfirmationDialogDetailRow[] {
-    if (!this.importConfirmOpen()) {
-      return [];
-    }
-    const file = this.importFile();
-    const organizationId = this.importOrganizationId()?.trim();
-    if (!file || !organizationId) {
-      return [];
-    }
-    const organizationName = this._importOrganizationDisplayName(organizationId);
-    const rows: ConfirmationDialogDetailRow[] = [
-      { label: this._transloco.translate('processes.import.confirmFileLabel'), value: file.name },
-      {
-        label: this._transloco.translate('processes.import.confirmOrganizationLabel'),
-        value: organizationName,
-      },
-    ];
-    const slug = this.importDataSourceSlug()?.trim();
-    if (slug) {
-      rows.push({
-        label: this._transloco.translate('processes.import.confirmDataSourceLabel'),
-        value: this._importDataSourceDisplayName(slug),
-      });
-    }
-    return rows;
-  }
-
-  /**
-   * Abre el paso de confirmación (nombre de archivo + organización + fuente).
-   */
-  openImportConfirmDialog(): void {
-    const file = this.importFile();
-    const organizationId = this.importOrganizationId()?.trim();
-    if (!file || !organizationId) return;
-    if (!this.importDataSourceSlug()?.trim()) {
-      return;
-    }
-
-    this.importConfirmOpen.set(true);
-  }
-
-  onCancelImportConfirm(): void {
-    this.importConfirmOpen.set(false);
-  }
-
-  /**
-   * Tras confirmar: sube archivo + organization_id (importación en segundo plano + reporte por email).
-   */
-  onConfirmImportSubmit(): void {
-    this.importConfirmOpen.set(false);
-    this.executeImportSubmit();
-  }
-
-  private _importOrganizationDisplayName(organizationId: string): string {
-    const org = this.importOrganizations().find((o) => o.id === organizationId);
-    const name = org?.name?.trim();
-    return name || organizationId;
-  }
-
-  private _importDataSourceDisplayName(slug: string): string {
-    const src = this.importDataSources().find((s) => s.slug === slug);
-    const name = src?.name?.trim();
-    return name || slug;
-  }
-
-  private _loadImportDataSources(): void {
-    this.importDataSourcesLoading.set(true);
-    this._processService.getProcessDataSources().subscribe({
-      next: (list) => {
-        this.importDataSources.set(Array.isArray(list) ? list : []);
-        this.importDataSourcesLoading.set(false);
-        this._applyDefaultDataSourceSlug();
-      },
-      error: () => {
-        this.importDataSources.set([]);
-        this.importDataSourcesLoading.set(false);
-        this.importDataSourceSlug.set('');
-      },
-    });
-  }
-
-  /**
-   * Preselecciona fuente según modo: privado → publicaciones_procesales;
-   * estándar → judicial_branch (o la primera opción disponible).
-   */
-  private _applyDefaultDataSourceSlug(): void {
-    const options = this.importDataSourceOptions();
-    if (!options.length) {
-      this.importDataSourceSlug.set('');
-      return;
-    }
-    const preferred = this.importIsPrivate() ? 'publicaciones_procesales' : 'judicial_branch';
-    const match = options.find((o) => o.id === preferred);
-    this.importDataSourceSlug.set(match?.id ?? options[0].id);
-  }
-
-  private executeImportSubmit(): void {
-    const file = this.importFile();
-    const organizationId = this.importOrganizationId()?.trim();
-    const dataSourceSlug = this.importDataSourceSlug()?.trim();
-    if (!file || !organizationId || !dataSourceSlug) return;
-
-    const isPrivate = this.importIsPrivate();
-
-    this.importSubmitting.set(true);
-    this.importResult.set(null);
-
-    // Privado → POST /processes/private-import | Estándar → POST /processes/import
-    const request$ = isPrivate
-      ? this._processService.importPrivateProcesses(file, organizationId, dataSourceSlug)
-      : this._processService.importProcesses(file, organizationId, dataSourceSlug);
-
-    request$.subscribe({
-      next: (response) => {
-        this.importResult.set(response);
-        this.importSubmitting.set(false);
-      },
-      error: (err) => {
-        const body = err.error;
-        const message =
-          body?.message || this._transloco.translate('processes.import.errors.generic');
-        this.importResult.set({
-          message,
-          import_batch_id: body?.import_batch_id,
-          errors: body?.errors,
-        });
-        this.importSubmitting.set(false);
-      },
-    });
-  }
-
-  // -----------------------------------------------------------------------------------------------------
-  // Importar actuaciones / movimientos
-  // -----------------------------------------------------------------------------------------------------
 
   openActuacionesImportFromMobileFab(): void {
     this.closeMobileFabMenu();
@@ -1380,241 +1111,11 @@ export class ProcessesComponent {
   }
 
   openActuacionesImportModal(): void {
-    this.actuacionesImportFile.set(null);
-    this.actuacionesImportResult.set(null);
-    this.actuacionesImportFieldErrors.set({});
-    this.actuacionesImportSubmitting.set(false);
-    this.actuacionesSkippedOpen.set(false);
-    this.isActuacionesImportModalOpen.set(true);
+    this.importModals()?.openActuaciones();
   }
 
-  closeActuacionesImportModal(): void {
-    this.isActuacionesImportModalOpen.set(false);
-    this.closeMobileFabMenu();
-    this.actuacionesImportFile.set(null);
-    this.actuacionesImportResult.set(null);
-    this.actuacionesImportFieldErrors.set({});
-    this.actuacionesImportSubmitting.set(false);
-    this.actuacionesSkippedOpen.set(false);
+  onActuacionesImported(): void {
+    this.loadProcesses(1, this.pagination()?.per_page || 10);
   }
 
-  onActuacionesImportFileSelected(file: File | null): void {
-    this.actuacionesImportFile.set(file);
-    this.actuacionesImportFieldErrors.update((e) => {
-      const next = { ...e };
-      delete next.file;
-      return next;
-    });
-  }
-
-  isActuacionesImportSuccess(res: ActuacionesImportResponse): boolean {
-    if (res.errors) return false;
-    return (
-      !!res.import_batch_id ||
-      typeof res.actions_imported === 'number' ||
-      typeof res.unassigned_count === 'number'
-    );
-  }
-
-  /** Import OK pero todas las actuaciones fueron al repositorio (ningún proceso existía) */
-  isActuacionesImportOnlyUnassigned(res: ActuacionesImportResponse): boolean {
-    return (res.actions_imported ?? 0) === 0 && (res.unassigned_count ?? 0) > 0;
-  }
-
-  getActuacionesUnassignedNumbers(res: ActuacionesImportResponse): string[] {
-    const list = res.unassigned_process_numbers;
-    return Array.isArray(list) && list.length > 0 ? list : [];
-  }
-
-  getActuacionesUpdatedNumbers(res: ActuacionesImportResponse): string[] {
-    const list = res.processes_updated_numbers;
-    return Array.isArray(list) && list.length > 0 ? list : [];
-  }
-
-  getActuacionesUnassignedCount(res: ActuacionesImportResponse): number {
-    const explicit = res.unassigned_count;
-    if (typeof explicit === 'number' && explicit >= 0) return explicit;
-    return this.getActuacionesUnassignedNumbers(res).length;
-  }
-
-  getActuacionesSkippedActions(res: ActuacionesImportResponse): ProcessActuacionSkippedItem[] {
-    const list = res.skipped_actions;
-    return Array.isArray(list) ? list : [];
-  }
-
-  toggleActuacionesSkippedOpen(): void {
-    this.actuacionesSkippedOpen.update((open) => !open);
-  }
-
-  openImportProcessesFromActuacionesResult(): void {
-    this.closeActuacionesImportModal();
-    this.openImportModal();
-    this.importIsPrivate.set(true);
-    this._applyDefaultDataSourceSlug();
-  }
-
-  getActuacionesImportRowErrors(
-    res: ActuacionesImportResponse
-  ): { row: string; message: string }[] {
-    const rows = res.errors?.rows;
-    if (!rows || typeof rows !== 'object') return [];
-    return Object.entries(rows)
-      .map(([row, value]) => ({
-        row,
-        message: Array.isArray(value) ? value.join(' ') : String(value),
-      }))
-      .sort((a, b) => Number(a.row) - Number(b.row) || a.row.localeCompare(b.row));
-  }
-
-  getActuacionesImportSuccessMessage(res: ActuacionesImportResponse): string {
-    const imported = res.actions_imported ?? 0;
-    const unassignedCount = this.getActuacionesUnassignedCount(res);
-
-    if (imported === 0 && unassignedCount > 0) {
-      return this._transloco.translate('processes.actuacionesImport.successOnlyUnassigned', {
-        stored: res.actions_stored_unassigned ?? 0,
-        count: unassignedCount,
-      });
-    }
-
-    let msg = this._transloco.translate('processes.actuacionesImport.successSummary', {
-      actions: imported,
-      processes: res.processes_updated ?? 0,
-    });
-    if ((res.actions_skipped ?? 0) > 0) {
-      msg += ' ' + this._transloco.translate('processes.actuacionesImport.successSkipped', {
-        skipped: res.actions_skipped,
-      });
-    }
-    return msg;
-  }
-
-  copyActuacionesNotFoundNumbers(numbers: string[], event?: Event): void {
-    this._copyActuacionesProcessNumbers(
-      numbers,
-      'processes.actuacionesImport.copyNotFoundSuccess',
-      event
-    );
-  }
-
-  copyActuacionesUpdatedNumbers(numbers: string[], event?: Event): void {
-    this._copyActuacionesProcessNumbers(
-      numbers,
-      'processes.actuacionesImport.copyUpdatedSuccess',
-      event
-    );
-  }
-
-  private _copyActuacionesProcessNumbers(
-    numbers: string[],
-    successKey: string,
-    event?: Event
-  ): void {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    const text = (numbers ?? [])
-      .map((n) => (n ?? '').replace(/\D/g, ''))
-      .filter(Boolean)
-      .join('\n');
-    if (!text) return;
-
-    if (this._copiedRadicadoToastTimer) {
-      clearTimeout(this._copiedRadicadoToastTimer);
-      this._copiedRadicadoToastTimer = undefined;
-    }
-
-    const dismiss = (): void => {
-      this.copyRadicadoToast.set(null);
-      this._copiedRadicadoToastTimer = undefined;
-    };
-
-    navigator.clipboard.writeText(text).then(() => {
-      this.copyRadicadoToast.set({
-        message: this._transloco.translate(successKey),
-        kind: 'success',
-      });
-      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
-    }).catch(() => {
-      this.copyRadicadoToast.set({
-        message: this._transloco.translate('processes.copy.toastError'),
-        kind: 'error',
-      });
-      this._copiedRadicadoToastTimer = setTimeout(() => dismiss(), 2200);
-    });
-  }
-
-  submitActuacionesImport(): void {
-    const file = this.actuacionesImportFile();
-    if (!file) return;
-
-    this.actuacionesImportSubmitting.set(true);
-    this.actuacionesImportResult.set(null);
-    this.actuacionesImportFieldErrors.set({});
-
-    this._processService.importActuaciones(file).subscribe({
-      next: (response) => {
-        const unassigned = Array.isArray(response.unassigned_process_numbers)
-          ? response.unassigned_process_numbers
-          : [];
-        const updatedNumbers = Array.isArray(response.processes_updated_numbers)
-          ? response.processes_updated_numbers
-          : [];
-        const skipped = Array.isArray(response.skipped_actions)
-          ? response.skipped_actions
-          : [];
-        this.actuacionesImportResult.set({
-          ...response,
-          actions_imported: response.actions_imported ?? 0,
-          actions_skipped: response.actions_skipped ?? skipped.length,
-          actions_stored_unassigned: response.actions_stored_unassigned ?? 0,
-          processes_updated: response.processes_updated ?? updatedNumbers.length,
-          processes_updated_numbers: updatedNumbers,
-          unassigned_count: response.unassigned_count ?? unassigned.length,
-          unassigned_process_numbers: unassigned,
-          skipped_actions: skipped,
-        });
-        this.actuacionesSkippedOpen.set(false);
-        this.actuacionesImportSubmitting.set(false);
-        if ((response.actions_imported ?? 0) > 0) {
-          this.loadProcesses(1, this.pagination()?.per_page || 10);
-        }
-      },
-      error: (err) => {
-        const body = err.error as ActuacionesImportResponse | undefined;
-        const errors = body?.errors;
-
-        if (errors && !errors.rows && errors.file) {
-          this.actuacionesImportFieldErrors.set({
-            file: this._firstErrorMessage(errors.file),
-          });
-          this.actuacionesImportSubmitting.set(false);
-          return;
-        }
-
-        this.actuacionesImportResult.set({
-          message:
-            body?.message ||
-            this._transloco.translate('processes.actuacionesImport.errors.generic'),
-          actions_imported: 0,
-          actions_skipped: 0,
-          actions_stored_unassigned: 0,
-          processes_updated: 0,
-          processes_updated_numbers: [],
-          unassigned_count: 0,
-          unassigned_process_numbers: [],
-          skipped_actions: [],
-          import_batch_id: body?.import_batch_id,
-          errors: errors ?? { file: body?.message || 'failed' },
-        });
-        this.actuacionesImportSubmitting.set(false);
-      },
-    });
-  }
-
-  private _firstErrorMessage(value: string | string[] | undefined): string | undefined {
-    if (!value) return undefined;
-    return Array.isArray(value) ? value[0] : value;
-  }
 }
