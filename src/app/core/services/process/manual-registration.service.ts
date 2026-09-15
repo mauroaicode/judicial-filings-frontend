@@ -19,6 +19,8 @@ export class ManualRegistrationService {
 
   /** Badge del menú: pendientes de digitación. */
   public readonly pendingCount = signal(0);
+  /** Sube cuando llega una solicitud por WebSocket; la cola se recarga. */
+  public readonly queueRevision = signal(0);
 
   list(filters: ManualRegistrationFilter = {}): Observable<ManualRegistrationListResponse> {
     let params = new HttpParams();
@@ -29,9 +31,7 @@ export class ManualRegistrationService {
     if (filters.per_page) {
       params = params.set('per_page', String(filters.per_page));
     }
-    if (filters.status) {
-      params = params.set('status', filters.status);
-    }
+    params = params.set('status', filters.status || 'pending');
     if (filters.reason) {
       params = params.set('reason', filters.reason);
     }
@@ -73,5 +73,9 @@ export class ManualRegistrationService {
     if (typeof count === 'number' && count >= 0) {
       this.pendingCount.set(count);
     }
+  }
+
+  notifyQueueUpdated(): void {
+    this.queueRevision.update((n) => n + 1);
   }
 }

@@ -59,6 +59,7 @@ export class ProcessImportModalsComponent {
   public importDataSourceSlug = signal<string>('');
   public importDataSources = signal<ProcessDataSource[]>([]);
   public importDataSourcesLoading = signal<boolean>(false);
+  public importHintProcessNumber = signal<string>('');
 
   public isActuacionesImportModalOpen = signal<boolean>(false);
   public actuacionesImportSubmitting = signal<boolean>(false);
@@ -96,11 +97,12 @@ export class ProcessImportModalsComponent {
     return !!this.actuacionesImportFile();
   });
 
-  openExcel(options?: { isPrivate?: boolean; organizationId?: string }): void {
+  openExcel(options?: { isPrivate?: boolean; organizationId?: string; processNumber?: string }): void {
     this.importFile.set(null);
     this.importResult.set(null);
     this.importOrganizationId.set(options?.organizationId?.trim() || '');
     this.importIsPrivate.set(options?.isPrivate === true);
+    this.importHintProcessNumber.set(options?.processNumber?.replace(/\D/g, '') || '');
     this.importDataSourceSlug.set('');
     this.importDataSources.set([]);
     this.importConfirmOpen.set(false);
@@ -119,6 +121,7 @@ export class ProcessImportModalsComponent {
     this.importDataSourceSlug.set('');
     this.importDataSources.set([]);
     this.importSubmitting.set(false);
+    this.importHintProcessNumber.set('');
     this.dismissed.emit();
   }
 

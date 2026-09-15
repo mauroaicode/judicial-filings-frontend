@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   Injector,
+  effect,
   inject,
   OnInit,
   signal,
@@ -19,12 +20,14 @@ import {
   ManualRegistrationReason,
   ManualRegistrationRequest,
   ManualRegistrationStatus,
+  ManualRegistrationSubject,
 } from '@app/core/models/process/manual-registration-request.model';
 import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
 import {
   ConfirmationDialogComponent,
   ConfirmationDialogDetailRow,
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { ProcessImportModalsComponent } from '@app/modules/admin/processes/components/process-import-modals/process-import-modals.component';
 
@@ -37,6 +40,7 @@ import { ProcessImportModalsComponent } from '@app/modules/admin/processes/compo
     TranslocoPipe,
     ProcessNumberPipe,
     ConfirmationDialogComponent,
+    BottomSheetModalComponent,
     ProcessImportModalsComponent,
   ],
   templateUrl: './manual-registrations.component.html',
@@ -63,6 +67,7 @@ export class ManualRegistrationsComponent implements OnInit {
   public currentPerPage = signal<number>(20);
   public hoveredRowId = signal<string | null>(null);
   public highlightedRequestId = signal<string | null>(null);
+  public selectedRequest = signal<ManualRegistrationRequest | null>(null);
   public copiedMessage = signal<string | null>(null);
   public toastMessage = signal<string | null>(null);
   public toastKind = signal<'success' | 'error'>('success');
@@ -86,11 +91,22 @@ export class ManualRegistrationsComponent implements OnInit {
   private _toastTimer: ReturnType<typeof setTimeout> | null = null;
   private _copiedTimer: ReturnType<typeof setTimeout> | null = null;
   private _highlightTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private _autoOpenedRequestId: string | null = null;
 
   constructor() {
     this._applyQueryFilters();
     this._service.refreshPendingCount();
     this.loadRequests();
+
+    let seenRevision = this._service.queueRevision();
+    effect(() => {
+      const rev = this._service.queueRevision();
+      if (rev === seenRevision) {
+        return;
+      }
+      seenRevision = rev;
+      this.loadRequests(1);
+    });
   }
 
   ngOnInit(): void {
@@ -123,7 +139,12 @@ export class ManualRegistrationsComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
-          this.items.set(response.data || []);
+          const data = response.data || [];
+          if (data.length === 0 && (response.current_page ?? 1) > 1) {
+            this.loadRequests(response.current_page - 1);
+            return;
+          }
+          this.items.set(data);
           this.pagination.set({
             current_page: response.current_page,
             per_page: response.per_page,
@@ -134,6 +155,11 @@ export class ManualRegistrationsComponent implements OnInit {
           });
           this.currentPerPage.set(response.per_page);
           this.loading.set(false);
+          const selectedId = this.selectedRequest()?.id;
+          if (selectedId) {
+            const updated = (response.data || []).find((row) => row.id === selectedId);
+            this.selectedRequest.set(updated ?? null);
+          }
           this._reconcileRequestQueryParam();
         },
         error: (error) => {
@@ -245,18 +271,63 @@ export class ManualRegistrationsComponent implements OnInit {
       });
   }
 
-  goToPrivateImport(item: ManualRegistrationRequest): void {
+  goToPrivateImport(item: ManualRegistrationRequest, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     this.importModals()?.openExcel({
       isPrivate: true,
       organizationId: item.organization_id,
+      processNumber: item.process_number,
     });
   }
 
-  goToActuacionesImport(): void {
+  goToActuacionesImport(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     this.importModals()?.openActuaciones();
   }
 
-  openResolveConfirm(item: ManualRegistrationRequest, status: 'registered' | 'rejected'): void {
+  openDetail(item: ManualRegistrationRequest, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.selectedRequest.set(item);
+  }
+
+  closeDetail(): void {
+    this.selectedRequest.set(null);
+  }
+
+  subjectsOf(list: ManualRegistrationSubject[] | null | undefined): ManualRegistrationSubject[] {
+    if (!Array.isArray(list)) return [];
+    return list.filter((s) => (s?.name || '').trim().length > 0);
+  }
+
+  subjectLine(subject: ManualRegistrationSubject): string {
+    const name = (subject.name || '').trim() || '–';
+    const id = (subject.identification || '').trim();
+    return id ? `${name} · ${id}` : name;
+  }
+
+  partyPreview(list: ManualRegistrationSubject[] | null | undefined): { main: string; extra: number } {
+    const people = this.subjectsOf(list);
+    if (people.length === 0) return { main: '–', extra: 0 };
+    return { main: this.subjectLine(people[0]), extra: Math.max(0, people.length - 1) };
+  }
+
+  copySubject(subject: ManualRegistrationSubject, event?: Event): void {
+    this.copyToClipboard(this.subjectLine(subject), event);
+  }
+
+  copyPartyGroup(list: ManualRegistrationSubject[] | null | undefined, event?: Event): void {
+    const text = this.subjectsOf(list)
+      .map((s) => this.subjectLine(s))
+      .join('\n');
+    this.copyToClipboard(text, event);
+  }
+
+  openResolveConfirm(item: ManualRegistrationRequest, status: 'registered' | 'rejected', event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     this.pendingResolve.set({ item, status });
     this.confirmOpen.set(true);
   }
@@ -331,6 +402,7 @@ export class ManualRegistrationsComponent implements OnInit {
             ? this._transloco.translate('manualRegistrations.resolveRegistered')
             : this._transloco.translate('manualRegistrations.resolveRejected');
         this._showToast(response.message?.trim() || fallback, 'success');
+        this.closeDetail();
         const page = this.pagination()?.current_page ?? 1;
         this.loadRequests(page);
       },
@@ -374,8 +446,14 @@ export class ManualRegistrationsComponent implements OnInit {
     if (!requestId) {
       return;
     }
-    if (this.items().some((item) => item.id === requestId)) {
-      this._highlightRequestRow(requestId);
+    const item = this.items().find((row) => row.id === requestId);
+    if (!item) {
+      return;
+    }
+    this._highlightRequestRow(requestId);
+    if (this._autoOpenedRequestId !== requestId) {
+      this.selectedRequest.set(item);
+      this._autoOpenedRequestId = requestId;
     }
   }
 

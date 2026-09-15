@@ -2,6 +2,11 @@ export type ManualRegistrationReason = 'not_found' | 'private' | 'all_private';
 export type ManualRegistrationStatus = 'pending' | 'registered' | 'rejected';
 export type ManualRegistrationLawyerRole = 'plaintiff' | 'defendant';
 
+export interface ManualRegistrationSubject {
+  name: string;
+  identification: string | null;
+}
+
 export interface ManualRegistrationRequest {
   id: string;
   process_number: string;
@@ -9,6 +14,13 @@ export interface ManualRegistrationRequest {
   reason_label: string;
   status: ManualRegistrationStatus;
   lawyer_role: ManualRegistrationLawyerRole | null;
+  /** Clase de proceso capturada por el abogado. */
+  process_class?: string | null;
+  plaintiffs?: ManualRegistrationSubject[];
+  defendants?: ManualRegistrationSubject[];
+  other_subjects?: ManualRegistrationSubject[];
+  /** Mensaje de contexto opcional del backend. */
+  message?: string | null;
   unassigned_actions_count: number;
   discord_notified: boolean;
   organization_id: string;

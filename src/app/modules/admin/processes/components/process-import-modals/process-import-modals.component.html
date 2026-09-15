@@ -29,6 +29,29 @@
         {{ 'processes.import.sheetHint' | transloco }}
       </p>
 
+      @if (importHintProcessNumber()) {
+        <div class="mt-3 flex items-start justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-primary/70">
+              {{ 'processes.import.radicadoHintLabel' | transloco }}
+            </p>
+            <p class="mt-0.5 font-semibold text-sm text-primary break-all">
+              {{ importHintProcessNumber() | processNumber }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-circle shrink-0 text-primary/60 hover:text-primary"
+            (click)="copyProcessRadicado(importHintProcessNumber(), $event)"
+            [attr.aria-label]="'processes.copy.tooltip' | transloco"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+            </svg>
+          </button>
+        </div>
+      }
+
       @if (!importResult()) {
         <div class="form-control mb-4 mt-4">
           <label class="label">

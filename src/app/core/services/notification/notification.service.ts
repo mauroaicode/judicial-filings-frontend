@@ -4,6 +4,7 @@ import { Observable, catchError, of, tap } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
 import { AppNotification, NotificationResponse, UnreadCountResponse } from '@app/core/models/notification/notification.model';
 import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
+import { normalizeNotificationBusinessType } from '@app/core/constants/notification-navigation.constant';
 
 @Injectable({
     providedIn: 'root'
@@ -131,7 +132,14 @@ export class NotificationService {
                 status: String(inner.status ?? payload?.status ?? ''),
                 request_id: requestId || undefined,
                 process_number: String(inner.process_number ?? payload?.process_number ?? '') || undefined,
-                organization_name: String(inner.organization_name ?? payload?.organization_name ?? '') || undefined,
+                organization_name:
+                    String(
+                        inner.organization_name ??
+                            inner.organization ??
+                            payload?.organization_name ??
+                            payload?.organization ??
+                            ''
+                    ) || undefined,
                 url: String(inner.url ?? payload?.url ?? '') || undefined,
             },
             read_at: null,
@@ -145,9 +153,10 @@ export class NotificationService {
         this._unreadCount.update((count) => count + 1);
         this._newCount.update((count) => count + 1);
 
-        const normalizedType = String(businessType).trim().toLowerCase().replace(/_/g, '-');
+        const normalizedType = normalizeNotificationBusinessType(businessType);
         if (normalizedType === 'manual-registration-requested') {
             this._manualRegistrationService.refreshPendingCount();
+            this._manualRegistrationService.notifyQueueUpdated();
         }
     }
 }

@@ -1101,7 +1101,7 @@ export class ProcessesComponent {
     this.openImportModal();
   }
 
-  openImportModal(options?: { isPrivate?: boolean; organizationId?: string }): void {
+  openImportModal(options?: { isPrivate?: boolean; organizationId?: string; processNumber?: string }): void {
     this.importModals()?.openExcel(options);
   }
 
