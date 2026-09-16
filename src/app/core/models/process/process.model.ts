@@ -89,6 +89,8 @@ export interface ProcessFilter {
   status?: string; // 'active' | 'inactive'
   /** Filtra por origen: `private` | `public` (query `privacy`) */
   privacy?: 'private' | 'public';
+  /** Solo procesos con solicitud de alta manual `registered` (query `alta_manual=1`) */
+  alta_manual?: boolean;
   has_multiple_instances?: boolean;
   process_date?: string;
   process_date_from?: string;
@@ -291,8 +293,10 @@ export interface ProcessDetail {
   subclass_process: string;
   litigants: string | null;
   process_date: string;
+  /** Filing date as Y-m-d. Use this for date pickers; `process_date` is localized. */
+  process_date_iso?: string | null;
   last_activity_date: string | null;
-  location: string;
+  location: string | null;
   filing_content: string | null;
   is_private: boolean;
   /** Alta hecha por digitación/Excel (no consulta automática). */
@@ -370,6 +374,15 @@ export interface ProcessInterestedOrganizations {
   items: ProcessInterestedOrganization[];
 }
 
+export interface AttachProcessOrganizationsPayload {
+  organization_ids: string[];
+}
+
+export interface ProcessOrganizationsMutationResponse {
+  message: string;
+  organizations: ProcessInterestedOrganizations;
+}
+
 /**
  * Process Detail Response
  */
@@ -398,11 +411,19 @@ export interface Action {
   action_registration_id?: number;
   cons_action?: number;
   action_date: string;
+  /** Action date as Y-m-d. Use this for date pickers; `action_date` is localized. */
+  action_date_iso?: string | null;
   registration_date: string;
+  /** Registration date as Y-m-d. Use this for date pickers; `registration_date` is localized. */
+  registration_date_iso?: string | null;
   action: string;
   annotation: string | null;
   term_start_date?: string | null;
+  /** Term start as Y-m-d. Use this for date pickers; `term_start_date` may be localized or "-". */
+  term_start_date_iso?: string | null;
   term_end_date?: string | null;
+  /** Term end as Y-m-d. Use this for date pickers; `term_end_date` may be localized or "-". */
+  term_end_date_iso?: string | null;
   court?: string;
   created_at?: string;
   updated_at?: string;
@@ -410,6 +431,42 @@ export interface Action {
   notified_action_id?: string | null;
   fijacion_action_id?: string | null;
   related_action?: Action | null;
+}
+
+/**
+ * Partial PATCH body for process general information.
+ * Send only changed fields. Dates as Y-m-d.
+ */
+export interface UpdateProcessGeneralInfoPayload {
+  court?: string;
+  speaker?: string | null;
+  department?: string;
+  process_type?: string;
+  process_class?: string;
+  subclass_process?: string | null;
+  location?: string | null;
+  process_date?: string;
+}
+
+export interface UpdateProcessGeneralInfoResponse {
+  message: string;
+  process: ProcessDetail;
+}
+
+/**
+ * Partial PATCH body for action dates.
+ * Send only changed fields. Dates as Y-m-d. Term dates null to clear.
+ */
+export interface UpdateProcessActionDatesPayload {
+  action_date?: string;
+  registration_date?: string;
+  term_start_date?: string | null;
+  term_end_date?: string | null;
+}
+
+export interface UpdateProcessActionResponse {
+  message: string;
+  action: Action;
 }
 
 /**

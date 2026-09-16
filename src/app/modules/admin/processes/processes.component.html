@@ -530,6 +530,16 @@
             <option value="public">{{ 'processes.filters.privacyPublic' | transloco }}</option>
           </select>
         </div>
+
+        <div class="form-control min-w-0">
+          <label class="label py-0">
+            <span class="label-text leading-snug break-words">{{ 'processes.filters.altaManual' | transloco }}</span>
+          </label>
+          <select formControlName="alta_manual" class="select select-bordered select-sm w-full max-w-full">
+            <option value="">{{ 'processes.filters.all' | transloco }}</option>
+            <option value="1">{{ 'processes.filters.yes' | transloco }}</option>
+          </select>
+        </div>
         </div>
       </form>
 

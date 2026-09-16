@@ -1,0 +1,167 @@
+<div class="modal-box p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-xl w-full">
+  <div class="p-6 pb-4 border-b border-base-200/50">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-4 min-w-0">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-xl font-bold text-base-content">
+            {{ 'processDetail.actions.datesModal.title' | transloco }}
+          </h3>
+          <p class="text-sm text-base-content/40 font-medium truncate">
+            {{ action().action || ('processDetail.actions.datesModal.subtitle' | transloco) }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all shrink-0"
+        [disabled]="isSaving()"
+        (click)="onClose()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8 space-y-5 max-h-[70vh] overflow-y-auto">
+    @if (errorMessage()) {
+      <div class="alert alert-error rounded-xl text-sm py-3">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="form-control w-full">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+            {{ 'processDetail.actions.table.actionDate' | transloco }}
+          </span>
+        </label>
+        <app-date-picker
+          formControlName="action_date"
+          [placeholder]="'processDetail.actions.datesModal.datePlaceholder' | transloco"
+          [hasError]="!!fieldError('action_date')"
+        ></app-date-picker>
+        @if (invalidHint('action_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-warning text-xs">
+              {{ 'processDetail.actions.datesModal.invalidCurrentDate' | transloco: { date: invalidHint('action_date') } }}
+            </span>
+          </label>
+        }
+        @if (fieldError('action_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-error text-xs">{{ fieldError('action_date') }}</span>
+          </label>
+        }
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+            {{ 'processDetail.actions.table.registrationDate' | transloco }}
+          </span>
+        </label>
+        <app-date-picker
+          formControlName="registration_date"
+          [placeholder]="'processDetail.actions.datesModal.datePlaceholder' | transloco"
+          [hasError]="!!fieldError('registration_date')"
+        ></app-date-picker>
+        @if (invalidHint('registration_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-warning text-xs">
+              {{ 'processDetail.actions.datesModal.invalidCurrentDate' | transloco: { date: invalidHint('registration_date') } }}
+            </span>
+          </label>
+        }
+        @if (fieldError('registration_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-error text-xs">{{ fieldError('registration_date') }}</span>
+          </label>
+        }
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+            {{ 'processDetail.actions.table.termStartDate' | transloco }}
+          </span>
+        </label>
+        <app-date-picker
+          formControlName="term_start_date"
+          [allowClear]="true"
+          [placeholder]="'processDetail.actions.datesModal.optionalDatePlaceholder' | transloco"
+          [hasError]="!!fieldError('term_start_date')"
+        ></app-date-picker>
+        @if (invalidHint('term_start_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-warning text-xs">
+              {{ 'processDetail.actions.datesModal.invalidCurrentDate' | transloco: { date: invalidHint('term_start_date') } }}
+            </span>
+          </label>
+        }
+        @if (fieldError('term_start_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-error text-xs">{{ fieldError('term_start_date') }}</span>
+          </label>
+        }
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+            {{ 'processDetail.actions.table.termEndDate' | transloco }}
+          </span>
+        </label>
+        <app-date-picker
+          formControlName="term_end_date"
+          [allowClear]="true"
+          [placeholder]="'processDetail.actions.datesModal.optionalDatePlaceholder' | transloco"
+          [hasError]="!!fieldError('term_end_date')"
+        ></app-date-picker>
+        @if (invalidHint('term_end_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-warning text-xs">
+              {{ 'processDetail.actions.datesModal.invalidCurrentDate' | transloco: { date: invalidHint('term_end_date') } }}
+            </span>
+          </label>
+        }
+        @if (fieldError('term_end_date')) {
+          <label class="label py-0 mt-1">
+            <span class="label-text-alt text-error text-xs">{{ fieldError('term_end_date') }}</span>
+          </label>
+        }
+      </div>
+    </form>
+  </div>
+
+  <div class="p-6 border-t border-base-200/50 bg-base-200/20 flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
+    <button
+      type="button"
+      class="btn btn-ghost btn-md normal-case font-bold px-8 rounded-xl w-full sm:w-auto text-base-content/40 hover:bg-base-300/40"
+      [disabled]="isSaving()"
+      (click)="onClose()"
+    >
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-neutral btn-md normal-case font-bold px-12 rounded-xl w-full sm:w-auto shadow-lg transition-all active:scale-95"
+      [disabled]="!hasChanges() || isSaving()"
+      (click)="onSave()"
+    >
+      @if (isSaving()) {
+        <span class="loading loading-spinner loading-xs mr-2"></span>
+        {{ 'common.saving' | transloco }}
+      } @else {
+        {{ 'common.save' | transloco }}
+      }
+    </button>
+  </div>
+</div>

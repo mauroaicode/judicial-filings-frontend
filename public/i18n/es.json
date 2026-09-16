@@ -220,6 +220,7 @@
       "privacyPlaceholder": "Todas",
       "privacyPrivate": "Solo privados",
       "privacyPublic": "Solo públicos",
+      "altaManual": "Alta manual",
       "all": "Todos",
       "yes": "Sí",
       "no": "No",
@@ -585,11 +586,12 @@
   },
   "manualRegistrations": {
     "title": "Altas manuales",
-    "description": "Radicados que el abogado no pudo agregar. Digita con Importar Excel privado o Actuaciones y marca la solicitud como resuelta.",
+    "description": "Solicitudes que el abogado no pudo agregar. Revisa los datos, corrige si hace falta y registra el radicado en la organización.",
     "empty": "No hay solicitudes con los filtros actuales.",
     "copied": "Copiado al portapapeles",
     "loadError": "No se pudo cargar la cola de altas manuales.",
-    "resolveRegistered": "Solicitud marcada como registrada.",
+    "registerSuccess": "El radicado quedó registrado en la organización.",
+    "registerError": "No se pudo registrar el radicado.",
     "resolveRejected": "Solicitud rechazada.",
     "resolveError": "No se pudo actualizar la solicitud.",
     "filters": {
@@ -633,12 +635,16 @@
       "status": "Estado"
     },
     "detail": {
-      "title": "Datos para digitación",
-      "subtitle": "Capturados por el abogado. Úsalos como referencia al importar el proceso privado.",
+      "title": "Registrar radicado",
+      "subtitle": "Revisa y corrige los datos del abogado. Registrar crea el proceso en la organización.",
       "close": "Cerrar",
       "openAria": "Ver detalle de la solicitud",
       "processClass": "Clase de proceso",
       "lawyerRole": "Rol del abogado",
+      "court": "Despacho",
+      "speaker": "Ponente",
+      "subclassProcess": "Subclase de proceso",
+      "location": "Ubicación",
       "reason": "Motivo",
       "organization": "Organización",
       "requestedBy": "Solicitante",
@@ -646,16 +652,32 @@
       "defendants": "Demandados",
       "otherSubjects": "Otros sujetos",
       "emptyParty": "Sin registros",
-      "copyGroup": "Copiar listado",
+      "addPerson": "Agregar",
+      "removePerson": "Quitar",
+      "name": "Nombre",
       "identification": "Identificación",
       "pendingHistory": "Hay histórico pendiente ({{count}}) que se asociará al crear el proceso.",
       "view": "Ver detalle"
     },
+    "form": {
+      "processClassPlaceholder": "Ej. Verbal sumario",
+      "lawyerRolePlaceholder": "Selecciona el rol",
+      "courtPlaceholder": "Ej. Juzgado 1 Civil",
+      "speakerPlaceholder": "Ej. María Gómez",
+      "subclassProcessPlaceholder": "Ej. Singular",
+      "locationPlaceholder": "Ej. Despacho",
+      "processClassRequired": "La clase de proceso es obligatoria.",
+      "lawyerRoleRequired": "El rol del abogado es obligatorio.",
+      "plaintiffsRequired": "Agrega al menos un demandante con nombre.",
+      "defendantsRequired": "Agrega al menos un demandado con nombre."
+    },
     "actions": {
-      "importPrivate": "Importar Excel privado",
+      "register": "Registrar",
+      "registering": "Registrando...",
+      "importPrivate": "Importar Excel (opcional)",
       "importActuaciones": "Importar actuaciones",
-      "markRegistered": "Marcar registrado",
-      "reject": "Rechazar"
+      "reject": "Rechazar",
+      "viewProcess": "Ver proceso"
     },
     "confirm": {
       "registeredTitle": "Marcar como registrado",
@@ -705,6 +727,22 @@
     "deactivateProcess": "Desactivar Seguimiento",
     "back": "Volver",
     "generalInfo": "Información General",
+    "generalInfoModal": {
+      "edit": "Editar",
+      "title": "Editar información general",
+      "subtitle": "Corrige despacho, tipo y fecha de radicación. El número de radicado no se puede cambiar.",
+      "processNumberHint": "Solo lectura. Es la llave de sincronización.",
+      "courtPlaceholder": "Ej: Juzgado 003 Civil del Circuito",
+      "optionalPlaceholder": "Opcional",
+      "datePlaceholder": "Seleccionar fecha",
+      "courtRequired": "El despacho es obligatorio.",
+      "dateOutOfRange": "La fecha debe estar entre 1900-01-01 y 2100-12-31.",
+      "invalidCurrentDate": "La fecha actual es inválida: {{date}}. Selecciona una fecha válida para corregirla.",
+      "noChanges": "Cambia al menos un campo antes de guardar.",
+      "saved": "Información general actualizada correctamente.",
+      "notFound": "El proceso no existe.",
+      "errorGeneric": "No se pudo actualizar la información general. Revisa los datos e intenta de nuevo."
+    },
     "processNumber": "Número de Radicado",
     "speaker": "Ponente",
     "court": "Despacho",
@@ -744,6 +782,26 @@
       "confirmDeactivateMessage": "¿Está seguro de desactivar el seguimiento para la organización \"{{name}}\"? Ya no se realizará seguimiento automático de las actualizaciones.",
       "roleSaved": "Rol de la organización actualizado exitosamente.",
       "trashFromOrg": "Enviar a papelera",
+      "add": "Agregar organización",
+      "empty": "No hay organizaciones interesadas",
+      "remove": "Quitar",
+      "removed": "Organización quitada de este proceso.",
+      "removeError": "No se pudo quitar la organización.",
+      "removeNotLinked": "La organización ya no estaba vinculada a este proceso.",
+      "removeConfirmTitle": "Quitar organización",
+      "removeConfirmMessage": "¿Quitar a {{name}} de este proceso? Dejará de verlo en su organización.",
+      "addModal": {
+        "title": "Agregar organizaciones interesadas",
+        "subtitle": "Busca y selecciona una o varias organizaciones activas",
+        "searchPlaceholder": "Buscar organización",
+        "noResults": "Sin organizaciones",
+        "add": "Agregar",
+        "addCount": "Agregar ({{count}})",
+        "minOne": "Selecciona al menos una organización.",
+        "saved": "Organizaciones vinculadas correctamente.",
+        "notFound": "El proceso no existe.",
+        "errorGeneric": "No se pudieron agregar las organizaciones. Revisa los datos e intenta de nuevo."
+      },
       "roleModal": {
         "title": "Asignar rol de la organización",
         "subtitle": "Define si la organización actúa como demandante o demandado en este proceso",
@@ -809,7 +867,22 @@
         "termEndDate": "Fecha finaliza término",
         "actionDate": "Fecha de actuación",
         "registrationDate": "Fecha de registro",
-        "court": "Despacho"
+        "court": "Despacho",
+        "edit": "Editar fechas"
+      },
+      "datesModal": {
+        "title": "Editar fechas de la actuación",
+        "subtitle": "Corrige las fechas de esta actuación",
+        "edit": "Editar fechas",
+        "datePlaceholder": "Seleccionar fecha",
+        "optionalDatePlaceholder": "Sin término",
+        "saved": "Fechas de la actuación actualizadas correctamente.",
+        "noChanges": "Cambia al menos una fecha antes de guardar.",
+        "dateOutOfRange": "La fecha debe estar entre 1900-01-01 y 2100-12-31.",
+        "termRangeError": "La fecha de finalización del término no puede ser anterior a la de inicio.",
+        "invalidCurrentDate": "La fecha actual es inválida: {{date}}. Selecciona una fecha válida para corregirla.",
+        "notFound": "La actuación no pertenece a este proceso.",
+        "errorGeneric": "No se pudieron actualizar las fechas. Revisa los datos e intenta de nuevo."
       }
     },
     "error": {
@@ -843,7 +916,8 @@
     "save": "Guardar",
     "saving": "Guardando...",
     "actions": "Acciones",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "edit": "Editar"
   },
   "notifications": {
     "title": "Notificaciones",

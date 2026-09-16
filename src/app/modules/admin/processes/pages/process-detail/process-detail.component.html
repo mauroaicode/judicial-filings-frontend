@@ -11,7 +11,7 @@
   }
 
   @if (toastVisible()) {
-    <div class="toast toast-end z-[110]">
+    <div class="toast toast-end z-[12000]">
       <div
         [class]="'alert shadow-lg border-none animate-in fade-in slide-in-from-right duration-300 ' + (toastType() === 'success' ? 'alert-success' : 'alert-error')"
       >
@@ -273,7 +273,6 @@
             }
 
             <div class="space-y-4">
-              @if (hasOrganizations()) {
                 <div id="process-organizations-section" class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm organizations-collapse">
                   <input
                     type="radio"
@@ -290,6 +289,24 @@
                     <span class="text-base font-bold">{{ 'processDetail.organizations.title' | transloco }}</span>
                   </div>
                   <div class="collapse-content px-6 pb-6 pt-0">
+                    <div class="flex justify-end mt-3 mb-4">
+                      <button
+                        type="button"
+                        (click)="openAddOrganizationsModal()"
+                        class="btn btn-sm btn-outline border-base-200 bg-base-100 font-bold text-[11px] normal-case text-primary hover:border-primary/40 hover:bg-primary/5"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        {{ 'processDetail.organizations.add' | transloco }}
+                      </button>
+                    </div>
+
+                    @if (organizations().length === 0) {
+                      <div class="text-center py-6 bg-base-200/20 rounded-xl border border-dashed border-base-300">
+                        <p class="text-base-content/40 font-medium text-xs">{{ 'processDetail.organizations.empty' | transloco }}</p>
+                      </div>
+                    } @else {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                       @for (org of organizations(); track org.id) {
                         <div
@@ -401,6 +418,21 @@
                                 </button>
                                 <button
                                   type="button"
+                                  (click)="openDetachOrganizationConfirm(org)"
+                                  [disabled]="detachingOrganizationId() === org.id"
+                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 font-bold normal-case hover:bg-transparent disabled:opacity-40 gap-1"
+                                >
+                                  @if (detachingOrganizationId() === org.id) {
+                                    <span class="loading loading-spinner loading-xs"></span>
+                                  } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    {{ 'processDetail.organizations.remove' | transloco }}
+                                  }
+                                </button>
+                                <button
+                                  type="button"
                                   (click)="openTrashModalForOrganization(org)"
                                   class="btn btn-ghost btn-xs h-7 min-h-7 px-0 text-error font-bold normal-case hover:bg-transparent"
                                 >
@@ -412,9 +444,9 @@
                         </div>
                       }
                     </div>
+                    }
                   </div>
                 </div>
-              }
 
               <div class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
                 <input
@@ -432,10 +464,23 @@
                   <span class="text-base font-bold">{{ 'processDetail.generalInfo' | transloco }}</span>
                 </div>
                 <div class="collapse-content px-6 pb-6 pt-0">
+                  <div class="flex justify-end mt-3 mb-3">
+                    <button
+                      type="button"
+                      (click)="openEditGeneralInfo()"
+                      class="btn btn-sm btn-outline border-base-200 bg-base-100 font-bold text-[11px] normal-case text-primary hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      {{ 'processDetail.generalInfoModal.edit' | transloco }}
+                    </button>
+                  </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.processNumber', value: (process()!.process_number | processNumber), strong: true, isCopyable: true, originalValue: process()!.process_number }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.speaker', value: process()!.speaker }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.court', value: process()!.court }"></ng-container>
+                    <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.department', value: process()!.department }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.processType', value: process()!.process_type }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.processClass', value: process()!.process_class }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.subclassProcess', value: process()!.subclass_process }"></ng-container>
@@ -610,6 +655,7 @@
                           [loading]="loadingActions()"
                           [emptyMessage]="'processDetail.actions.empty' | transloco"
                           (pageChange)="onActionsPageChange($event)"
+                          (actionClick)="onActionTableAction($event)"
                         ></app-data-table>
                       </div>
 
@@ -631,17 +677,36 @@
                                   <div class="min-w-0 flex-1 space-y-3">
                                     <div class="flex justify-between items-start gap-3">
                                       <h4 class="text-sm font-bold text-base-content leading-tight">{{ action.action }}</h4>
-                                      <span class="text-[9px] font-bold text-primary whitespace-nowrap bg-primary/5 px-2 py-1 rounded border border-primary/10">
-                                        {{ formatDateSafe(action.action_date, 'shortDate') }}
-                                      </span>
+                                      <button
+                                        type="button"
+                                        (click)="openEditActionDates(action)"
+                                        class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-primary font-bold normal-case hover:bg-primary/10 shrink-0"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        {{ 'processDetail.actions.datesModal.edit' | transloco }}
+                                      </button>
                                     </div>
                                     <p class="text-xs font-medium text-base-content/80 leading-relaxed italic border-l-3 border-primary/20 pl-4 bg-base-200/20 py-2 rounded-r-lg">
                                       {{ action.annotation || 'Sin anotación' }}
                                     </p>
                                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 border-t border-dashed border-base-200">
                                       <div class="flex items-center gap-2">
-                                        <span class="text-[9px] font-bold uppercase text-base-content/30 tracking-wider">Fecha Registro</span>
+                                        <span class="text-[9px] font-bold uppercase text-base-content/30 tracking-wider">{{ 'processDetail.actions.table.actionDate' | transloco }}</span>
+                                        <span class="text-[10px] font-bold text-base-content/60">{{ formatDateSafe(action.action_date, 'shortDate') }}</span>
+                                      </div>
+                                      <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-bold uppercase text-base-content/30 tracking-wider">{{ 'processDetail.actions.table.registrationDate' | transloco }}</span>
                                         <span class="text-[10px] font-bold text-base-content/60">{{ formatDateSafe(action.registration_date, 'short') }}</span>
+                                      </div>
+                                      <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-bold uppercase text-base-content/30 tracking-wider">{{ 'processDetail.actions.table.termStartDate' | transloco }}</span>
+                                        <span class="text-[10px] font-bold text-base-content/60">{{ action.term_start_date && action.term_start_date !== '-' ? action.term_start_date : '–' }}</span>
+                                      </div>
+                                      <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-bold uppercase text-base-content/30 tracking-wider">{{ 'processDetail.actions.table.termEndDate' | transloco }}</span>
+                                        <span class="text-[10px] font-bold text-base-content/60">{{ action.term_end_date && action.term_end_date !== '-' ? action.term_end_date : '–' }}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -912,6 +977,53 @@
       </form>
     </dialog>
 
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showAddOrganizationsModal()">
+      @if (showAddOrganizationsModal() && process()) {
+        <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-xl">
+          <app-add-process-organizations-modal
+            [processId]="process()!.id"
+            [excludeIds]="linkedOrganizationIds()"
+            (closed)="closeAddOrganizationsModal()"
+            (saved)="onOrganizationsAttached($event)"
+          ></app-add-process-organizations-modal>
+        </div>
+      }
+      <form method="dialog" class="modal-backdrop" (click)="closeAddOrganizationsModal()">
+        <button type="button">close</button>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showGeneralInfoModal()">
+      @if (showGeneralInfoModal() && process()) {
+        <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-2xl">
+          <app-process-general-info-modal
+            [process]="process()!"
+            (closed)="closeGeneralInfoModal()"
+            (saved)="onGeneralInfoSaved($event)"
+          ></app-process-general-info-modal>
+        </div>
+      }
+      <form method="dialog" class="modal-backdrop" (click)="closeGeneralInfoModal()">
+        <button type="button">close</button>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showActionDatesModal()">
+      @if (showActionDatesModal() && process() && selectedActionForEdit(); as action) {
+        <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-xl">
+          <app-action-dates-modal
+            [processId]="process()!.id"
+            [action]="action"
+            (closed)="closeActionDatesModal()"
+            (saved)="onActionDatesSaved($event)"
+          ></app-action-dates-modal>
+        </div>
+      }
+      <form method="dialog" class="modal-backdrop" (click)="closeActionDatesModal()">
+        <button type="button">close</button>
+      </form>
+    </dialog>
+
     <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showOrganizationRoleModal()">
       @if (showOrganizationRoleModal() && process() && selectedOrganizationForRole(); as org) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-lg">
@@ -939,6 +1051,17 @@
       confirmClass="btn-neutral"
       (confirm)="onConfirmSubjectDelete()"
       (cancel)="onCancelSubjectDelete()"
+    ></app-confirmation-dialog>
+
+    <app-confirmation-dialog
+      [open]="confirmDetachOrganizationOpen()"
+      [title]="getDetachOrganizationTitle()"
+      [message]="getDetachOrganizationMessage()"
+      [confirmLabel]="'processDetail.organizations.remove' | transloco"
+      [cancelLabel]="'generics.cancel' | transloco"
+      confirmClass="btn-neutral"
+      (confirm)="onConfirmDetachOrganization()"
+      (cancel)="onCancelDetachOrganization()"
     ></app-confirmation-dialog>
 
     <app-confirmation-dialog

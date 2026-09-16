@@ -1,0 +1,15 @@
+.date-picker-input {
+  cursor: pointer;
+  padding-right: 2.75rem;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.date-picker .btn-circle {
+  min-height: 1.5rem;
+  height: 1.5rem;
+  width: 1.5rem;
+}

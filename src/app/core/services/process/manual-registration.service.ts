@@ -6,6 +6,8 @@ import { ProcessService } from '@app/core/services/process/process.service';
 import {
   ManualRegistrationFilter,
   ManualRegistrationListResponse,
+  RegisterManualRegistrationPayload,
+  RegisterManualRegistrationResponse,
   ResolveManualRegistrationPayload,
   ResolveManualRegistrationResponse,
 } from '@app/core/models/process/manual-registration-request.model';
@@ -46,6 +48,16 @@ export class ManualRegistrationService {
 
     const url = `${environment.apiBaseUrl}/processes/manual-registration-requests`;
     return this._http.get<ManualRegistrationListResponse>(url, { params });
+  }
+
+  register(
+    id: string,
+    payload: RegisterManualRegistrationPayload
+  ): Observable<RegisterManualRegistrationResponse> {
+    const url = `${environment.apiBaseUrl}/processes/manual-registration-requests/${id}/register`;
+    return this._http.post<RegisterManualRegistrationResponse>(url, payload).pipe(
+      tap(() => this.refreshPendingCount())
+    );
   }
 
   resolve(

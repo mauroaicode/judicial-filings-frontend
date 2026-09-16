@@ -34,11 +34,17 @@ import {
   Subject,
   SaveProcessSubjectsResponse,
   TrashProcessesResponse,
+  ProcessOrganizationsMutationResponse,
+  UpdateProcessActionResponse,
+  UpdateProcessGeneralInfoResponse,
 } from '@app/core/models/process/process.model';
 import { buildTextWithHighlights } from '@app/core/utils/alert-highlight.utils';
 
 import { RoleSelectionModalComponent } from '../../components/role-selection-modal/role-selection-modal.component';
 import { SubjectFormModalComponent } from '../../components/subject-form-modal/subject-form-modal.component';
+import { ProcessGeneralInfoModalComponent } from '../../components/process-general-info-modal/process-general-info-modal.component';
+import { ActionDatesModalComponent } from '../../components/action-dates-modal/action-dates-modal.component';
+import { AddProcessOrganizationsModalComponent } from '../../components/add-process-organizations-modal/add-process-organizations-modal.component';
 import { TrashProcessesModalComponent } from '../../components/trash-processes-modal/trash-processes-modal.component';
 
 @Component({
@@ -54,6 +60,9 @@ import { TrashProcessesModalComponent } from '../../components/trash-processes-m
     ProcessAlertTooltipComponent,
     RoleSelectionModalComponent,
     SubjectFormModalComponent,
+    ProcessGeneralInfoModalComponent,
+    ActionDatesModalComponent,
+    AddProcessOrganizationsModalComponent,
     ConfirmationDialogComponent,
     TrashProcessesModalComponent,
   ],
@@ -82,6 +91,7 @@ export class ProcessDetailComponent {
     Math.max(this._organizationsApiCount(), this.organizations().length)
   );
   public hasOrganizations = computed(() => this.organizationsCount() > 0);
+  public linkedOrganizationIds = computed(() => this.organizations().map((org) => org.id));
 
   /** Acordeón activo en el detalle */
   public accordionSection = signal<'organizations' | 'general' | 'subjects' | 'actions'>('general');
@@ -129,9 +139,24 @@ export class ProcessDetailComponent {
   public confirmOrganizationStatusAction = signal<'activate' | 'deactivate'>('deactivate');
   public updatingOrganizationStatusId = signal<string | null>(null);
 
+  /** Modal agregar organizaciones interesadas */
+  public showAddOrganizationsModal = signal<boolean>(false);
+
+  /** Confirmación quitar organización interesada */
+  public confirmDetachOrganizationOpen = signal<boolean>(false);
+  public selectedOrganizationForDetach = signal<ProcessInterestedOrganization | null>(null);
+  public detachingOrganizationId = signal<string | null>(null);
+
   /** Modal crear/editar sujeto procesal */
   public showSubjectModal = signal<boolean>(false);
   public selectedSubjectForEdit = signal<Subject | null>(null);
+
+  /** Modal editar información general */
+  public showGeneralInfoModal = signal<boolean>(false);
+
+  /** Modal editar fechas de una actuación */
+  public showActionDatesModal = signal<boolean>(false);
+  public selectedActionForEdit = signal<Action | null>(null);
 
   /** Confirmación eliminar sujeto manual */
   public confirmSubjectDeleteOpen = signal<boolean>(false);
@@ -272,6 +297,13 @@ export class ProcessDetailComponent {
         width: '150px',
         align: 'center',
         render: formatDateFn,
+      },
+      {
+        key: 'edit_dates',
+        label: 'processDetail.actions.table.edit',
+        width: '56px',
+        align: 'center',
+        action: 'edit',
       },
     ];
 
@@ -461,6 +493,86 @@ export class ProcessDetailComponent {
     this.showToast('success', this._transloco.translate('processDetail.organizations.roleSaved'));
   }
 
+  public openAddOrganizationsModal(): void {
+    this.showAddOrganizationsModal.set(true);
+    this.accordionSection.set('organizations');
+  }
+
+  public closeAddOrganizationsModal(): void {
+    this.showAddOrganizationsModal.set(false);
+  }
+
+  public onOrganizationsAttached(response: ProcessOrganizationsMutationResponse): void {
+    this._applyOrganizations(response.organizations);
+    this.closeAddOrganizationsModal();
+    this.showToast('success', response.message || this._transloco.translate('processDetail.organizations.addModal.saved'));
+  }
+
+  public openDetachOrganizationConfirm(org: ProcessInterestedOrganization): void {
+    this.selectedOrganizationForDetach.set(org);
+    this.confirmDetachOrganizationOpen.set(true);
+  }
+
+  public getDetachOrganizationTitle(): string {
+    return this._transloco.translate('processDetail.organizations.removeConfirmTitle');
+  }
+
+  public getDetachOrganizationMessage(): string {
+    const org = this.selectedOrganizationForDetach();
+    if (!org) return '';
+    return this._transloco.translate('processDetail.organizations.removeConfirmMessage', { name: org.name });
+  }
+
+  public onCancelDetachOrganization(): void {
+    this.confirmDetachOrganizationOpen.set(false);
+    this.selectedOrganizationForDetach.set(null);
+  }
+
+  public onConfirmDetachOrganization(): void {
+    const process = this.process();
+    const org = this.selectedOrganizationForDetach();
+    if (!process || !org) return;
+
+    this.confirmDetachOrganizationOpen.set(false);
+    this.detachingOrganizationId.set(org.id);
+
+    this._processService.detachProcessOrganization(process.id, org.id).subscribe({
+      next: (response) => {
+        this.selectedOrganizationForDetach.set(null);
+        this.detachingOrganizationId.set(null);
+        this._applyOrganizations(response.organizations);
+        this.showToast(
+          'success',
+          response.message || this._transloco.translate('processDetail.organizations.removed')
+        );
+      },
+      error: (err: HttpErrorResponse) => {
+        this.detachingOrganizationId.set(null);
+        if (err.status === 404) {
+          this.organizations.update((list) => list.filter((item) => item.id !== org.id));
+          this._organizationsApiCount.set(this.organizations().length);
+          this.selectedOrganizationForDetach.set(null);
+          this.showToast('error', this._transloco.translate('processDetail.organizations.removeNotLinked'));
+          return;
+        }
+        this.selectedOrganizationForDetach.set(null);
+        const body = err.error as { message?: string } | undefined;
+        const message =
+          typeof body?.message === 'string' && body.message.trim()
+            ? body.message
+            : this._transloco.translate('processDetail.organizations.removeError');
+        this.showToast('error', message);
+      },
+    });
+  }
+
+  private _applyOrganizations(payload: ProcessOrganizationsMutationResponse['organizations'] | undefined): void {
+    const items = payload?.items ?? [];
+    const count = payload?.count ?? items.length;
+    this.organizations.set(items);
+    this._organizationsApiCount.set(count);
+  }
+
   public openCreateSubjectModal(): void {
     this.selectedSubjectForEdit.set(null);
     this.showSubjectModal.set(true);
@@ -487,6 +599,81 @@ export class ProcessDetailComponent {
       this.subjects.set(response.subjects ?? []);
     }
     this.showToast('success', response.message || this._transloco.translate('processDetail.subjects.saved'));
+  }
+
+  public openEditGeneralInfo(): void {
+    if (!this.process()) return;
+    this.showGeneralInfoModal.set(true);
+    this.accordionSection.set('general');
+  }
+
+  public closeGeneralInfoModal(): void {
+    this.showGeneralInfoModal.set(false);
+  }
+
+  public onGeneralInfoSaved(response: UpdateProcessGeneralInfoResponse): void {
+    const current = this.process();
+    this.process.set(current ? { ...current, ...response.process } : response.process);
+    this.closeGeneralInfoModal();
+    this.showToast('success', response.message || this._transloco.translate('processDetail.generalInfoModal.saved'));
+  }
+
+  public openEditActionDates(action: Action): void {
+    this.selectedActionForEdit.set(action);
+    this.showActionDatesModal.set(true);
+    this.accordionSection.set('actions');
+  }
+
+  public closeActionDatesModal(): void {
+    this.showActionDatesModal.set(false);
+    this.selectedActionForEdit.set(null);
+  }
+
+  public onActionTableAction(event: { key: string; row: Action }): void {
+    if (event.key === 'edit_dates') {
+      this.openEditActionDates(event.row);
+    }
+  }
+
+  public onActionDatesSaved(response: UpdateProcessActionResponse): void {
+    const updated = response.action;
+    this.actions.update((list) =>
+      list.map((item) => {
+        if (item.id === updated.id) {
+          return {
+            ...item,
+            ...updated,
+            related_action: item.related_action ?? updated.related_action ?? null,
+          };
+        }
+        if (item.related_action?.id === updated.id) {
+          return { ...item, related_action: { ...item.related_action, ...updated } };
+        }
+        return item;
+      })
+    );
+    this.closeActionDatesModal();
+    this.showToast('success', response.message || this._transloco.translate('processDetail.actions.datesModal.saved'));
+
+    const processId = this.process()?.id;
+    if (processId && updated.action_date_iso) {
+      this._refreshProcessHeader(processId);
+    }
+  }
+
+  private _refreshProcessHeader(processId: string): void {
+    this._processService.getProcessDetail(processId).subscribe({
+      next: (response) => {
+        const current = this.process();
+        if (!current || current.id !== response.process.id) return;
+        this.process.set({
+          ...current,
+          ...response.process,
+          last_activity_date: response.process.last_activity_date,
+        });
+      },
+      error: () => undefined,
+    });
   }
 
   public isSubjectManual(subject: Subject): boolean {

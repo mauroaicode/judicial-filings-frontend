@@ -19,6 +19,12 @@ import {
   BulkRoleUpdateResponse,
   SubjectUpsertPayload,
   SaveProcessSubjectsResponse,
+  UpdateProcessGeneralInfoPayload,
+  UpdateProcessGeneralInfoResponse,
+  UpdateProcessActionDatesPayload,
+  UpdateProcessActionResponse,
+  AttachProcessOrganizationsPayload,
+  ProcessOrganizationsMutationResponse,
   TrashProcessesPayload,
   TrashProcessPayload,
   TrashProcessesResponse,
@@ -70,6 +76,9 @@ export class ProcessService {
     }
     if (filters.privacy === 'private' || filters.privacy === 'public') {
       params = params.set('privacy', filters.privacy);
+    }
+    if (filters.alta_manual === true) {
+      params = params.set('alta_manual', '1');
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       params = params.set('has_multiple_instances', filters.has_multiple_instances.toString());
@@ -329,6 +338,31 @@ export class ProcessService {
   }
 
   /**
+   * Partial update of process general information (admin).
+   * PATCH /processes/{processId} — send only changed fields.
+   */
+  updateProcessGeneralInfo(
+    processId: string,
+    payload: UpdateProcessGeneralInfoPayload
+  ): Observable<UpdateProcessGeneralInfoResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}`;
+    return this._http.patch<UpdateProcessGeneralInfoResponse>(url, payload);
+  }
+
+  /**
+   * Partial update of action dates (admin).
+   * PATCH /processes/{processId}/actions/{actionId} — send only changed fields.
+   */
+  updateProcessActionDates(
+    processId: string,
+    actionId: string,
+    payload: UpdateProcessActionDatesPayload
+  ): Observable<UpdateProcessActionResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}/actions/${actionId}`;
+    return this._http.patch<UpdateProcessActionResponse>(url, payload);
+  }
+
+  /**
    * Update lawyer role for multiple processes in bulk
    */
   updateBulkProcessRoles(processIds: string[], role: string): Observable<BulkRoleUpdateResponse> {
@@ -337,6 +371,30 @@ export class ProcessService {
       process_ids: processIds,
       lawyer_role: role,
     });
+  }
+
+  /**
+   * Vincular organizaciones interesadas a un proceso (admin).
+   * POST /processes/{processId}/organizations
+   */
+  attachProcessOrganizations(
+    processId: string,
+    payload: AttachProcessOrganizationsPayload
+  ): Observable<ProcessOrganizationsMutationResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}/organizations`;
+    return this._http.post<ProcessOrganizationsMutationResponse>(url, payload);
+  }
+
+  /**
+   * Quitar una organización interesada de un proceso (admin).
+   * DELETE /processes/{processId}/organizations/{organizationId}
+   */
+  detachProcessOrganization(
+    processId: string,
+    organizationId: string
+  ): Observable<ProcessOrganizationsMutationResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}/organizations/${organizationId}`;
+    return this._http.delete<ProcessOrganizationsMutationResponse>(url);
   }
 
   /**

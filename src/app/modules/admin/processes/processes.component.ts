@@ -139,6 +139,7 @@ export class ProcessesComponent {
     status: [''],
     /** '' | 'private' | 'public' — query `privacy` */
     privacy: [''],
+    alta_manual: [''],
     has_multiple_instances: [null as boolean | null],
     process_date_range: [null as DateRange | null],
     created_at_range: [null as DateRange | null],
@@ -339,6 +340,9 @@ export class ProcessesComponent {
     if (queryParams['privacy'] === 'private' || queryParams['privacy'] === 'public') {
       this.filterForm.patchValue({ privacy: queryParams['privacy'] });
     }
+    if (queryParams['alta_manual'] === '1' || queryParams['alta_manual'] === 'true') {
+      this.filterForm.patchValue({ alta_manual: '1' });
+    }
     if (isValidValue(queryParams['has_multiple_instances'])) {
       this.filterForm.patchValue({ has_multiple_instances: queryParams['has_multiple_instances'] === 'true' });
     }
@@ -396,6 +400,9 @@ export class ProcessesComponent {
     }
     if (filters.privacy === 'private' || filters.privacy === 'public') {
       queryParams['privacy'] = filters.privacy;
+    }
+    if (filters.alta_manual === true) {
+      queryParams['alta_manual'] = '1';
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       queryParams['has_multiple_instances'] = filters.has_multiple_instances.toString();
@@ -462,6 +469,7 @@ export class ProcessesComponent {
         formValue.privacy === 'private' || formValue.privacy === 'public'
           ? (formValue.privacy as 'private' | 'public')
           : undefined,
+      alta_manual: formValue.alta_manual === '1' || formValue.alta_manual === true ? true : undefined,
       has_multiple_instances: formValue.has_multiple_instances !== null && formValue.has_multiple_instances !== '' ? formValue.has_multiple_instances : undefined,
       process_date_from: processDateRange?.from && processDateRange.from.trim() ? processDateRange.from : undefined,
       process_date_to: processDateRange?.to && processDateRange.to.trim() ? processDateRange.to : undefined,
@@ -567,6 +575,7 @@ export class ProcessesComponent {
       organization: '',
       status: '',
       privacy: '',
+      alta_manual: '',
       has_multiple_instances: null,
       process_date_range: null,
       created_at_range: null,

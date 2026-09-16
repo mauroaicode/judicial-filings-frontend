@@ -1,0 +1,249 @@
+<div class="modal-box p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-2xl w-full">
+  <div class="p-6 pb-4 border-b border-base-200/50">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-base-content">
+            {{ 'processDetail.generalInfoModal.title' | transloco }}
+          </h3>
+          <p class="text-sm text-base-content/40 font-medium">
+            {{ 'processDetail.generalInfoModal.subtitle' | transloco }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all"
+        [disabled]="isSaving()"
+        (click)="onClose()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8 space-y-5 max-h-[70vh] overflow-y-auto">
+    @if (errorMessage()) {
+      <div class="alert alert-error rounded-xl text-sm py-3">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="space-y-4">
+      <div class="form-control w-full">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+            {{ 'processDetail.processNumber' | transloco }}
+          </span>
+        </label>
+        <input
+          type="text"
+          class="input input-bordered w-full bg-base-200/50 text-base-content/70"
+          [value]="process().process_number"
+          readonly
+          disabled
+        />
+        <label class="label py-0 mt-1">
+          <span class="label-text-alt text-base-content/40 text-xs">
+            {{ 'processDetail.generalInfoModal.processNumberHint' | transloco }}
+          </span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.court' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="court"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('court')"
+            [placeholder]="'processDetail.generalInfoModal.courtPlaceholder' | transloco"
+          />
+          @if (fieldError('court')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('court') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.speaker' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="speaker"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('speaker')"
+            [placeholder]="'processDetail.generalInfoModal.optionalPlaceholder' | transloco"
+          />
+          @if (fieldError('speaker')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('speaker') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.department' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="department"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('department')"
+          />
+          @if (fieldError('department')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('department') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.processType' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="process_type"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('process_type')"
+          />
+          @if (fieldError('process_type')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('process_type') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.processClass' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="process_class"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('process_class')"
+          />
+          @if (fieldError('process_class')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('process_class') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.subclassProcess' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="subclass_process"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('subclass_process')"
+            [placeholder]="'processDetail.generalInfoModal.optionalPlaceholder' | transloco"
+          />
+          @if (fieldError('subclass_process')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('subclass_process') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.location' | transloco }}
+            </span>
+          </label>
+          <input
+            type="text"
+            formControlName="location"
+            class="input input-bordered w-full"
+            [class.input-error]="!!fieldError('location')"
+            [placeholder]="'processDetail.generalInfoModal.optionalPlaceholder' | transloco"
+          />
+          @if (fieldError('location')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('location') }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.processDate' | transloco }}
+            </span>
+          </label>
+          <app-date-picker
+            formControlName="process_date"
+            [placeholder]="'processDetail.generalInfoModal.datePlaceholder' | transloco"
+            [hasError]="!!fieldError('process_date')"
+          ></app-date-picker>
+          @if (invalidProcessDateHint()) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-warning text-xs">
+                {{ 'processDetail.generalInfoModal.invalidCurrentDate' | transloco: { date: invalidProcessDateHint() } }}
+              </span>
+            </label>
+          }
+          @if (fieldError('process_date')) {
+            <label class="label py-0 mt-1">
+              <span class="label-text-alt text-error text-xs">{{ fieldError('process_date') }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="p-6 border-t border-base-200/50 bg-base-200/20 flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
+    <button
+      type="button"
+      class="btn btn-ghost btn-md normal-case font-bold px-8 rounded-xl w-full sm:w-auto text-base-content/40 hover:bg-base-300/40"
+      [disabled]="isSaving()"
+      (click)="onClose()"
+    >
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-neutral btn-md normal-case font-bold px-12 rounded-xl w-full sm:w-auto shadow-lg transition-all active:scale-95"
+      [disabled]="!hasChanges() || isSaving()"
+      (click)="onSave()"
+    >
+      @if (isSaving()) {
+        <span class="loading loading-spinner loading-xs mr-2"></span>
+        {{ 'common.saving' | transloco }}
+      } @else {
+        {{ 'common.save' | transloco }}
+      }
+    </button>
+  </div>
+</div>

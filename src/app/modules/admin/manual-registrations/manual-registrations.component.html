@@ -8,13 +8,21 @@
   }
 
   @if (toastMessage(); as tm) {
-    <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+    <div
+      class="toast toast-end toast-bottom z-[10000]"
+      [class.pointer-events-none]="!toastProcessId()"
+    >
       <div
         class="alert shadow-lg"
         [class.alert-success]="toastKind() === 'success'"
         [class.alert-error]="toastKind() === 'error'"
       >
         <span class="font-medium">{{ tm }}</span>
+        @if (toastProcessId()) {
+          <button type="button" class="btn btn-sm btn-ghost font-bold normal-case" (click)="goToRegisteredProcess()">
+            {{ 'manualRegistrations.actions.viewProcess' | transloco }}
+          </button>
+        }
       </div>
     </div>
   }
@@ -412,6 +420,12 @@
           </p>
         </div>
 
+        @if (formError(); as error) {
+          <div class="rounded-xl border border-error/30 bg-error/10 px-3 py-2.5 text-sm text-error">
+            {{ error }}
+          </div>
+        }
+
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
@@ -425,18 +439,6 @@
             </p>
             <p class="mt-0.5 text-sm font-medium">{{ detail.requested_by_name || '–' }}</p>
             <p class="text-xs text-base-content/55">{{ detail.requested_by_email || '–' }}</p>
-          </div>
-          <div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
-              {{ 'manualRegistrations.detail.processClass' | transloco }}
-            </p>
-            <p class="mt-0.5 text-sm font-medium">{{ detail.process_class?.trim() || '–' }}</p>
-          </div>
-          <div>
-            <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
-              {{ 'manualRegistrations.detail.lawyerRole' | transloco }}
-            </p>
-            <p class="mt-0.5 text-sm font-medium">{{ lawyerRoleLabel(detail.lawyer_role) }}</p>
           </div>
           <div class="sm:col-span-2">
             <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
@@ -455,119 +457,197 @@
           </div>
         }
 
-        <section>
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <h4 class="text-sm font-bold">{{ 'manualRegistrations.detail.plaintiffs' | transloco }}</h4>
-            @if (subjectsOf(detail.plaintiffs).length > 0) {
-              <button type="button" class="btn btn-ghost btn-xs normal-case" (click)="copyPartyGroup(detail.plaintiffs, $event)">
-                {{ 'manualRegistrations.detail.copyGroup' | transloco }}
-              </button>
-            }
+        @if (detail.status === 'pending') {
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.processClass' | transloco }} *</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                [class.input-error]="registerAttempted() && !registerProcessClass().trim()"
+                [value]="registerProcessClass()"
+                (input)="onProcessClassInput($event)"
+                [placeholder]="'manualRegistrations.form.processClassPlaceholder' | transloco"
+              />
+            </div>
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.lawyerRole' | transloco }} *</span>
+              </label>
+              <select
+                class="select select-bordered select-sm w-full"
+                [class.select-error]="registerAttempted() && !registerLawyerRole()"
+                [value]="registerLawyerRole()"
+                (change)="onLawyerRoleChange($event)"
+              >
+                <option value="">{{ 'manualRegistrations.form.lawyerRolePlaceholder' | transloco }}</option>
+                <option value="plaintiff">{{ 'manualRegistrations.lawyerRole.plaintiff' | transloco }}</option>
+                <option value="defendant">{{ 'manualRegistrations.lawyerRole.defendant' | transloco }}</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.court' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                maxlength="255"
+                [value]="registerCourt()"
+                (input)="onCourtInput($event)"
+                [placeholder]="'manualRegistrations.form.courtPlaceholder' | transloco"
+              />
+            </div>
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.speaker' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                maxlength="255"
+                [value]="registerSpeaker()"
+                (input)="onSpeakerInput($event)"
+                [placeholder]="'manualRegistrations.form.speakerPlaceholder' | transloco"
+              />
+            </div>
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.subclassProcess' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                maxlength="255"
+                [value]="registerSubclassProcess()"
+                (input)="onSubclassProcessInput($event)"
+                [placeholder]="'manualRegistrations.form.subclassProcessPlaceholder' | transloco"
+              />
+            </div>
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.location' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                maxlength="255"
+                [value]="registerLocation()"
+                (input)="onLocationInput($event)"
+                [placeholder]="'manualRegistrations.form.locationPlaceholder' | transloco"
+              />
+            </div>
           </div>
-          @if (subjectsOf(detail.plaintiffs).length === 0) {
-            <p class="text-sm text-base-content/40">{{ 'manualRegistrations.detail.emptyParty' | transloco }}</p>
-          } @else {
-            <ul class="space-y-1.5">
-              @for (person of subjectsOf(detail.plaintiffs); track $index) {
-                <li class="flex items-start justify-between gap-2 rounded-lg border border-base-200 bg-base-200/40 px-3 py-2">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium break-words">{{ person.name }}</p>
-                    @if (person.identification?.trim()) {
-                      <p class="text-xs text-base-content/55 tabular-nums">
-                        {{ 'manualRegistrations.detail.identification' | transloco }}: {{ person.identification }}
-                      </p>
-                    }
-                  </div>
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:text-primary"
-                    (click)="copySubject(person, $event)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
-                    </svg>
-                  </button>
-                </li>
-              }
-            </ul>
-          }
-        </section>
 
-        <section>
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <h4 class="text-sm font-bold">{{ 'manualRegistrations.detail.defendants' | transloco }}</h4>
-            @if (subjectsOf(detail.defendants).length > 0) {
-              <button type="button" class="btn btn-ghost btn-xs normal-case" (click)="copyPartyGroup(detail.defendants, $event)">
-                {{ 'manualRegistrations.detail.copyGroup' | transloco }}
-              </button>
-            }
-          </div>
-          @if (subjectsOf(detail.defendants).length === 0) {
-            <p class="text-sm text-base-content/40">{{ 'manualRegistrations.detail.emptyParty' | transloco }}</p>
-          } @else {
-            <ul class="space-y-1.5">
-              @for (person of subjectsOf(detail.defendants); track $index) {
-                <li class="flex items-start justify-between gap-2 rounded-lg border border-base-200 bg-base-200/40 px-3 py-2">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium break-words">{{ person.name }}</p>
-                    @if (person.identification?.trim()) {
-                      <p class="text-xs text-base-content/55 tabular-nums">
-                        {{ 'manualRegistrations.detail.identification' | transloco }}: {{ person.identification }}
-                      </p>
-                    }
+          @for (section of partySections; track section.group) {
+            <section>
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <h4 class="text-sm font-bold">
+                  {{ section.titleKey | transloco }}
+                  @if (section.required) {
+                    <span>*</span>
+                  }
+                </h4>
+                <button type="button" class="btn btn-ghost btn-xs normal-case" (click)="addSubject(section.group)">
+                  {{ 'manualRegistrations.detail.addPerson' | transloco }}
+                </button>
+              </div>
+              <div class="space-y-2">
+                @for (row of rowsOf(section.group); track $index) {
+                  <div class="grid grid-cols-1 gap-2 rounded-lg border border-base-200 bg-base-200/40 p-2 sm:grid-cols-[1fr_8rem_auto] sm:items-center">
+                    <input
+                      type="text"
+                      class="input input-bordered input-sm w-full"
+                      [value]="row.name"
+                      (input)="updateSubject(section.group, $index, 'name', $event)"
+                      [placeholder]="'manualRegistrations.detail.name' | transloco"
+                    />
+                    <input
+                      type="text"
+                      class="input input-bordered input-sm w-full"
+                      [value]="row.identification"
+                      (input)="updateSubject(section.group, $index, 'identification', $event)"
+                      [placeholder]="'manualRegistrations.detail.identification' | transloco"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-xs text-error normal-case"
+                      [disabled]="section.required && !canRemoveSubject(section.group)"
+                      (click)="removeSubject(section.group, $index)"
+                    >
+                      {{ 'manualRegistrations.detail.removePerson' | transloco }}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:text-primary"
-                    (click)="copySubject(person, $event)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
-                    </svg>
-                  </button>
-                </li>
-              }
-            </ul>
+                } @empty {
+                  <p class="text-sm text-base-content/40">{{ 'manualRegistrations.detail.emptyParty' | transloco }}</p>
+                }
+              </div>
+            </section>
           }
-        </section>
-
-        <section>
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <h4 class="text-sm font-bold">{{ 'manualRegistrations.detail.otherSubjects' | transloco }}</h4>
-            @if (subjectsOf(detail.other_subjects).length > 0) {
-              <button type="button" class="btn btn-ghost btn-xs normal-case" (click)="copyPartyGroup(detail.other_subjects, $event)">
-                {{ 'manualRegistrations.detail.copyGroup' | transloco }}
-              </button>
-            }
+        } @else {
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.processClass' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ detail.process_class?.trim() || '–' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.lawyerRole' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ lawyerRoleLabel(detail.lawyer_role) }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.court' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ detail.court?.trim() || '–' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.speaker' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ detail.speaker?.trim() || '–' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.subclassProcess' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ detail.subclass_process?.trim() || '–' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'manualRegistrations.detail.location' | transloco }}
+              </p>
+              <p class="mt-0.5 text-sm font-medium">{{ detail.location?.trim() || '–' }}</p>
+            </div>
           </div>
-          @if (subjectsOf(detail.other_subjects).length === 0) {
-            <p class="text-sm text-base-content/40">{{ 'manualRegistrations.detail.emptyParty' | transloco }}</p>
-          } @else {
-            <ul class="space-y-1.5">
-              @for (person of subjectsOf(detail.other_subjects); track $index) {
-                <li class="flex items-start justify-between gap-2 rounded-lg border border-base-200 bg-base-200/40 px-3 py-2">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium break-words">{{ person.name }}</p>
-                    @if (person.identification?.trim()) {
-                      <p class="text-xs text-base-content/55 tabular-nums">
-                        {{ 'manualRegistrations.detail.identification' | transloco }}: {{ person.identification }}
-                      </p>
-                    }
-                  </div>
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/35 hover:text-primary"
-                    (click)="copySubject(person, $event)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
-                    </svg>
-                  </button>
-                </li>
+          @for (section of partySections; track section.group) {
+            <section>
+              <h4 class="mb-2 text-sm font-bold">{{ section.titleKey | transloco }}</h4>
+              @let people = subjectsOf(section.group === 'plaintiffs' ? detail.plaintiffs : section.group === 'defendants' ? detail.defendants : detail.other_subjects);
+              @if (people.length === 0) {
+                <p class="text-sm text-base-content/40">{{ 'manualRegistrations.detail.emptyParty' | transloco }}</p>
+              } @else {
+                <ul class="space-y-1.5">
+                  @for (person of people; track $index) {
+                    <li class="rounded-lg border border-base-200 bg-base-200/40 px-3 py-2">
+                      <p class="text-sm font-medium break-words">{{ person.name }}</p>
+                      @if (person.identification?.trim()) {
+                        <p class="text-xs text-base-content/55 tabular-nums">
+                          {{ 'manualRegistrations.detail.identification' | transloco }}: {{ person.identification }}
+                        </p>
+                      }
+                    </li>
+                  }
+                </ul>
               }
-            </ul>
+            </section>
           }
-        </section>
+        }
       </div>
     }
     @if (selectedRequest(); as detail) {
@@ -576,7 +656,8 @@
           <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <button
               type="button"
-              class="btn btn-outline btn-primary w-full sm:w-auto rounded-xl font-bold normal-case"
+              class="btn btn-ghost w-full sm:w-auto rounded-xl font-bold normal-case"
+              [disabled]="registering() || rejecting()"
               (click)="goToPrivateImport(detail, $event)"
             >
               {{ 'manualRegistrations.actions.importPrivate' | transloco }}
@@ -585,6 +666,7 @@
               <button
                 type="button"
                 class="btn btn-ghost w-full sm:w-auto rounded-xl font-bold normal-case"
+                [disabled]="registering() || rejecting()"
                 (click)="goToActuacionesImport($event)"
               >
                 {{ 'manualRegistrations.actions.importActuaciones' | transloco }}
@@ -592,19 +674,24 @@
             }
             <button
               type="button"
-              class="btn btn-primary w-full sm:w-auto rounded-xl font-bold normal-case"
-              [disabled]="resolving()"
-              (click)="openResolveConfirm(detail, 'registered', $event)"
+              class="btn btn-ghost text-error w-full sm:w-auto rounded-xl font-bold normal-case"
+              [disabled]="registering() || rejecting()"
+              (click)="openRejectConfirm(detail, $event)"
             >
-              {{ 'manualRegistrations.actions.markRegistered' | transloco }}
+              {{ 'manualRegistrations.actions.reject' | transloco }}
             </button>
             <button
               type="button"
-              class="btn btn-ghost text-error w-full sm:w-auto rounded-xl font-bold normal-case"
-              [disabled]="resolving()"
-              (click)="openResolveConfirm(detail, 'rejected', $event)"
+              class="btn btn-primary w-full sm:w-auto rounded-xl font-bold normal-case"
+              [disabled]="registering() || rejecting()"
+              (click)="submitRegister()"
             >
-              {{ 'manualRegistrations.actions.reject' | transloco }}
+              @if (registering()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                {{ 'manualRegistrations.actions.registering' | transloco }}
+              } @else {
+                {{ 'manualRegistrations.actions.register' | transloco }}
+              }
             </button>
           </div>
         } @else {
@@ -624,9 +711,9 @@
     [detailRows]="getConfirmDetailRows()"
     [confirmLabel]="getConfirmLabel()"
     [cancelLabel]="'common.cancel' | transloco"
-    [confirmClass]="getConfirmClass()"
-    (confirm)="onConfirmResolve()"
-    (cancel)="onCancelResolve()"
+    confirmClass="btn-error"
+    (confirm)="onConfirmReject()"
+    (cancel)="onCancelReject()"
   ></app-confirmation-dialog>
   </div>
 

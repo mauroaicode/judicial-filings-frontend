@@ -20,6 +20,8 @@ export interface DataTableColumn {
   /** When true, treat rendered value as safe-ish HTML (Angular sanitizes). */
   html?: boolean;
   render?: (value: any, row: any) => string;
+  /** Renders an edit icon button; clicks emit `actionClick` and do not trigger `rowClick`. */
+  action?: 'edit';
 }
 
 /**
@@ -54,6 +56,7 @@ export class DataTableComponent {
   // Outputs
   public pageChange = output<{ page: number; perPage: number }>();
   public rowClick = output<any>();
+  public actionClick = output<{ key: string; row: any }>();
 
   // Page size options
   public pageSizeOptions = [10, 20, 25, 50, 100];
@@ -70,6 +73,15 @@ export class DataTableComponent {
    */
   onRowClick(row: any): void {
     this.rowClick.emit(row);
+  }
+
+  /**
+   * Handle column action button click
+   */
+  onActionClick(event: Event, key: string, row: any): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.actionClick.emit({ key, row });
   }
 
   /**

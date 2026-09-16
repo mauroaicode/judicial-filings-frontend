@@ -229,11 +229,12 @@
     },
     "manualRegistrations": {
         "title": "Manual registrations",
-        "description": "Filings the lawyer could not add. Digitize with private Excel import or Actuaciones, then mark the request as resolved.",
+        "description": "Requests the lawyer could not add. Review the data, correct it if needed, and register the filing in the organization.",
         "empty": "No requests match the current filters.",
         "copied": "Copied to clipboard",
         "loadError": "Could not load the manual registration queue.",
-        "resolveRegistered": "Request marked as registered.",
+        "registerSuccess": "The filing was registered in the organization.",
+        "registerError": "Could not register the filing.",
         "resolveRejected": "Request rejected.",
         "resolveError": "Could not update the request.",
         "filters": {
@@ -277,12 +278,16 @@
             "status": "Status"
         },
         "detail": {
-            "title": "Data for digitization",
-            "subtitle": "Captured by the lawyer. Use it as a reference when importing the private process.",
+            "title": "Register filing",
+            "subtitle": "Review and correct the lawyer's data. Register creates the process in the organization.",
             "close": "Close",
             "openAria": "View request details",
             "processClass": "Case type",
             "lawyerRole": "Lawyer role",
+            "court": "Court",
+            "speaker": "Speaker",
+            "subclassProcess": "Process subclass",
+            "location": "Location",
             "reason": "Reason",
             "organization": "Organization",
             "requestedBy": "Requested by",
@@ -290,16 +295,32 @@
             "defendants": "Defendants",
             "otherSubjects": "Other subjects",
             "emptyParty": "No records",
-            "copyGroup": "Copy list",
+            "addPerson": "Add",
+            "removePerson": "Remove",
+            "name": "Name",
             "identification": "ID",
             "pendingHistory": "There is pending history ({{count}}) that will be linked when the process is created.",
             "view": "View details"
         },
+        "form": {
+            "processClassPlaceholder": "E.g. Verbal summary",
+            "lawyerRolePlaceholder": "Select a role",
+            "courtPlaceholder": "E.g. 1st Civil Court",
+            "speakerPlaceholder": "E.g. Maria Gomez",
+            "subclassProcessPlaceholder": "E.g. Singular",
+            "locationPlaceholder": "E.g. Chambers",
+            "processClassRequired": "Case type is required.",
+            "lawyerRoleRequired": "Lawyer role is required.",
+            "plaintiffsRequired": "Add at least one plaintiff with a name.",
+            "defendantsRequired": "Add at least one defendant with a name."
+        },
         "actions": {
-            "importPrivate": "Import private Excel",
+            "register": "Register",
+            "registering": "Registering...",
+            "importPrivate": "Import Excel (optional)",
             "importActuaciones": "Import actuaciones",
-            "markRegistered": "Mark registered",
-            "reject": "Reject"
+            "reject": "Reject",
+            "viewProcess": "View process"
         },
         "confirm": {
             "registeredTitle": "Mark as registered",
@@ -440,7 +461,10 @@
     "common": {
         "back": "Back",
         "cancel": "Cancel",
-        "actions": "Actions"
+        "actions": "Actions",
+        "edit": "Edit",
+        "save": "Save",
+        "saving": "Saving..."
     },
     "processes": {
         "title": "Judicial Processes",
@@ -481,6 +505,9 @@
             "privacyPlaceholder": "All",
             "privacyPrivate": "Private only",
             "privacyPublic": "Public only",
+            "altaManual": "Manual registration",
+            "all": "All",
+            "yes": "Yes",
             "lastApiUpdateRange": "Last sync",
             "lastApiUpdateRangePlaceholder": "Date range"
         },
@@ -638,7 +665,8 @@
         "loading": "Loading...",
         "save": "Save",
         "saving": "Saving...",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "edit": "Edit"
     },
     "gestionProcesos": {
         "filters": {
@@ -681,6 +709,22 @@
         "deactivateProcess": "Deactivate Tracking",
         "back": "Back",
         "generalInfo": "General Information",
+        "generalInfoModal": {
+            "edit": "Edit",
+            "title": "Edit general information",
+            "subtitle": "Correct court, type and filing date. The case number cannot be changed.",
+            "processNumberHint": "Read-only. It is the synchronization key.",
+            "courtPlaceholder": "E.g.: Juzgado 003 Civil del Circuito",
+            "optionalPlaceholder": "Optional",
+            "datePlaceholder": "Select a date",
+            "courtRequired": "Court is required.",
+            "dateOutOfRange": "The date must be between 1900-01-01 and 2100-12-31.",
+            "invalidCurrentDate": "Current date is invalid: {{date}}. Select a valid date to correct it.",
+            "noChanges": "Change at least one field before saving.",
+            "saved": "General information updated successfully.",
+            "notFound": "The process was not found.",
+            "errorGeneric": "Could not update general information. Check the data and try again."
+        },
         "processNumber": "Process Number",
         "speaker": "Speaker",
         "court": "Court",
@@ -719,6 +763,26 @@
             "confirmDeactivateMessage": "Are you sure you want to deactivate tracking for organization \"{{name}}\"? Automatic update tracking will stop.",
             "roleSaved": "Organization role updated successfully.",
             "trashFromOrg": "Move to trash",
+            "add": "Add organization",
+            "empty": "No interested organizations",
+            "remove": "Remove",
+            "removed": "Organization removed from this process.",
+            "removeError": "Could not remove the organization.",
+            "removeNotLinked": "The organization was no longer linked to this process.",
+            "removeConfirmTitle": "Remove organization",
+            "removeConfirmMessage": "Remove {{name}} from this process? It will no longer see it in its organization.",
+            "addModal": {
+                "title": "Add interested organizations",
+                "subtitle": "Search and select one or more active organizations",
+                "searchPlaceholder": "Search organization",
+                "noResults": "No organizations",
+                "add": "Add",
+                "addCount": "Add ({{count}})",
+                "minOne": "Select at least one organization.",
+                "saved": "Organizations linked successfully.",
+                "notFound": "The process was not found.",
+                "errorGeneric": "Could not add the organizations. Check the data and try again."
+            },
             "roleModal": {
                 "title": "Assign organization role",
                 "subtitle": "Define whether the organization acts as plaintiff or defendant in this process",
@@ -784,7 +848,22 @@
                 "termEndDate": "Term end date",
                 "actionDate": "Action date",
                 "registrationDate": "Registration date",
-                "court": "Court"
+                "court": "Court",
+                "edit": "Edit dates"
+            },
+            "datesModal": {
+                "title": "Edit action dates",
+                "subtitle": "Correct the dates of this action",
+                "edit": "Edit dates",
+                "datePlaceholder": "Select a date",
+                "optionalDatePlaceholder": "No term",
+                "saved": "Action dates updated successfully.",
+                "noChanges": "Change at least one date before saving.",
+                "dateOutOfRange": "The date must be between 1900-01-01 and 2100-12-31.",
+                "termRangeError": "The term end date cannot be earlier than the start date.",
+                "invalidCurrentDate": "Current date is invalid: {{date}}. Select a valid date to correct it.",
+                "notFound": "This action does not belong to the process.",
+                "errorGeneric": "Could not update the action dates. Check the data and try again."
             }
         },
         "error": {

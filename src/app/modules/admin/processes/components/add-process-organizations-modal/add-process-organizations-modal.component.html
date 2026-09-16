@@ -1,0 +1,139 @@
+<div class="modal-box p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-xl w-full h-[90vh] sm:h-auto flex flex-col">
+  <div class="p-6 pb-4 border-b border-base-200/50 shrink-0">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-4 min-w-0">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-xl font-bold text-base-content">
+            {{ 'processDetail.organizations.addModal.title' | transloco }}
+          </h3>
+          <p class="text-sm text-base-content/40 font-medium">
+            {{ 'processDetail.organizations.addModal.subtitle' | transloco }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all shrink-0"
+        [disabled]="isSaving()"
+        (click)="onClose()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8 space-y-4 flex-1 min-h-0 overflow-y-auto">
+    @if (errorMessage()) {
+      <div class="alert alert-error rounded-xl text-sm py-3">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (selected().length > 0) {
+      <div class="flex flex-wrap gap-2">
+        @for (org of selected(); track org.id) {
+          <span class="badge badge-primary badge-outline gap-1 h-7 px-3 font-semibold">
+            <span class="truncate max-w-[12rem]">{{ org.name }}</span>
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-circle min-h-0 h-4 w-4 p-0"
+              [disabled]="isSaving()"
+              (click)="removeSelected(org.id)"
+              [attr.aria-label]="'common.cancel' | transloco"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </span>
+        }
+      </div>
+    }
+
+    <div class="app-searchable-select relative w-full app-searchable-select--open">
+      <div class="app-searchable-select__panel relative left-0 right-0 z-[1] flex max-h-[min(22rem,calc(100vh-18rem))] flex-col overflow-hidden rounded-lg border border-base-content/20 bg-base-100 shadow-sm">
+        <div class="shrink-0 border-b border-base-200 p-2">
+          <input
+            type="search"
+            class="input input-bordered input-sm w-full"
+            [value]="query()"
+            (input)="onQueryInput($any($event.target).value)"
+            [placeholder]="'processDetail.organizations.addModal.searchPlaceholder' | transloco"
+            [disabled]="isSaving()"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+        <ul class="menu menu-sm max-h-52 flex-1 overflow-y-auto p-0">
+          @if (isSearching()) {
+            <li class="px-3 py-4 flex justify-center">
+              <span class="loading loading-spinner loading-sm text-primary"></span>
+            </li>
+          } @else if (results().length === 0) {
+            <li class="px-3 py-2 text-sm text-base-content/60">
+              {{ 'processDetail.organizations.addModal.noResults' | transloco }}
+            </li>
+          } @else {
+            @for (org of results(); track org.id) {
+              <li>
+                <button
+                  type="button"
+                  class="rounded-none active:bg-base-200"
+                  [class.bg-secondary]="isSelected(org.id)"
+                  [class.text-secondary-content]="isSelected(org.id)"
+                  [disabled]="isSaving()"
+                  (click)="toggleOrganization(org)"
+                >
+                  <span class="truncate flex-1 text-left">{{ org.name }}</span>
+                  @if (isSelected(org.id)) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                </button>
+              </li>
+            }
+          }
+        </ul>
+      </div>
+    </div>
+
+    @if (fieldError()) {
+      <p class="text-error text-xs font-medium">{{ fieldError() }}</p>
+    }
+  </div>
+
+  <div class="p-6 border-t border-base-200/50 bg-base-200/20 flex flex-col-reverse sm:flex-row justify-end items-center gap-3 shrink-0">
+    <button
+      type="button"
+      class="btn btn-ghost btn-md normal-case font-bold px-8 rounded-xl w-full sm:w-auto text-base-content/40 hover:bg-base-300/40"
+      [disabled]="isSaving()"
+      (click)="onClose()"
+    >
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-neutral btn-md normal-case font-bold px-12 rounded-xl w-full sm:w-auto shadow-lg transition-all active:scale-95"
+      [disabled]="selected().length === 0 || isSaving()"
+      (click)="onSave()"
+    >
+      @if (isSaving()) {
+        <span class="loading loading-spinner loading-xs mr-2"></span>
+        {{ 'common.saving' | transloco }}
+      } @else if (selected().length > 1) {
+        {{ 'processDetail.organizations.addModal.addCount' | transloco: { count: selected().length } }}
+      } @else {
+        {{ 'processDetail.organizations.addModal.add' | transloco }}
+      }
+    </button>
+  </div>
+</div>

@@ -16,6 +16,11 @@ export interface ManualRegistrationRequest {
   lawyer_role: ManualRegistrationLawyerRole | null;
   /** Clase de proceso capturada por el abogado. */
   process_class?: string | null;
+  /** Despacho; puede venir null. */
+  court?: string | null;
+  speaker?: string | null;
+  subclass_process?: string | null;
+  location?: string | null;
   plaintiffs?: ManualRegistrationSubject[];
   defendants?: ManualRegistrationSubject[];
   other_subjects?: ManualRegistrationSubject[];
@@ -62,10 +67,28 @@ export interface ManualRegistrationListMeta {
 }
 
 export interface ResolveManualRegistrationPayload {
-  status: 'registered' | 'rejected';
+  status: 'rejected';
 }
 
 export interface ResolveManualRegistrationResponse {
   message: string;
+  data: ManualRegistrationRequest;
+}
+
+export interface RegisterManualRegistrationPayload {
+  process_class: string;
+  lawyer_role: ManualRegistrationLawyerRole;
+  court?: string;
+  speaker?: string;
+  subclass_process?: string;
+  location?: string;
+  plaintiffs: ManualRegistrationSubject[];
+  defendants: ManualRegistrationSubject[];
+  other_subjects: ManualRegistrationSubject[];
+}
+
+export interface RegisterManualRegistrationResponse {
+  message: string;
+  process_id?: string;
   data: ManualRegistrationRequest;
 }
