@@ -619,7 +619,8 @@
     },
     "lawyerRole": {
       "plaintiff": "Demandante",
-      "defendant": "Demandado"
+      "defendant": "Demandado",
+      "other": "Otro"
     },
     "table": {
       "processNumber": "Número de Radicación",
@@ -672,10 +673,8 @@
       "defendantsRequired": "Agrega al menos un demandado con nombre."
     },
     "actions": {
-      "register": "Registrar",
+      "register": "Registrar proceso",
       "registering": "Registrando...",
-      "importPrivate": "Importar Excel (opcional)",
-      "importActuaciones": "Importar actuaciones",
       "reject": "Rechazar",
       "viewProcess": "Ver proceso"
     },

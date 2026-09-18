@@ -1,6 +1,6 @@
 export type ManualRegistrationReason = 'not_found' | 'private' | 'all_private';
 export type ManualRegistrationStatus = 'pending' | 'registered' | 'rejected';
-export type ManualRegistrationLawyerRole = 'plaintiff' | 'defendant';
+export type ManualRegistrationLawyerRole = 'plaintiff' | 'defendant' | 'other';
 
 export interface ManualRegistrationSubject {
   name: string;
@@ -76,15 +76,15 @@ export interface ResolveManualRegistrationResponse {
 }
 
 export interface RegisterManualRegistrationPayload {
-  process_class: string;
-  lawyer_role: ManualRegistrationLawyerRole;
+  process_class?: string;
+  lawyer_role?: ManualRegistrationLawyerRole;
   court?: string;
   speaker?: string;
   subclass_process?: string;
   location?: string;
-  plaintiffs: ManualRegistrationSubject[];
-  defendants: ManualRegistrationSubject[];
-  other_subjects: ManualRegistrationSubject[];
+  plaintiffs?: ManualRegistrationSubject[];
+  defendants?: ManualRegistrationSubject[];
+  other_subjects?: ManualRegistrationSubject[];
 }
 
 export interface RegisterManualRegistrationResponse {

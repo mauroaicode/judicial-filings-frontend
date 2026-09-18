@@ -262,7 +262,8 @@
         },
         "lawyerRole": {
             "plaintiff": "Plaintiff",
-            "defendant": "Defendant"
+            "defendant": "Defendant",
+            "other": "Other"
         },
         "table": {
             "processNumber": "Filing number",
@@ -315,10 +316,8 @@
             "defendantsRequired": "Add at least one defendant with a name."
         },
         "actions": {
-            "register": "Register",
+            "register": "Register process",
             "registering": "Registering...",
-            "importPrivate": "Import Excel (optional)",
-            "importActuaciones": "Import actuaciones",
             "reject": "Reject",
             "viewProcess": "View process"
         },

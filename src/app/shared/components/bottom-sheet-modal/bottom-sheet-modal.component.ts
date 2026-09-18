@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-/** Bottom sheet en móvil y modal centrado en lg+. Proyecta `.bottom-sheet-body` y opcional `.bottom-sheet-footer`. */
+/** Bottom sheet en móvil y modal centrado en lg+. Proyecta `.bottom-sheet-header` (opcional), `.bottom-sheet-body` y `.bottom-sheet-footer`. */
 @Component({
   selector: 'app-bottom-sheet-modal',
   standalone: true,

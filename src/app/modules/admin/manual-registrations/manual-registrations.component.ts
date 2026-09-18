@@ -8,7 +8,6 @@ import {
   inject,
   OnInit,
   signal,
-  viewChild,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -31,7 +30,6 @@ import {
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
-import { ProcessImportModalsComponent } from '@app/modules/admin/processes/components/process-import-modals/process-import-modals.component';
 import { ROUTES_ADMIN } from '@app/core/constants/router.constant';
 
 type SubjectFormRow = { name: string; identification: string };
@@ -47,7 +45,6 @@ type PartyGroup = 'plaintiffs' | 'defendants' | 'otherSubjects';
     ProcessNumberPipe,
     ConfirmationDialogComponent,
     BottomSheetModalComponent,
-    ProcessImportModalsComponent,
   ],
   templateUrl: './manual-registrations.component.html',
   styleUrl: './manual-registrations.component.scss',
@@ -65,8 +62,6 @@ export class ManualRegistrationsComponent implements OnInit {
   private _activatedRoute = inject(ActivatedRoute);
   private _router = inject(Router);
   private _destroyRef = inject(DestroyRef);
-
-  public importModals = viewChild(ProcessImportModalsComponent);
 
   public showFilters = signal<boolean>(false);
   public loading = signal<boolean>(false);
@@ -263,6 +258,9 @@ export class ManualRegistrationsComponent implements OnInit {
     if (role === 'defendant') {
       return this._transloco.translate('manualRegistrations.lawyerRole.defendant');
     }
+    if (role === 'other') {
+      return this._transloco.translate('manualRegistrations.lawyerRole.other');
+    }
     return '–';
   }
 
@@ -299,22 +297,6 @@ export class ManualRegistrationsComponent implements OnInit {
       });
   }
 
-  goToPrivateImport(item: ManualRegistrationRequest, event?: Event): void {
-    event?.preventDefault();
-    event?.stopPropagation();
-    this.importModals()?.openExcel({
-      isPrivate: true,
-      organizationId: item.organization_id,
-      processNumber: item.process_number,
-    });
-  }
-
-  goToActuacionesImport(event?: Event): void {
-    event?.preventDefault();
-    event?.stopPropagation();
-    this.importModals()?.openActuaciones();
-  }
-
   goToRegisteredProcess(): void {
     const id = this.toastProcessId()?.trim();
     if (!id) return;
@@ -343,7 +325,7 @@ export class ManualRegistrationsComponent implements OnInit {
 
   onLawyerRoleChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    this.registerLawyerRole.set(value === 'plaintiff' || value === 'defendant' ? value : '');
+    this.registerLawyerRole.set(this._asLawyerRole(value) ?? '');
   }
 
   onCourtInput(event: Event): void {
@@ -528,7 +510,7 @@ export class ManualRegistrationsComponent implements OnInit {
     this.formError.set(null);
     this.registerAttempted.set(false);
     this.registerProcessClass.set((item.process_class || '').trim());
-    this.registerLawyerRole.set(item.lawyer_role === 'plaintiff' || item.lawyer_role === 'defendant' ? item.lawyer_role : '');
+    this.registerLawyerRole.set(this._asLawyerRole(item.lawyer_role) ?? '');
     this.registerCourt.set((item.court || '').trim());
     this.registerSpeaker.set((item.speaker || '').trim());
     this.registerSubclassProcess.set((item.subclass_process || '').trim());
@@ -571,10 +553,10 @@ export class ManualRegistrationsComponent implements OnInit {
     defendants: ManualRegistrationSubject[];
     other_subjects: ManualRegistrationSubject[];
   } {
-    const role = this.registerLawyerRole();
+    const role = this._asLawyerRole(this.registerLawyerRole());
     return {
       process_class: this.registerProcessClass().trim(),
-      lawyer_role: role === 'plaintiff' || role === 'defendant' ? role : undefined,
+      lawyer_role: role,
       court: this._optionalText(this.registerCourt()),
       speaker: this._optionalText(this.registerSpeaker()),
       subclass_process: this._optionalText(this.registerSubclassProcess()),
@@ -583,6 +565,13 @@ export class ManualRegistrationsComponent implements OnInit {
       defendants: this._mapSubjectPayload(this.defendants()),
       other_subjects: this._mapSubjectPayload(this.otherSubjects()),
     };
+  }
+
+  private _asLawyerRole(value: string | null | undefined): ManualRegistrationLawyerRole | undefined {
+    if (value === 'plaintiff' || value === 'defendant' || value === 'other') {
+      return value;
+    }
+    return undefined;
   }
 
   private _optionalText(value: string): string | undefined {
@@ -599,7 +588,7 @@ export class ManualRegistrationsComponent implements OnInit {
     if (!payload.process_class?.trim()) {
       return this._transloco.translate('manualRegistrations.form.processClassRequired');
     }
-    if (payload.lawyer_role !== 'plaintiff' && payload.lawyer_role !== 'defendant') {
+    if (!this._asLawyerRole(payload.lawyer_role)) {
       return this._transloco.translate('manualRegistrations.form.lawyerRoleRequired');
     }
     if (payload.plaintiffs.length < 1) {

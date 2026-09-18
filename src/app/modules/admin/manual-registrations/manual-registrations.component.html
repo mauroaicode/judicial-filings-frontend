@@ -395,31 +395,32 @@
     (dismiss)="closeDetail()"
   >
     @if (selectedRequest(); as detail) {
-      <div class="bottom-sheet-body space-y-5">
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
-            {{ 'manualRegistrations.detail.title' | transloco }}
-          </p>
-          <div class="mt-1 flex items-start justify-between gap-2">
-            <h3 class="text-lg font-bold text-primary break-all leading-snug">
-              {{ detail.process_number | processNumber }}
-            </h3>
-            <button
-              type="button"
-              class="btn btn-ghost btn-xs btn-circle shrink-0 text-primary/50 hover:text-primary"
-              (click)="copyToClipboard(detail.process_number, $event)"
-              [attr.aria-label]="'processes.copy.tooltip' | transloco"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-base-content/60">
-            {{ 'manualRegistrations.detail.subtitle' | transloco }}
-          </p>
+      <div class="bottom-sheet-header shrink-0 border-b border-base-200 bg-base-100 px-4 pb-3 pt-2 sm:px-6 lg:pt-5">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">
+          {{ 'manualRegistrations.detail.title' | transloco }}
+        </p>
+        <div class="mt-1 flex items-start justify-between gap-2">
+          <h3 class="text-lg font-bold text-primary break-all leading-snug">
+            {{ detail.process_number | processNumber }}
+          </h3>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-circle shrink-0 text-primary/50 hover:text-primary"
+            (click)="copyToClipboard(detail.process_number, $event)"
+            [attr.aria-label]="'processes.copy.tooltip' | transloco"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+            </svg>
+          </button>
         </div>
-
+        <p class="mt-1 text-sm text-base-content/60">
+          {{ 'manualRegistrations.detail.subtitle' | transloco }}
+        </p>
+      </div>
+    }
+    @if (selectedRequest(); as detail) {
+      <div class="bottom-sheet-body space-y-5">
         @if (formError(); as error) {
           <div class="rounded-xl border border-error/30 bg-error/10 px-3 py-2.5 text-sm text-error">
             {{ error }}
@@ -485,6 +486,7 @@
                 <option value="">{{ 'manualRegistrations.form.lawyerRolePlaceholder' | transloco }}</option>
                 <option value="plaintiff">{{ 'manualRegistrations.lawyerRole.plaintiff' | transloco }}</option>
                 <option value="defendant">{{ 'manualRegistrations.lawyerRole.defendant' | transloco }}</option>
+                <option value="other">{{ 'manualRegistrations.lawyerRole.other' | transloco }}</option>
               </select>
             </div>
             <div class="form-control">
@@ -656,24 +658,6 @@
           <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <button
               type="button"
-              class="btn btn-ghost w-full sm:w-auto rounded-xl font-bold normal-case"
-              [disabled]="registering() || rejecting()"
-              (click)="goToPrivateImport(detail, $event)"
-            >
-              {{ 'manualRegistrations.actions.importPrivate' | transloco }}
-            </button>
-            @if (detail.unassigned_actions_count > 0) {
-              <button
-                type="button"
-                class="btn btn-ghost w-full sm:w-auto rounded-xl font-bold normal-case"
-                [disabled]="registering() || rejecting()"
-                (click)="goToActuacionesImport($event)"
-              >
-                {{ 'manualRegistrations.actions.importActuaciones' | transloco }}
-              </button>
-            }
-            <button
-              type="button"
               class="btn btn-ghost text-error w-full sm:w-auto rounded-xl font-bold normal-case"
               [disabled]="registering() || rejecting()"
               (click)="openRejectConfirm(detail, $event)"
@@ -716,6 +700,4 @@
     (cancel)="onCancelReject()"
   ></app-confirmation-dialog>
   </div>
-
-  <app-process-import-modals />
 </div>
