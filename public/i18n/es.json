@@ -76,6 +76,7 @@
     "manualRegistrations": "Altas manuales",
     "clients": "Organizaciones",
     "importHistory": "Historial importaciones",
+    "exportHistory": "Historial exportaciones",
     "judicialSync": "Sincronización Rama",
     "digestPackages": "Consolidados",
     "toggleSidebar": "Alternar menú lateral"
@@ -581,6 +582,106 @@
       "reasonLabel": "Detalle del error",
       "technicalBadge": "Técnico / SQL",
       "businessBadge": "Validación",
+      "close": "Cerrar"
+    }
+  },
+  "historialExportaciones": {
+    "title": "Historial de exportaciones",
+    "description": "Exportaciones de procesos a Excel de todas las organizaciones.",
+    "orgTitle": "Exportaciones de procesos",
+    "orgDescription": "Historial de exportaciones Excel de esta organización.",
+    "empty": "No hay exportaciones registradas por el momento.",
+    "filters": {
+      "fabAria": "Abrir o cerrar filtros de búsqueda",
+      "title": "Filtros de búsqueda",
+      "organization": "Organización",
+      "organizationPlaceholder": "Coincidencia parcial en el nombre",
+      "status": "Estado",
+      "statusAll": "Todos",
+      "createdAtRange": "Fecha de solicitud",
+      "createdAtRangePlaceholder": "Desde – hasta",
+      "search": "Filtrar",
+      "reset": "Limpiar filtros"
+    },
+    "status": {
+      "pending": "En cola",
+      "processing": "Procesando",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "unknown": "Sin estado"
+    },
+    "table": {
+      "organization": "Organización",
+      "file": "Archivo",
+      "createdAt": "Solicitado",
+      "status": "Estado",
+      "rows": "Procesos",
+      "actionRows": "Actuaciones",
+      "filters": "Filtros usados",
+      "requestedBy": "Solicitado por"
+    },
+    "chips": {
+      "none": "Sin filtros",
+      "createdRange": "Creado {{from}} → {{to}}",
+      "updatedRange": "Actualizado {{from}} → {{to}}",
+      "plaintiffs": "Demandantes",
+      "defendants": "Demandados",
+      "otherSubjects": "Otros sujetos",
+      "actionsAll": "Con actuaciones",
+      "actionsRange": "Actuaciones {{from}} → {{to}}"
+    },
+    "actions": {
+      "export": "Exportar procesos",
+      "exportAria": "Exportar procesos de la organización a Excel",
+      "history": "Historial de exportaciones",
+      "historyAria": "Ver historial de exportaciones de la organización",
+      "download": "Descargar Excel",
+      "rerun": "Volver a exportar",
+      "viewError": "Ver error",
+      "viewHistory": "Ver historial",
+      "expired": "Expirado",
+      "expiredHint": "El archivo expiró (~24h). Usa «Volver a exportar»."
+    },
+    "modal": {
+      "title": "Exportar procesos a Excel",
+      "subtitle": "La exportación se encola en segundo plano. Te avisaremos cuando esté lista.",
+      "closeAria": "Cerrar",
+      "sectionProcesses": "Procesos",
+      "sectionActions": "Actuaciones",
+      "status": "Estado del proceso",
+      "statusAll": "Todos",
+      "statusActive": "Activo",
+      "statusInactive": "Inactivo",
+      "statusSuspended": "Suspendido",
+      "createdAtRange": "Fecha de vinculación (creación)",
+      "updatedAtRange": "Fecha de actualización",
+      "dateRangePlaceholder": "Desde – hasta",
+      "columnsTitle": "Columnas de sujetos",
+      "columnsHint": "Incluir estas columnas en el Excel.",
+      "includePlaintiffs": "Demandante",
+      "includeDefendants": "Demandado",
+      "includeOtherSubjects": "Otros sujetos",
+      "includeActions": "Incluir actuaciones",
+      "includeActionsHint": "Las actuaciones van en una hoja aparte (1 fila por actuación). Luego puedes filtrar por radicado en Excel.",
+      "actionsDateRange": "Rango de fechas de actuaciones",
+      "actionsDateRangeHint": "Filtra por fecha de actuación. Recomendado en organizaciones grandes (por defecto: últimos 90 días).",
+      "actionsNoRangeWarning": "Sin rango de fechas el export puede tardar mucho o fallar si hay más de ~100.000 actuaciones. Reduce el rango si es posible.",
+      "submit": "Encolar exportación",
+      "submitting": "Encolando…"
+    },
+    "toast": {
+      "queued": "Exportación en cola… te avisaremos cuando esté lista",
+      "rerunQueued": "Re-exportación en cola… te avisaremos cuando esté lista",
+      "downloaded": "Descarga iniciada"
+    },
+    "errors": {
+      "load": "No se pudo cargar el historial de exportaciones.",
+      "enqueue": "No se pudo encolar la exportación.",
+      "download": "No se pudo descargar el archivo.",
+      "rerun": "No se pudo volver a exportar."
+    },
+    "errorModal": {
+      "title": "Error de la exportación",
       "close": "Cerrar"
     }
   },

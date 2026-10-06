@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { finalize } from 'rxjs/operators';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
@@ -31,11 +32,13 @@ export class OrganizationSettingsModalComponent implements OnInit {
   private _organizationService = inject(OrganizationService);
   private _fb = inject(FormBuilder);
   private _transloco = inject(TranslocoService);
+  private _router = inject(Router);
 
   public organizationId = input.required<string>();
 
   public closed = output<void>();
   public saved = output<UpdateOrganizationSettingsResponse>();
+  public exportRequested = output<{ id: string; name: string }>();
 
   public activeTab = signal<OrganizationSettingsTab>('info');
   public loading = signal(true);
@@ -96,6 +99,18 @@ export class OrganizationSettingsModalComponent implements OnInit {
   onClose(): void {
     if (this.saving()) return;
     this.closed.emit();
+  }
+
+  onExportRequested(): void {
+    const detail = this.detail();
+    if (!detail) return;
+    this.exportRequested.emit({ id: detail.id, name: detail.name });
+  }
+
+  onViewExportHistory(): void {
+    const id = this.organizationId();
+    this.closed.emit();
+    void this._router.navigate(['/admin/organizations', id, 'exports']);
   }
 
   onSave(): void {

@@ -602,7 +602,7 @@
                         <span class="text-[11px] font-bold uppercase text-base-content tracking-[0.2em]">FILTROS DE BÚSQUEDA</span>
                       </div>
 
-                      <form [formGroup]="actionFilterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
+                      <form [formGroup]="actionFilterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6" (ngSubmit)="onSearchActions()">
                         <div class="form-control">
                           <label class="label !pt-0 !pb-1"><span class="label-standard">{{ 'processDetail.actions.filters.actionDateRange' | transloco }}</span></label>
                           <app-date-range-picker [size]="'sm'" formControlName="action_date_range"></app-date-range-picker>
@@ -627,9 +627,8 @@
                           <label class="label !pt-0 !pb-1"><span class="label-standard">{{ 'processDetail.actions.filters.search' | transloco }}</span></label>
                           <input type="text" formControlName="search" class="input-standard input input-bordered" [placeholder]="'processDetail.actions.filters.searchPlaceholder' | transloco" />
                         </div>
-                      </form>
 
-                      <div class="mt-8 flex justify-end items-center gap-6 border-t border-base-200/50 pt-6">
+                      <div class="mt-2 flex justify-end items-center gap-6 border-t border-base-200/50 pt-6 md:col-span-2 lg:col-span-4">
                         <button
                           type="button"
                           class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
@@ -637,13 +636,14 @@
                         >
                           {{ 'processDetail.actions.filters.reset' | transloco }}
                         </button>
-                        <button type="button" class="btn-standard-search" (click)="onSearchActions()">
+                        <button type="submit" class="btn-standard-search">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                           {{ 'processDetail.actions.filters.search' | transloco }}
                         </button>
                       </div>
+                      </form>
                     </div>
 
                     <div class="bg-white border border-base-200 overflow-hidden shadow-sm action-data-container">

@@ -77,6 +77,7 @@
         "manualRegistrations": "Manual registrations",
         "clients": "Organizations",
         "importHistory": "Import history",
+        "exportHistory": "Export history",
         "judicialSync": "Branch sync",
         "digestPackages": "Digest packages",
         "toggleSidebar": "Toggle sidebar"
@@ -224,6 +225,106 @@
             "reasonLabel": "Error detail",
             "technicalBadge": "Technical / SQL",
             "businessBadge": "Validation",
+            "close": "Close"
+        }
+    },
+    "historialExportaciones": {
+        "title": "Export history",
+        "description": "Process Excel exports across all organizations.",
+        "orgTitle": "Process exports",
+        "orgDescription": "Excel export history for this organization.",
+        "empty": "No exports recorded yet.",
+        "filters": {
+            "fabAria": "Show or hide search filters",
+            "title": "Search filters",
+            "organization": "Organization",
+            "organizationPlaceholder": "Partial match on name",
+            "status": "Status",
+            "statusAll": "All",
+            "createdAtRange": "Requested date",
+            "createdAtRangePlaceholder": "From – to",
+            "search": "Apply filters",
+            "reset": "Clear filters"
+        },
+        "status": {
+            "pending": "Queued",
+            "processing": "Processing",
+            "completed": "Completed",
+            "failed": "Failed",
+            "unknown": "Unknown"
+        },
+        "table": {
+            "organization": "Organization",
+            "file": "File",
+            "createdAt": "Requested",
+            "status": "Status",
+            "rows": "Processes",
+            "actionRows": "Actions",
+            "filters": "Filters used",
+            "requestedBy": "Requested by"
+        },
+        "chips": {
+            "none": "No filters",
+            "createdRange": "Created {{from}} → {{to}}",
+            "updatedRange": "Updated {{from}} → {{to}}",
+            "plaintiffs": "Plaintiffs",
+            "defendants": "Defendants",
+            "otherSubjects": "Other parties",
+            "actionsAll": "With actions",
+            "actionsRange": "Actions {{from}} → {{to}}"
+        },
+        "actions": {
+            "export": "Export processes",
+            "exportAria": "Export organization processes to Excel",
+            "history": "Export history",
+            "historyAria": "View organization export history",
+            "download": "Download Excel",
+            "rerun": "Export again",
+            "viewError": "View error",
+            "viewHistory": "View history",
+            "expired": "Expired",
+            "expiredHint": "The file expired (~24h). Use “Export again”."
+        },
+        "modal": {
+            "title": "Export processes to Excel",
+            "subtitle": "The export is queued in the background. We will notify you when it is ready.",
+            "closeAria": "Close",
+            "sectionProcesses": "Processes",
+            "sectionActions": "Actions / filings history",
+            "status": "Process status",
+            "statusAll": "All",
+            "statusActive": "Active",
+            "statusInactive": "Inactive",
+            "statusSuspended": "Suspended",
+            "createdAtRange": "Link date (created)",
+            "updatedAtRange": "Updated date",
+            "dateRangePlaceholder": "From – to",
+            "columnsTitle": "Party columns",
+            "columnsHint": "Include these columns in the spreadsheet.",
+            "includePlaintiffs": "Plaintiff",
+            "includeDefendants": "Defendant",
+            "includeOtherSubjects": "Other parties",
+            "includeActions": "Include actions",
+            "includeActionsHint": "Actions go on a separate sheet (1 row per action). You can then filter by filing number in Excel.",
+            "actionsDateRange": "Actions date range",
+            "actionsDateRangeHint": "Filters by action date. Recommended for large organizations (default: last 90 days).",
+            "actionsNoRangeWarning": "Without a date range the export may take a long time or fail if there are more than ~100,000 actions. Narrow the range if possible.",
+            "submit": "Queue export",
+            "submitting": "Queuing…"
+        },
+        "toast": {
+            "queued": "Export queued… we will notify you when it is ready",
+            "rerunQueued": "Re-export queued… we will notify you when it is ready",
+            "downloaded": "Download started"
+        },
+        "errors": {
+            "load": "Could not load export history.",
+            "enqueue": "Could not queue the export.",
+            "download": "Could not download the file.",
+            "rerun": "Could not re-export."
+        },
+        "errorModal": {
+            "title": "Export error",
             "close": "Close"
         }
     },

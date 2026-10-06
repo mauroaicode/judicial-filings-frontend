@@ -42,12 +42,41 @@ export const ADMIN_NOTIFICATION_NAVIGATION_BY_TYPE: Record<
       queryParams: Object.keys(queryParams).length ? queryParams : undefined,
     };
   },
+  'process-export-finished': (n) => {
+    const exportId = (n.data?.export_id || n.data?.id || '').trim();
+    const organizationId = (n.data?.organization_id || '').trim();
+    const fromUrl = adminPathFromNotificationUrl(n.data?.url);
+
+    if (fromUrl) {
+      const queryParams: Record<string, string> = { ...(fromUrl.queryParams ?? {}) };
+      if (exportId && !queryParams['export']) {
+        queryParams['export'] = exportId;
+      }
+      return {
+        commands: fromUrl.commands,
+        queryParams: Object.keys(queryParams).length ? queryParams : undefined,
+      };
+    }
+
+    if (organizationId) {
+      return {
+        commands: [`/admin/organizations/${organizationId}/exports`],
+        queryParams: exportId ? { export: exportId } : undefined,
+      };
+    }
+
+    return {
+      commands: [ROUTES_ADMIN.EXPORT_HISTORY],
+      queryParams: exportId ? { export: exportId } : undefined,
+    };
+  },
 };
 
 /** Alias por si llega typo (`impor-report` → `import-report`) */
 export const NOTIFICATION_BUSINESS_TYPE_ALIASES: Record<string, string> = {
   'impor-report': 'import-report',
   manual_registration_requested: 'manual-registration-requested',
+  process_export_finished: 'process-export-finished',
 };
 
 export function normalizeNotificationBusinessType(raw: string | null | undefined): string {

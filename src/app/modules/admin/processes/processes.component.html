@@ -364,7 +364,7 @@
   >
     <div class="card-body">
       <h2 class="card-title text-lg mb-4">{{ 'processes.filters.title' | transloco }}</h2>
-      <form [formGroup]="filterForm" class="flex flex-col gap-5" autocomplete="off">
+      <form [formGroup]="filterForm" class="flex flex-col gap-5" autocomplete="off" (ngSubmit)="onSearch()">
         <!-- Campos de texto y selects: rejilla estable (8 celdas → 4+4 en xl) -->
         <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <!-- Row 1: Process Number, Court, Process Class, Plaintiff -->
@@ -541,7 +541,6 @@
           </select>
         </div>
         </div>
-      </form>
 
       <!-- Filter Actions -->
       <div class="card-actions mt-4 justify-end gap-4">
@@ -552,7 +551,7 @@
         >
           {{ 'processes.filters.reset' | transloco }}
         </button>
-        <button type="button" class="btn-standard-search" (click)="onSearch()">
+        <button type="submit" class="btn-standard-search">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-4 w-4 shrink-0"
@@ -570,6 +569,7 @@
           {{ 'processes.filters.search' | transloco }}
         </button>
       </div>
+      </form>
     </div>
   </div>
   }

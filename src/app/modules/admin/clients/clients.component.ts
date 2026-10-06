@@ -24,6 +24,8 @@ import {
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { ConfirmationDialogComponent } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { OrganizationSettingsModalComponent } from './components/organization-settings-modal/organization-settings-modal.component';
+import { ProcessExportModalComponent } from './components/process-export-modal/process-export-modal.component';
+import { ProcessExportItem } from '@app/core/models/process/process-export.model';
 
 @Component({
   selector: 'app-clients',
@@ -35,6 +37,7 @@ import { OrganizationSettingsModalComponent } from './components/organization-se
     DateRangePickerComponent,
     ConfirmationDialogComponent,
     OrganizationSettingsModalComponent,
+    ProcessExportModalComponent,
   ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
@@ -91,6 +94,10 @@ export class ClientsComponent {
   /** Modal configuración rápida de organización */
   public settingsModalOpen = signal<boolean>(false);
   public settingsOrganizationId = signal<string | null>(null);
+  /** Modal exportar procesos a Excel */
+  public exportModalOpen = signal<boolean>(false);
+  public exportOrganizationId = signal<string | null>(null);
+  public exportOrganizationName = signal<string>('');
   private _toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public filterForm: FormGroup = this._fb.group({
@@ -369,6 +376,34 @@ export class ClientsComponent {
   closeSettingsModal(): void {
     this.settingsModalOpen.set(false);
     this.settingsOrganizationId.set(null);
+  }
+
+  openExportModal(org: Organization): void {
+    this.exportOrganizationId.set(org.id);
+    this.exportOrganizationName.set(org.name);
+    this.exportModalOpen.set(true);
+  }
+
+  onSettingsExportRequested(event: { id: string; name: string }): void {
+    this.closeSettingsModal();
+    this.exportOrganizationId.set(event.id);
+    this.exportOrganizationName.set(event.name);
+    this.exportModalOpen.set(true);
+  }
+
+  closeExportModal(): void {
+    this.exportModalOpen.set(false);
+    this.exportOrganizationId.set(null);
+    this.exportOrganizationName.set('');
+  }
+
+  onExportQueued(event: { item: ProcessExportItem; message: string }): void {
+    this.closeExportModal();
+    this.showSuccessToast(this._transloco.translate('historialExportaciones.toast.queued'));
+  }
+
+  goToExportHistory(org: Organization): void {
+    void this._router.navigate(['/admin/organizations', org.id, 'exports']);
   }
 
   onSettingsSaved(response: UpdateOrganizationSettingsResponse): void {

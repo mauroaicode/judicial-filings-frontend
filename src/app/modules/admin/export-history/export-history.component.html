@@ -1,0 +1,421 @@
+<div class="w-full space-y-6 pb-24 lg:pb-0">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      @if (isOrgScoped) {
+        <button type="button" class="btn btn-ghost btn-sm mb-2 -ml-2 gap-1 text-base-content/70" (click)="goToOrganizations()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          {{ 'common.back' | transloco }}
+        </button>
+      }
+      <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+        @if (isOrgScoped) {
+          {{ 'historialExportaciones.orgTitle' | transloco }}
+        } @else {
+          {{ 'historialExportaciones.title' | transloco }}
+        }
+      </h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        @if (isOrgScoped) {
+          {{ 'historialExportaciones.orgDescription' | transloco }}
+          @if (organizationName()) {
+            <span class="font-medium text-primary"> — {{ organizationName() }}</span>
+          }
+        } @else {
+          {{ 'historialExportaciones.description' | transloco }}
+        }
+      </p>
+    </div>
+    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      @if (isOrgScoped) {
+        <button type="button" class="btn btn-primary btn-sm sm:btn-md rounded-xl" (click)="openExportModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          {{ 'historialExportaciones.actions.export' | transloco }}
+        </button>
+      }
+      <button
+        type="button"
+        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
+        [ngClass]="
+          showFilters()
+            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
+        "
+        (click)="toggleFilters()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        <span class="font-bold">{{ 'historialExportaciones.filters.title' | transloco }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="lg:hidden fixed bottom-6 right-4 z-[60] flex flex-col gap-3 items-end" role="group">
+    @if (isOrgScoped) {
+      <button
+        type="button"
+        class="btn btn-circle btn-lg bg-primary text-primary-content shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-primary"
+        (click)="openExportModal()"
+        [attr.aria-label]="'historialExportaciones.actions.export' | transloco"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      </button>
+    }
+    <button
+      type="button"
+      class="btn btn-circle btn-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all"
+      [ngClass]="
+        showFilters() ? 'bg-primary text-primary-content border-primary' : 'bg-base-100 text-primary border-primary/20'
+      "
+      (click)="toggleFilters()"
+      [attr.aria-label]="'historialExportaciones.filters.fabAria' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293.707L3.293 7.293A1 1 0 013 6.586V4z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  @if (showFilters()) {
+    <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">{{ 'historialExportaciones.filters.title' | transloco }}</h2>
+        <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off" (ngSubmit)="applyFilters()">
+          @if (!isOrgScoped) {
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">{{ 'historialExportaciones.filters.organization' | transloco }}</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full"
+                formControlName="organization"
+                [placeholder]="'historialExportaciones.filters.organizationPlaceholder' | transloco"
+                autocomplete="off"
+              />
+            </div>
+          }
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">{{ 'historialExportaciones.filters.status' | transloco }}</span>
+            </label>
+            <select class="select select-bordered select-sm w-full" formControlName="status">
+              <option value="">{{ 'historialExportaciones.filters.statusAll' | transloco }}</option>
+              <option value="pending">{{ 'historialExportaciones.status.pending' | transloco }}</option>
+              <option value="processing">{{ 'historialExportaciones.status.processing' | transloco }}</option>
+              <option value="completed">{{ 'historialExportaciones.status.completed' | transloco }}</option>
+              <option value="failed">{{ 'historialExportaciones.status.failed' | transloco }}</option>
+            </select>
+          </div>
+          <div class="form-control">
+            <app-date-range-picker
+              [label]="'historialExportaciones.filters.createdAtRange' | transloco"
+              [placeholder]="'historialExportaciones.filters.createdAtRangePlaceholder' | transloco"
+              [size]="'sm'"
+              formControlName="created_at_range"
+            ></app-date-range-picker>
+          </div>
+          <div class="card-actions col-span-full mt-0 justify-end gap-4 sm:col-span-2 lg:col-span-3 xl:col-span-4">
+          <button
+            type="button"
+            class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+            (click)="resetFilters()"
+          >
+            {{ 'historialExportaciones.filters.reset' | transloco }}
+          </button>
+          <button type="submit" class="btn-standard-search">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {{ 'historialExportaciones.filters.search' | transloco }}
+          </button>
+        </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="flex items-center justify-center py-16">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      }
+
+      @if (!loading() && exportItems().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center px-4">
+          <p class="text-base-content/60">{{ 'historialExportaciones.empty' | transloco }}</p>
+        </div>
+      }
+
+      @if (!loading() && exportItems().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="table table-zebra export-history-table">
+            <thead>
+              <tr>
+                @if (!isOrgScoped) {
+                  <th>{{ 'historialExportaciones.table.organization' | transloco }}</th>
+                }
+                <th>{{ 'historialExportaciones.table.file' | transloco }}</th>
+                <th>{{ 'historialExportaciones.table.createdAt' | transloco }}</th>
+                <th>{{ 'historialExportaciones.table.status' | transloco }}</th>
+                <th class="text-center">{{ 'historialExportaciones.table.rows' | transloco }}</th>
+                <th class="text-center">{{ 'historialExportaciones.table.actionRows' | transloco }}</th>
+                <th>{{ 'historialExportaciones.table.filters' | transloco }}</th>
+                <th>{{ 'historialExportaciones.table.requestedBy' | transloco }}</th>
+                <th class="text-center">{{ 'common.actions' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of exportItems(); track item.id) {
+                <tr
+                  class="export-history-row"
+                  [attr.data-export-id]="item.id"
+                  [class.export-history-row-highlight]="highlightedExportId() === item.id"
+                >
+                  @if (!isOrgScoped) {
+                    <td class="align-middle">
+                      <a
+                        class="link link-hover font-medium text-primary"
+                        [routerLink]="['/admin/organizations', item.organization_id, 'exports']"
+                      >
+                        {{ item.organization_name || '–' }}
+                      </a>
+                    </td>
+                  }
+                  <td class="align-middle max-w-[12rem]">
+                    <span class="block truncate text-sm" [title]="item.file_name || ''">
+                      {{ item.file_name || '–' }}
+                    </span>
+                  </td>
+                  <td class="align-middle whitespace-nowrap text-sm">{{ formatDate(item.created_at) }}</td>
+                  <td class="align-middle">
+                    <span class="badge badge-sm whitespace-nowrap" [ngClass]="getStatusClass(item.status)">
+                      {{ statusLabel(item) }}
+                    </span>
+                  </td>
+                  <td class="align-middle text-center tabular-nums font-medium">
+                    {{ item.row_count ?? 0 }}
+                  </td>
+                  <td class="align-middle text-center tabular-nums font-medium">
+                    @if (item.filters?.include_actions || (item.action_row_count ?? 0) > 0) {
+                      {{ item.action_row_count ?? 0 }}
+                    } @else {
+                      <span class="text-base-content/40">–</span>
+                    }
+                  </td>
+                  <td class="align-middle max-w-[16rem]">
+                    <div class="flex flex-wrap gap-1">
+                      @for (chip of filterChips(item.filters); track chip) {
+                        <span class="badge badge-ghost badge-sm font-normal">{{ chip }}</span>
+                      } @empty {
+                        <span class="text-xs text-base-content/50">{{ 'historialExportaciones.chips.none' | transloco }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="align-middle text-sm text-base-content/80">
+                    {{ item.requested_by_name || '–' }}
+                  </td>
+                  <td class="align-middle">
+                    <div class="flex flex-wrap items-center justify-center gap-1">
+                      @if (item.downloadable) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs text-success"
+                          (click)="download(item, $event)"
+                          [disabled]="isDownloading(item.id)"
+                          [title]="'historialExportaciones.actions.download' | transloco"
+                        >
+                          @if (isDownloading(item.id)) {
+                            <span class="loading loading-spinner loading-xs"></span>
+                          } @else {
+                            {{ 'historialExportaciones.actions.download' | transloco }}
+                          }
+                        </button>
+                      } @else if (item.status === 'completed') {
+                        <span
+                          class="text-[10px] text-base-content/45 px-1"
+                          [title]="'historialExportaciones.actions.expiredHint' | transloco"
+                        >
+                          {{ 'historialExportaciones.actions.expired' | transloco }}
+                        </span>
+                      }
+
+                      @if (item.can_rerun) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs text-primary"
+                          (click)="rerun(item, $event)"
+                          [disabled]="isRerunning(item.id)"
+                          [title]="'historialExportaciones.actions.rerun' | transloco"
+                        >
+                          @if (isRerunning(item.id)) {
+                            <span class="loading loading-spinner loading-xs"></span>
+                          } @else {
+                            {{ 'historialExportaciones.actions.rerun' | transloco }}
+                          }
+                        </button>
+                      }
+
+                      @if (item.error_message) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs text-error"
+                          (click)="openErrorModal(item, $event)"
+                        >
+                          {{ 'historialExportaciones.actions.viewError' | transloco }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (pagination(); as paginationInfo) {
+          <div class="export-history-pagination border-t border-base-300 bg-base-100">
+            <div class="export-history-pagination__results">
+              {{ 'table.showing' | transloco }}
+              <span class="font-semibold">{{ paginationInfo.from }}</span>
+              {{ 'table.to' | transloco }}
+              <span class="font-semibold">{{ paginationInfo.to }}</span>
+              {{ 'table.of' | transloco }}
+              <span class="font-semibold">{{ paginationInfo.total }}</span>
+              {{ 'table.results' | transloco }}
+            </div>
+            <div class="export-history-pagination__controls join">
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >
+                ««
+              </button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === 1"
+                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === 1"
+              >
+                «
+              </button>
+              @for (page of getPageNumbers(); track page) {
+                <button
+                  class="join-item btn btn-sm"
+                  [class.btn-active]="page === paginationInfo.current_page"
+                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
+                >
+                  {{ page }}
+                </button>
+              }
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >
+                »
+              </button>
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
+                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
+                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
+              >
+                »»
+              </button>
+            </div>
+            <div class="export-history-pagination__per-page flex items-center gap-2">
+              <span class="text-sm text-base-content/60">{{ 'table.perPage' | transloco }}</span>
+              <select
+                class="select select-bordered select-sm w-20"
+                [ngModel]="currentPerPage()"
+                (ngModelChange)="onPageChangeFromTable(1, $event)"
+                [ngModelOptions]="{ standalone: true }"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <option [ngValue]="size">{{ size }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+@if (errorModalItem(); as errItem) {
+  <dialog class="modal modal-open">
+    <div class="modal-box max-w-lg">
+      <h3 class="font-bold text-lg">{{ 'historialExportaciones.errorModal.title' | transloco }}</h3>
+      <p class="py-2 text-sm text-base-content/70">
+        {{ errItem.organization_name || '' }}
+        @if (errItem.created_at) {
+          · {{ formatDate(errItem.created_at) }}
+        }
+      </p>
+      <pre class="mt-2 whitespace-pre-wrap rounded-lg bg-base-200 p-3 text-sm text-error">{{ errItem.error_message }}</pre>
+      <div class="modal-action">
+        <button type="button" class="btn" (click)="closeErrorModal()">{{ 'historialExportaciones.errorModal.close' | transloco }}</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop" (click)="closeErrorModal()">
+      <button type="button">close</button>
+    </form>
+  </dialog>
+}
+
+@if (exportModalOpen() && organizationId(); as orgId) {
+  <app-process-export-modal
+    [organizationId]="orgId"
+    [organizationName]="organizationName() || ''"
+    (closed)="closeExportModal()"
+    (queued)="onExportQueued($event)"
+  ></app-process-export-modal>
+}
+
+@if (toastMessage()) {
+  <div class="toast toast-end toast-bottom z-[9999]">
+    <div
+      class="alert shadow-lg"
+      [class.alert-success]="toastKind() === 'success'"
+      [class.alert-error]="toastKind() === 'error'"
+    >
+      <span>{{ toastMessage() }}</span>
+    </div>
+  </div>
+}

@@ -1,0 +1,86 @@
+.export-history-pagination {
+  margin-top: 0;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: 640px) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @media (max-width: 639px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  &__results {
+    font-size: 0.875rem;
+    color: hsl(var(--bc) / 0.7);
+    white-space: nowrap;
+    @media (min-width: 640px) {
+      justify-self: start;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    @media (min-width: 640px) {
+      justify-self: center;
+    }
+  }
+
+  &__per-page {
+    display: flex;
+    justify-content: flex-start;
+    @media (min-width: 640px) {
+      justify-self: end;
+    }
+  }
+}
+
+.export-history-table thead {
+  background-color: #24163e;
+}
+
+.export-history-table thead th {
+  color: #fff;
+  font-weight: 700;
+}
+
+.export-history-table.table-zebra tbody tr.export-history-row.export-history-row-highlight > td:not(:first-child) {
+  animation: export-row-fade-highlight-bg 24s ease-out forwards;
+}
+
+.export-history-table.table-zebra tbody tr.export-history-row.export-history-row-highlight > td:first-child {
+  animation: export-row-fade-highlight-bg 24s ease-out forwards, export-row-fade-highlight-bar 24s ease-out forwards;
+}
+
+.export-history-table tbody tr.export-history-row:not(.export-history-row-highlight):hover > td {
+  background-color: #f3f0f9 !important;
+}
+
+@keyframes export-row-fade-highlight-bg {
+  0%,
+  15% {
+    background-color: hsl(45 93% 90%);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes export-row-fade-highlight-bar {
+  0%,
+  15% {
+    box-shadow: inset 3px 0 0 0 hsl(38 92% 50%);
+  }
+  100% {
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}

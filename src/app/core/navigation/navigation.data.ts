@@ -41,6 +41,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     link: '/admin/import-history',
   },
   {
+    id: 'export-history',
+    title: 'navigation.exportHistory',
+    type: 'basic',
+    icon: 'exportHistory',
+    link: '/admin/export-history',
+  },
+  {
     id: 'judicial-sync',
     title: 'navigation.judicialSync',
     type: 'basic',

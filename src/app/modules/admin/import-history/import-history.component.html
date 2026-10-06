@@ -92,7 +92,7 @@
     <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
       <div class="card-body">
         <h2 class="card-title text-lg mb-4">{{ 'historialImportaciones.filters.title' | transloco }}</h2>
-        <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off">
+        <form [formGroup]="filterForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" autocomplete="off" (ngSubmit)="applyFilters()">
           <div class="form-control">
             <label class="label">
               <span class="label-text">{{ 'historialImportaciones.filters.organization' | transloco }}</span>
@@ -146,8 +146,7 @@
               formControlName="created_at_range"
             ></app-date-range-picker>
           </div>
-        </form>
-        <div class="card-actions mt-4 justify-end gap-4">
+          <div class="card-actions col-span-full mt-0 justify-end gap-4 sm:col-span-2 lg:col-span-3 xl:col-span-4">
           <button
             type="button"
             class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
@@ -155,7 +154,7 @@
           >
             {{ 'historialImportaciones.filters.reset' | transloco }}
           </button>
-          <button type="button" class="btn-standard-search" (click)="applyFilters()">
+          <button type="submit" class="btn-standard-search">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-4 w-4 shrink-0"
@@ -173,6 +172,7 @@
             {{ 'historialImportaciones.filters.search' | transloco }}
           </button>
         </div>
+        </form>
       </div>
     </div>
   }

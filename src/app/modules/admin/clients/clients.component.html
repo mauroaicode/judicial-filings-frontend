@@ -194,7 +194,8 @@
     <div class="card bg-base-100 shadow-sm animate-fade-in-up scroll-mt-6" [attr.id]="filtersSectionDomId">
       <div class="card-body">
         <h2 class="card-title text-lg mb-4">{{ 'clients.filters.title' | transloco }}</h2>
-      <form [formGroup]="filterForm" class="clients-filters-grid" autocomplete="off">
+      <form [formGroup]="filterForm" class="flex flex-col gap-4" autocomplete="off" (ngSubmit)="onSearch()">
+      <div class="clients-filters-grid">
         <div class="form-control min-w-0">
           <label class="label">
             <span class="label-text">{{ 'clients.filters.name' | transloco }}</span>
@@ -253,13 +254,13 @@
             formControlName="created_at_range"
           ></app-date-range-picker>
         </div>
-      </form>
+      </div>
 
-      <div class="flex flex-wrap items-center justify-end gap-2 mt-4">
+      <div class="flex flex-wrap items-center justify-end gap-2">
         <button type="button" class="btn btn-ghost btn-sm" (click)="onResetFilters()">
           {{ 'clients.filters.reset' | transloco }}
         </button>
-        <button type="button" class="btn btn-primary btn-sm" (click)="onSearch()">
+        <button type="submit" class="btn btn-primary btn-sm">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-4 w-4"
@@ -277,6 +278,7 @@
           {{ 'clients.filters.search' | transloco }}
         </button>
       </div>
+      </form>
     </div>
     </div>
   }
@@ -391,21 +393,53 @@
                       {{ 'clients.table.createdAt' | transloco }}:
                       <span class="text-base-content/80">{{ formatDate(org.created_at) }}</span>
                     </p>
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm btn-circle text-primary"
-                      (click)="openSettingsModal(org)"
-                      [attr.aria-label]="'clients.settings.configureAria' | transloco"
-                      [title]="'clients.settings.configure' | transloco"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                        />
-                      </svg>
-                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-success"
+                        (click)="openExportModal(org)"
+                        [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
+                        [title]="'historialExportaciones.actions.export' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-base-content/60"
+                        (click)="goToExportHistory(org)"
+                        [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
+                        [title]="'historialExportaciones.actions.history' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-primary"
+                        (click)="openSettingsModal(org)"
+                        [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                        [title]="'clients.settings.configure' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -466,21 +500,53 @@
                   </td>
                   <td class="text-center align-middle whitespace-nowrap">{{ formatDate(org.created_at) }}</td>
                   <td class="clients-sticky-actions text-center align-middle">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
-                      (click)="openSettingsModal(org)"
-                      [attr.aria-label]="'clients.settings.configureAria' | transloco"
-                      [title]="'clients.settings.configure' | transloco"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                        />
-                      </svg>
-                    </button>
+                    <div class="flex items-center justify-center gap-2 px-1">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-success hover:bg-success/10"
+                        (click)="openExportModal(org)"
+                        [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
+                        [title]="'historialExportaciones.actions.export' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:bg-base-200"
+                        (click)="goToExportHistory(org)"
+                        [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
+                        [title]="'historialExportaciones.actions.history' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
+                        (click)="openSettingsModal(org)"
+                        [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                        [title]="'clients.settings.configure' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }
@@ -962,6 +1028,16 @@
       [organizationId]="settingsOrgId"
       (closed)="closeSettingsModal()"
       (saved)="onSettingsSaved($event)"
+      (exportRequested)="onSettingsExportRequested($event)"
+    />
+  }
+
+  @if (exportModalOpen() && exportOrganizationId(); as exportOrgId) {
+    <app-process-export-modal
+      [organizationId]="exportOrgId"
+      [organizationName]="exportOrganizationName()"
+      (closed)="closeExportModal()"
+      (queued)="onExportQueued($event)"
     />
   }
 

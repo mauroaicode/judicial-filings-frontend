@@ -4,6 +4,7 @@ import { Observable, catchError, of, tap } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
 import { AppNotification, NotificationResponse, UnreadCountResponse } from '@app/core/models/notification/notification.model';
 import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
+import { ProcessExportService } from '@app/core/services/process/process-export.service';
 import { normalizeNotificationBusinessType } from '@app/core/constants/notification-navigation.constant';
 
 @Injectable({
@@ -12,6 +13,7 @@ import { normalizeNotificationBusinessType } from '@app/core/constants/notificat
 export class NotificationService {
     private _httpClient = inject(HttpClient);
     private _manualRegistrationService = inject(ManualRegistrationService);
+    private _processExportService = inject(ProcessExportService);
 
     // State
     private _notifications = signal<AppNotification[]>([]);
@@ -106,8 +108,9 @@ export class NotificationService {
                     typeof value === 'string' && value.trim().length > 0 && !value.includes('\\')
             ) || '';
 
-        /** Id del recurso (lote de importación, solicitud de alta manual, etc.). No usar `payload.id`. */
+        /** Id del recurso (lote de importación, solicitud de alta manual, export, etc.). No usar `payload.id`. */
         const resourceId =
+            (typeof inner.export_id === 'string' && inner.export_id) ||
             (typeof inner.request_id === 'string' && inner.request_id) ||
             (typeof payload?.request_id === 'string' && payload.request_id) ||
             (typeof inner.id === 'string' && inner.id) ||
@@ -119,6 +122,33 @@ export class NotificationService {
             (typeof payload?.request_id === 'string' && payload.request_id) ||
             '';
 
+        const exportId =
+            (typeof inner.export_id === 'string' && inner.export_id) ||
+            (businessType.toLowerCase().includes('process-export') && typeof inner.id === 'string' ? inner.id : '') ||
+            '';
+
+        const organizationId =
+            (typeof inner.organization_id === 'string' && inner.organization_id) ||
+            (typeof payload?.organization_id === 'string' && payload.organization_id) ||
+            '';
+
+        const downloadable =
+            typeof inner.downloadable === 'boolean'
+                ? inner.downloadable
+                : typeof payload?.downloadable === 'boolean'
+                  ? payload.downloadable
+                  : undefined;
+
+        const downloadUrl =
+            (typeof inner.download_url === 'string' && inner.download_url) ||
+            (typeof payload?.download_url === 'string' && payload.download_url) ||
+            null;
+
+        const rowCountRaw = inner.row_count ?? payload?.row_count;
+        const rowCount = typeof rowCountRaw === 'number' ? rowCountRaw : undefined;
+        const actionRowCountRaw = inner.action_row_count ?? payload?.action_row_count;
+        const actionRowCount = typeof actionRowCountRaw === 'number' ? actionRowCountRaw : undefined;
+
         const newNotification: AppNotification = {
             id: String(payload?.id ?? ''),
             type: typeof payload?.type === 'string' ? payload.type : 'BroadcastNotificationCreated',
@@ -128,10 +158,12 @@ export class NotificationService {
                 title: String(inner.title ?? payload?.title ?? ''),
                 description: String(inner.description ?? payload?.description ?? ''),
                 type: String(businessType),
-                id: String(resourceId),
+                id: String(resourceId || exportId),
                 status: String(inner.status ?? payload?.status ?? ''),
                 request_id: requestId || undefined,
+                export_id: exportId || undefined,
                 process_number: String(inner.process_number ?? payload?.process_number ?? '') || undefined,
+                organization_id: organizationId || undefined,
                 organization_name:
                     String(
                         inner.organization_name ??
@@ -140,6 +172,10 @@ export class NotificationService {
                             payload?.organization ??
                             ''
                     ) || undefined,
+                downloadable,
+                download_url: downloadUrl,
+                row_count: rowCount,
+                action_row_count: actionRowCount,
                 url: String(inner.url ?? payload?.url ?? '') || undefined,
             },
             read_at: null,
@@ -157,6 +193,9 @@ export class NotificationService {
         if (normalizedType === 'manual-registration-requested') {
             this._manualRegistrationService.refreshPendingCount();
             this._manualRegistrationService.notifyQueueUpdated();
+        }
+        if (normalizedType === 'process-export-finished') {
+            this._processExportService.notifyHistoryUpdated();
         }
     }
 }

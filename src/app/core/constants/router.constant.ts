@@ -3,6 +3,7 @@ export const ROUTES_ADMIN = {
   PROCESSES: '/admin/processes',
   MANUAL_REGISTRATIONS: '/admin/manual-registrations',
   ORGANIZATIONS: '/admin/organizations',
+  EXPORT_HISTORY: '/admin/export-history',
   SIGN_IN: '/sign-in',
   SIGN_OUT: '/sign-out',
 } as const;

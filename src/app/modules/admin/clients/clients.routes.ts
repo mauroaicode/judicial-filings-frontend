@@ -9,4 +9,12 @@ export default [
       title: 'clients.title',
     },
   },
+  {
+    path: ':organizationId/exports',
+    loadComponent: () =>
+      import('../export-history/export-history.component').then((m) => m.ExportHistoryComponent),
+    data: {
+      title: 'historialExportaciones.orgTitle',
+    },
+  },
 ] as Routes;

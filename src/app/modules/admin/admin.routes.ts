@@ -30,6 +30,11 @@ export default [
       import('./import-history/import-history.routes').then((m) => m.default),
   },
   {
+    path: 'export-history',
+    loadChildren: () =>
+      import('./export-history/export-history.routes').then((m) => m.default),
+  },
+  {
     path: 'judicial-sync',
     loadChildren: () =>
       import('./judicial-sync/judicial-sync.routes').then((m) => m.default),
