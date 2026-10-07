@@ -489,6 +489,26 @@
                 <option value="other">{{ 'manualRegistrations.lawyerRole.other' | transloco }}</option>
               </select>
             </div>
+            <div class="form-control sm:col-span-2">
+              <label class="label py-1">
+                <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.dataSource' | transloco }}</span>
+              </label>
+              <select
+                class="select select-bordered select-sm w-full"
+                [value]="registerDataSourceSlug()"
+                (change)="onDataSourceChange($event)"
+              >
+                <option value="publicaciones_procesales">
+                  {{ 'manualRegistrations.dataSource.publicacionesProcesales' | transloco }}
+                </option>
+                <option value="judicial_branch">
+                  {{ 'manualRegistrations.dataSource.judicialBranch' | transloco }}
+                </option>
+              </select>
+              <p class="mt-1 text-xs text-base-content/55 leading-relaxed">
+                {{ 'manualRegistrations.form.dataSourceHint' | transloco }}
+              </p>
+            </div>
             <div class="form-control">
               <label class="label py-1">
                 <span class="label-text text-sm font-semibold">{{ 'manualRegistrations.detail.court' | transloco }}</span>

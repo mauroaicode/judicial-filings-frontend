@@ -723,6 +723,10 @@
       "defendant": "Demandado",
       "other": "Otro"
     },
+    "dataSource": {
+      "publicacionesProcesales": "Publicaciones procesales (manual)",
+      "judicialBranch": "Rama Judicial (consulta automática)"
+    },
     "table": {
       "processNumber": "Número de Radicación",
       "organization": "Organización",
@@ -743,6 +747,7 @@
       "openAria": "Ver detalle de la solicitud",
       "processClass": "Clase de proceso",
       "lawyerRole": "Rol del abogado",
+      "dataSource": "Canal / fuente",
       "court": "Despacho",
       "speaker": "Ponente",
       "subclassProcess": "Subclase de proceso",
@@ -768,6 +773,7 @@
       "speakerPlaceholder": "Ej. María Gómez",
       "subclassProcessPlaceholder": "Ej. Singular",
       "locationPlaceholder": "Ej. Despacho",
+      "dataSourceHint": "Si el despacho ya dio radicado pero aún no está en consulta en línea, elige Rama Judicial para no rechazar la solicitud.",
       "processClassRequired": "La clase de proceso es obligatoria.",
       "lawyerRoleRequired": "El rol del abogado es obligatorio.",
       "plaintiffsRequired": "Agrega al menos un demandante con nombre.",

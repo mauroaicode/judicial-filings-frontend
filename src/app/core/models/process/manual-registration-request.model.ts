@@ -1,6 +1,7 @@
 export type ManualRegistrationReason = 'not_found' | 'private' | 'all_private';
 export type ManualRegistrationStatus = 'pending' | 'registered' | 'rejected';
 export type ManualRegistrationLawyerRole = 'plaintiff' | 'defendant' | 'other';
+export type ManualRegistrationDataSourceSlug = 'publicaciones_procesales' | 'judicial_branch';
 
 export interface ManualRegistrationSubject {
   name: string;
@@ -21,6 +22,7 @@ export interface ManualRegistrationRequest {
   speaker?: string | null;
   subclass_process?: string | null;
   location?: string | null;
+  data_source_slug?: ManualRegistrationDataSourceSlug | null;
   plaintiffs?: ManualRegistrationSubject[];
   defendants?: ManualRegistrationSubject[];
   other_subjects?: ManualRegistrationSubject[];
@@ -76,6 +78,7 @@ export interface ResolveManualRegistrationResponse {
 }
 
 export interface RegisterManualRegistrationPayload {
+  data_source_slug?: ManualRegistrationDataSourceSlug;
   process_class?: string;
   lawyer_role?: ManualRegistrationLawyerRole;
   court?: string;

@@ -366,6 +366,10 @@
             "defendant": "Defendant",
             "other": "Other"
         },
+        "dataSource": {
+            "publicacionesProcesales": "Procedural publications (manual)",
+            "judicialBranch": "Judicial Branch (automatic lookup)"
+        },
         "table": {
             "processNumber": "Filing number",
             "organization": "Organization",
@@ -386,6 +390,7 @@
             "openAria": "View request details",
             "processClass": "Case type",
             "lawyerRole": "Lawyer role",
+            "dataSource": "Channel / source",
             "court": "Court",
             "speaker": "Speaker",
             "subclassProcess": "Process subclass",
@@ -411,6 +416,7 @@
             "speakerPlaceholder": "E.g. Maria Gomez",
             "subclassProcessPlaceholder": "E.g. Singular",
             "locationPlaceholder": "E.g. Chambers",
+            "dataSourceHint": "If the court already issued a filing number but it is not yet in online lookup, choose Judicial Branch so you do not have to reject the request.",
             "processClassRequired": "Case type is required.",
             "lawyerRoleRequired": "Lawyer role is required.",
             "plaintiffsRequired": "Add at least one plaintiff with a name.",

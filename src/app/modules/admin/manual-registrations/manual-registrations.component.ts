@@ -15,6 +15,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
+  ManualRegistrationDataSourceSlug,
   ManualRegistrationLawyerRole,
   ManualRegistrationListMeta,
   ManualRegistrationReason,
@@ -54,6 +55,7 @@ export class ManualRegistrationsComponent implements OnInit {
   readonly filtersSectionDomId = 'manual-registrations-search-filters';
   private static readonly _REQUEST_ROW_HIGHLIGHT_MS = 16_000;
   private static readonly _OPTIONAL_TEXT_MAX = 255;
+  private static readonly _DEFAULT_DATA_SOURCE: ManualRegistrationDataSourceSlug = 'publicaciones_procesales';
 
   private _service = inject(ManualRegistrationService);
   private _transloco = inject(TranslocoService);
@@ -82,6 +84,9 @@ export class ManualRegistrationsComponent implements OnInit {
 
   public registerProcessClass = signal('');
   public registerLawyerRole = signal<ManualRegistrationLawyerRole | ''>('');
+  public registerDataSourceSlug = signal<ManualRegistrationDataSourceSlug>(
+    ManualRegistrationsComponent._DEFAULT_DATA_SOURCE
+  );
   public registerCourt = signal('');
   public registerSpeaker = signal('');
   public registerSubclassProcess = signal('');
@@ -328,6 +333,13 @@ export class ManualRegistrationsComponent implements OnInit {
     this.registerLawyerRole.set(this._asLawyerRole(value) ?? '');
   }
 
+  onDataSourceChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.registerDataSourceSlug.set(
+      this._asDataSourceSlug(value) ?? ManualRegistrationsComponent._DEFAULT_DATA_SOURCE
+    );
+  }
+
   onCourtInput(event: Event): void {
     this.registerCourt.set((event.target as HTMLInputElement).value);
   }
@@ -406,6 +418,7 @@ export class ManualRegistrationsComponent implements OnInit {
 
     this.registering.set(true);
     const body: RegisterManualRegistrationPayload = {
+      data_source_slug: payload.data_source_slug ?? ManualRegistrationsComponent._DEFAULT_DATA_SOURCE,
       process_class: payload.process_class,
       lawyer_role: payload.lawyer_role,
       plaintiffs: payload.plaintiffs,
@@ -511,6 +524,9 @@ export class ManualRegistrationsComponent implements OnInit {
     this.registerAttempted.set(false);
     this.registerProcessClass.set((item.process_class || '').trim());
     this.registerLawyerRole.set(this._asLawyerRole(item.lawyer_role) ?? '');
+    this.registerDataSourceSlug.set(
+      this._asDataSourceSlug(item.data_source_slug) ?? ManualRegistrationsComponent._DEFAULT_DATA_SOURCE
+    );
     this.registerCourt.set((item.court || '').trim());
     this.registerSpeaker.set((item.speaker || '').trim());
     this.registerSubclassProcess.set((item.subclass_process || '').trim());
@@ -555,6 +571,9 @@ export class ManualRegistrationsComponent implements OnInit {
   } {
     const role = this._asLawyerRole(this.registerLawyerRole());
     return {
+      data_source_slug:
+        this._asDataSourceSlug(this.registerDataSourceSlug()) ??
+        ManualRegistrationsComponent._DEFAULT_DATA_SOURCE,
       process_class: this.registerProcessClass().trim(),
       lawyer_role: role,
       court: this._optionalText(this.registerCourt()),
@@ -565,6 +584,13 @@ export class ManualRegistrationsComponent implements OnInit {
       defendants: this._mapSubjectPayload(this.defendants()),
       other_subjects: this._mapSubjectPayload(this.otherSubjects()),
     };
+  }
+
+  private _asDataSourceSlug(value: string | null | undefined): ManualRegistrationDataSourceSlug | undefined {
+    if (value === 'publicaciones_procesales' || value === 'judicial_branch') {
+      return value;
+    }
+    return undefined;
   }
 
   private _asLawyerRole(value: string | null | undefined): ManualRegistrationLawyerRole | undefined {
