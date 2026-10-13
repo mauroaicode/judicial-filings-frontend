@@ -20,8 +20,11 @@ export interface DataTableColumn {
   /** When true, treat rendered value as safe-ish HTML (Angular sanitizes). */
   html?: boolean;
   render?: (value: any, row: any) => string;
-  /** Renders an edit icon button; clicks emit `actionClick` and do not trigger `rowClick`. */
-  action?: 'edit';
+  /**
+   * Renders an icon button; clicks emit `actionClick` and do not trigger `rowClick`.
+   * `documents` shows a paperclip (optional badge via `row.documents.length`).
+   */
+  action?: 'edit' | 'documents';
 }
 
 /**

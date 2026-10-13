@@ -367,6 +367,8 @@ export interface ProcessInterestedOrganization {
   interest_date: string;
   inactivity_alert_level?: 'red' | 'yellow' | 'green' | null;
   alert_level?: 'red' | 'yellow' | 'green' | null;
+  /** Si el API lo incluye: puede ver documentos de actuaciones. */
+  can_view_action_documents?: boolean;
 }
 
 export interface ProcessInterestedOrganizations {
@@ -405,6 +407,31 @@ export interface AlertHighlight {
 /**
  * Action - Process action/actuación
  */
+/**
+ * PDF adjunto a una actuación (admin). `id` = Spatie Media id.
+ */
+export interface ActionDocument {
+  id: number;
+  original_filename: string;
+  size_bytes: number;
+  mime_type: string;
+  organization_ids: string[];
+}
+
+export interface UploadActionDocumentsResponse {
+  message: string;
+  documents: ActionDocument[];
+}
+
+export interface UpdateMediaOrganizationsPayload {
+  organization_ids: string[];
+}
+
+export interface UpdateMediaOrganizationsResponse {
+  message: string;
+  document: ActionDocument;
+}
+
 export interface Action {
   index?: number;
   id: string;
@@ -431,6 +458,8 @@ export interface Action {
   notified_action_id?: string | null;
   fijacion_action_id?: string | null;
   related_action?: Action | null;
+  /** PDFs adjuntos (admin). Solo en la instancia donde se subieron. */
+  documents?: ActionDocument[];
 }
 
 /**

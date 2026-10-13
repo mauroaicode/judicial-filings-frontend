@@ -3,7 +3,6 @@ import {
   Component,
   effect,
   ElementRef,
-  inject,
   input,
   output,
   signal,
@@ -13,8 +12,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-const XLSX_ACCEPT = '.xlsx';
-const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const DEFAULT_ACCEPT = '.xlsx';
+const DEFAULT_EXTENSIONS = ['.xlsx'];
 
 @Component({
   selector: 'app-file-drop-zone',
@@ -26,17 +25,36 @@ const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FileDropZoneComponent {
-  private _elementRef = inject(ElementRef);
-
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
-  accept = input<string>(XLSX_ACCEPT);
+  accept = input<string>(DEFAULT_ACCEPT);
+  /** Extensiones permitidas en minúsculas (con punto), p. ej. `['.pdf']`. */
+  allowedExtensions = input<string[]>(DEFAULT_EXTENSIONS);
   maxSizeMb = input<number>(10);
   disabled = input<boolean>(false);
+  /** Permite seleccionar / soltar varios archivos (encola en el padre). */
+  multiple = input<boolean>(false);
+  /**
+   * Si false, no muestra el archivo único seleccionado dentro de la zona
+   * (modo Excel). En multiple, la cola se muestra con `queuedFiles`.
+   */
+  showSelection = input<boolean>(true);
+  /** Cola controlada por el padre (modo multiple): se listan dentro del recuadro. */
+  queuedFiles = input<File[]>([]);
+  titleKey = input<string>('processes.import.dropzoneTitle');
+  subtitleKey = input<string>('processes.import.dropzoneSubtitle');
+  removeLabelKey = input<string>('processes.import.removeFile');
+  addMoreKey = input<string>('processes.import.dropzoneTitle');
+  invalidFormatKey = input<string>('processes.import.errors.invalidFormat');
+  fileTooBigKey = input<string>('processes.import.errors.fileTooBig');
   /** When parent sets this to null (e.g. on modal cancel), clear internal file state */
   value = input<File | null>(null);
 
   fileChange = output<File | null>();
+  /** Emite los archivos aceptados de la última selección/drop (modo multiple). */
+  filesChange = output<File[]>();
+  /** Índice a quitar de la cola del padre. */
+  removeQueuedFile = output<number>();
   error = output<string | null>();
 
   isDragging = signal<boolean>(false);
@@ -50,10 +68,6 @@ export class FileDropZoneComponent {
         this.errorMessage.set(null);
       }
     });
-  }
-
-  get acceptMime(): string {
-    return XLSX_MIME;
   }
 
   onDragOver(event: DragEvent): void {
@@ -76,15 +90,15 @@ export class FileDropZoneComponent {
     this.isDragging.set(false);
     const files = event.dataTransfer?.files;
     if (files?.length) {
-      this._processFile(files[0]);
+      this._handleFiles(Array.from(files));
     }
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) {
-      this._processFile(file);
+    const files = Array.from(input.files ?? []);
+    if (files.length) {
+      this._handleFiles(files);
     }
     input.value = '';
   }
@@ -101,29 +115,82 @@ export class FileDropZoneComponent {
     this.error.emit(null);
   }
 
-  private _processFile(file: File): void {
+  removeQueued(index: number): void {
+    this.removeQueuedFile.emit(index);
+  }
+
+  formatSize(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes < 0) return '–';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private _handleFiles(files: File[]): void {
+    if (this.multiple()) {
+      this._processMany(files);
+      return;
+    }
+    this._processOne(files[0]);
+  }
+
+  private _processOne(file: File): void {
     this.errorMessage.set(null);
     this.error.emit(null);
 
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
-    if (ext !== '.xlsx') {
-      const msg = 'processes.import.errors.invalidFormat';
-      this.errorMessage.set(msg);
-      this.error.emit(msg);
-      this.fileChange.emit(null);
-      return;
-    }
-
-    const maxBytes = this.maxSizeMb() * 1024 * 1024;
-    if (file.size > maxBytes) {
-      const msg = 'processes.import.errors.fileTooBig';
-      this.errorMessage.set(msg);
-      this.error.emit(msg);
+    const validationError = this._validateFile(file);
+    if (validationError) {
+      this.errorMessage.set(validationError);
+      this.error.emit(validationError);
       this.fileChange.emit(null);
       return;
     }
 
     this.selectedFile.set(file);
     this.fileChange.emit(file);
+  }
+
+  private _processMany(files: File[]): void {
+    this.errorMessage.set(null);
+    this.error.emit(null);
+
+    const accepted: File[] = [];
+    let firstError: string | null = null;
+
+    for (const file of files) {
+      const validationError = this._validateFile(file);
+      if (validationError) {
+        firstError ??= validationError;
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    if (firstError) {
+      this.errorMessage.set(firstError);
+      this.error.emit(firstError);
+    }
+
+    if (accepted.length) {
+      if (this.showSelection() && accepted.length === 1) {
+        this.selectedFile.set(accepted[0]);
+      }
+      this.filesChange.emit(accepted);
+    }
+  }
+
+  private _validateFile(file: File): string | null {
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    const allowed = this.allowedExtensions().map((e) => e.toLowerCase());
+    if (!allowed.includes(ext)) {
+      return this.invalidFormatKey();
+    }
+
+    const maxBytes = this.maxSizeMb() * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return this.fileTooBigKey();
+    }
+
+    return null;
   }
 }

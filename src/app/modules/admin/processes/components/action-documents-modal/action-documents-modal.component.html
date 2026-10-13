@@ -1,0 +1,474 @@
+@if (viewingDocument(); as viewing) {
+  <div class="action-documents-viewer p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl w-full flex flex-col border border-base-200/80">
+    <div class="flex items-start justify-between gap-3 border-b border-base-200 px-5 py-4 sm:px-6 shrink-0">
+      <div class="flex items-start gap-3 min-w-0">
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-square shrink-0 mt-0.5"
+          [disabled]="viewerLoading()"
+          (click)="closeViewer()"
+          [attr.aria-label]="'processDetail.actions.documentsModal.viewerBack' | transloco"
+          [title]="'processDetail.actions.documentsModal.viewerBack' | transloco"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div class="min-w-0">
+          <h3 class="text-lg font-bold text-base-content truncate">
+            {{ 'processDetail.actions.documentsModal.viewerTitle' | transloco }}
+          </h3>
+          <p class="mt-0.5 truncate text-sm text-base-content/50" [title]="viewing.original_filename">
+            {{ viewing.original_filename }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle shrink-0 text-base-content/50 hover:text-error"
+        [disabled]="viewerLoading()"
+        (click)="closeViewer()"
+        [attr.aria-label]="'processDetail.actions.documentsModal.viewerClose' | transloco"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="relative flex-1 min-h-0 bg-neutral/90">
+      @if (viewerLoading()) {
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-base-100">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <span class="text-sm text-base-content/60">{{ 'processDetail.actions.documentsModal.viewerLoading' | transloco }}</span>
+        </div>
+      } @else if (viewerError()) {
+        <div class="absolute inset-0 flex items-center justify-center p-6 bg-base-100">
+          <div class="alert alert-error max-w-md text-sm">
+            <span>{{ viewerError() }}</span>
+          </div>
+        </div>
+      } @else if (viewerUrl(); as url) {
+        <iframe
+          class="block h-full w-full border-0 bg-white"
+          [src]="url"
+          [attr.title]="viewing.original_filename"
+        ></iframe>
+      }
+    </div>
+
+    <div class="flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3 border-t border-base-200 bg-base-200/20 px-5 py-4 sm:px-6 shrink-0">
+      <button
+        type="button"
+        class="btn btn-neutral btn-md normal-case font-bold rounded-xl px-8 w-full sm:w-auto"
+        [disabled]="viewerLoading()"
+        (click)="closeViewer()"
+      >
+        {{ 'processDetail.actions.documentsModal.viewerBack' | transloco }}
+      </button>
+    </div>
+  </div>
+} @else {
+<div class="action-documents-modal p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-3xl w-full flex flex-col border border-base-200/80">
+  <div class="px-6 pt-7 pb-5 sm:px-8 sm:pt-8 border-b border-base-200/50 shrink-0">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-4 min-w-0">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+            />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-xl font-bold text-base-content">
+            {{ 'processDetail.actions.documentsModal.title' | transloco }}
+          </h3>
+          <p class="text-sm text-base-content/40 font-medium truncate">
+            {{ action().action || ('processDetail.actions.documentsModal.subtitle' | transloco) }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all shrink-0"
+        [disabled]="uploading() || savingAclId() != null || deletingId() != null"
+        (click)="onClose()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8 space-y-6 flex-1 min-h-0 overflow-y-auto">
+    @if (hasMultipleInstances()) {
+      <div class="alert alert-warning rounded-xl text-sm py-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <span>
+          {{
+            'processDetail.actions.documentsModal.instanceWarning'
+              | transloco: { court: courtName() || ('processDetail.actions.documentsModal.thisCourt' | transloco) }
+          }}
+        </span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert-error rounded-xl text-sm py-3">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Documentos existentes -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="text-sm font-bold text-base-content">
+          {{ 'processDetail.actions.documentsModal.existingTitle' | transloco }}
+        </h4>
+        <span class="badge badge-ghost badge-sm tabular-nums">{{ documents().length }}</span>
+      </div>
+
+      @if (documents().length === 0) {
+        <p class="text-sm text-base-content/50 rounded-xl bg-base-200/40 px-4 py-3">
+          {{ 'processDetail.actions.documentsModal.existingEmpty' | transloco }}
+        </p>
+      } @else {
+        <ul class="space-y-3">
+          @for (doc of documents(); track doc.id) {
+            <li class="rounded-2xl border border-base-200 bg-base-100 p-4 space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-base-content truncate" [title]="doc.original_filename">
+                    {{ doc.original_filename }}
+                  </p>
+                  <p class="text-xs text-base-content/50 mt-0.5">
+                    {{ formatSize(doc.size_bytes) }} · PDF
+                  </p>
+                </div>
+                <div class="flex flex-wrap items-center justify-end gap-1 shrink-0">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs font-bold normal-case text-primary"
+                    [disabled]="uploading() || viewerLoading() || deletingId() != null"
+                    (click)="openViewer(doc)"
+                  >
+                    {{ 'processDetail.actions.documentsModal.view' | transloco }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs font-bold normal-case"
+                    [disabled]="uploading() || deletingId() != null"
+                    (click)="startEditAcl(doc)"
+                  >
+                    {{ 'processDetail.actions.documentsModal.editAcl' | transloco }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs font-bold normal-case text-error"
+                    [disabled]="uploading() || savingAclId() != null"
+                    (click)="askDelete(doc)"
+                  >
+                    {{ 'processDetail.actions.documentsModal.delete' | transloco }}
+                  </button>
+                </div>
+              </div>
+
+              @if (editingAclId() !== doc.id) {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (orgId of doc.organization_ids; track orgId) {
+                    <span
+                      class="badge badge-sm gap-1"
+                      [class.badge-success]="canViewFlag(orgId) === true"
+                      [class.badge-warning]="canViewFlag(orgId) === false"
+                      [class.badge-ghost]="canViewFlag(orgId) == null"
+                      [title]="
+                        canViewFlag(orgId) === false
+                          ? ('processDetail.actions.documentsModal.orgWithoutFlag' | transloco)
+                          : orgName(orgId)
+                      "
+                    >
+                      {{ orgName(orgId) }}
+                    </span>
+                  } @empty {
+                    <span class="text-xs text-base-content/40">
+                      {{ 'processDetail.actions.documentsModal.noAcl' | transloco }}
+                    </span>
+                  }
+                </div>
+              }
+
+              @if (editingAclId() === doc.id) {
+                <div class="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-3">
+                  <p class="text-xs font-semibold text-base-content/70">
+                    {{ 'processDetail.actions.documentsModal.aclTitle' | transloco }}
+                  </p>
+                  <div class="space-y-2 max-h-48 overflow-y-auto">
+                    @for (org of organizations(); track org.id) {
+                      <button
+                        type="button"
+                        class="flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors"
+                        [class.border-primary]="isAclOrgSelected(org.id)"
+                        [class.bg-primary/10]="isAclOrgSelected(org.id)"
+                        [class.border-base-300]="!isAclOrgSelected(org.id)"
+                        [class.bg-base-100]="!isAclOrgSelected(org.id)"
+                        [disabled]="savingAclId() === doc.id"
+                        (click)="toggleAclOrg(org.id)"
+                      >
+                        <span
+                          class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2"
+                          [class.border-primary]="isAclOrgSelected(org.id)"
+                          [class.bg-primary]="isAclOrgSelected(org.id)"
+                          [class.text-primary-content]="isAclOrgSelected(org.id)"
+                          [class.border-base-content/40]="!isAclOrgSelected(org.id)"
+                          aria-hidden="true"
+                        >
+                          @if (isAclOrgSelected(org.id)) {
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                          }
+                        </span>
+                        <span class="min-w-0">
+                          <span class="block text-sm font-semibold text-base-content">{{ org.name }}</span>
+                          @if (canViewFlag(org.id) === false) {
+                            <span class="block text-[11px] text-warning mt-0.5">
+                              {{ 'processDetail.actions.documentsModal.orgWithoutFlag' | transloco }}
+                            </span>
+                          }
+                        </span>
+                      </button>
+                    }
+                  </div>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-ghost btn-sm normal-case font-bold" (click)="cancelEditAcl()" [disabled]="savingAclId() === doc.id">
+                      {{ 'common.cancel' | transloco }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-neutral btn-sm normal-case font-bold rounded-xl"
+                      (click)="saveAcl(doc)"
+                      [disabled]="savingAclId() === doc.id"
+                    >
+                      @if (savingAclId() === doc.id) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      }
+                      {{ 'common.save' | transloco }}
+                    </button>
+                  </div>
+                </div>
+              }
+
+              @if (confirmDeleteId() === doc.id) {
+                <div class="rounded-xl border border-error/30 bg-error/5 p-3 space-y-2">
+                  <p class="text-sm text-error font-medium">
+                    {{ 'processDetail.actions.documentsModal.deleteConfirm' | transloco: { name: doc.original_filename } }}
+                  </p>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-ghost btn-sm normal-case font-bold" (click)="cancelDelete()" [disabled]="deletingId() === doc.id">
+                      {{ 'common.cancel' | transloco }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-error btn-sm normal-case font-bold rounded-xl"
+                      (click)="confirmDelete(doc)"
+                      [disabled]="deletingId() === doc.id"
+                    >
+                      @if (deletingId() === doc.id) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      }
+                      {{ 'processDetail.actions.documentsModal.delete' | transloco }}
+                    </button>
+                  </div>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Subir nuevos -->
+    <section class="space-y-4 border-t border-base-200 pt-5">
+      <h4 class="text-sm font-bold text-base-content">
+        {{ 'processDetail.actions.documentsModal.uploadTitle' | transloco }}
+      </h4>
+
+      @if (!hasOrganizations()) {
+        <div class="alert alert-info rounded-xl text-sm py-3">
+          <span>{{ 'processDetail.actions.documentsModal.noProcessOrgs' | transloco }}</span>
+        </div>
+      } @else {
+        <div class="form-control space-y-2">
+          <label class="label py-0">
+            <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+              {{ 'processDetail.actions.documentsModal.filesLabel' | transloco }}
+            </span>
+          </label>
+          <app-file-drop-zone
+            accept=".pdf,application/pdf"
+            [allowedExtensions]="['.pdf']"
+            [maxSizeMb]="10"
+            [multiple]="true"
+            [showSelection]="false"
+            [queuedFiles]="selectedFiles()"
+            [disabled]="uploading()"
+            titleKey="processDetail.actions.documentsModal.dropzoneTitle"
+            subtitleKey="processDetail.actions.documentsModal.dropzoneSubtitle"
+            addMoreKey="processDetail.actions.documentsModal.addMore"
+            removeLabelKey="processDetail.actions.documentsModal.removeFile"
+            invalidFormatKey="processDetail.actions.documentsModal.invalidTypeShort"
+            fileTooBigKey="processDetail.actions.documentsModal.tooLargeShort"
+            (filesChange)="enqueueFiles($event)"
+            (removeQueuedFile)="removeSelectedFile($event)"
+            (error)="onDropZoneError($event)"
+          ></app-file-drop-zone>
+          <p class="text-xs text-base-content/55">
+            {{ 'processDetail.actions.documentsModal.filesHint' | transloco }}
+            @if (selectedFiles().length) {
+              <span class="font-semibold text-base-content/70">
+                · {{ 'processDetail.actions.documentsModal.queueCount' | transloco: { count: selectedFiles().length, max: 20 } }}
+              </span>
+            }
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'processDetail.actions.documentsModal.orgsLabel' | transloco }}
+              </p>
+              <p class="mt-1 text-xs leading-relaxed text-base-content/60">
+                {{ 'processDetail.actions.documentsModal.orgsHint' | transloco }}
+              </p>
+            </div>
+            <div class="flex gap-1 shrink-0">
+              <button type="button" class="btn btn-ghost btn-xs font-bold normal-case" (click)="selectAllOrgs()" [disabled]="uploading()">
+                {{ 'processDetail.actions.documentsModal.selectAll' | transloco }}
+              </button>
+              <button type="button" class="btn btn-ghost btn-xs font-bold normal-case" (click)="clearOrgSelection()" [disabled]="uploading()">
+                {{ 'processDetail.actions.documentsModal.clearSelection' | transloco }}
+              </button>
+            </div>
+          </div>
+
+          @if (loadingOrgFlags()) {
+            <p class="text-xs text-base-content/50 flex items-center gap-2">
+              <span class="loading loading-spinner loading-xs"></span>
+              {{ 'processDetail.actions.documentsModal.loadingFlags' | transloco }}
+            </p>
+          }
+
+          <div class="space-y-2 max-h-56 overflow-y-auto rounded-2xl border border-base-200 bg-base-200/20 p-2">
+            @for (org of organizations(); track org.id) {
+              <button
+                type="button"
+                class="flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors"
+                [class.border-primary]="isOrgSelected(org.id)"
+                [class.bg-primary/10]="isOrgSelected(org.id)"
+                [class.shadow-sm]="isOrgSelected(org.id)"
+                [class.border-base-300]="!isOrgSelected(org.id)"
+                [class.bg-base-100]="!isOrgSelected(org.id)"
+                [disabled]="uploading()"
+                (click)="toggleOrg(org.id)"
+              >
+                <span
+                  class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2"
+                  [class.border-primary]="isOrgSelected(org.id)"
+                  [class.bg-primary]="isOrgSelected(org.id)"
+                  [class.text-primary-content]="isOrgSelected(org.id)"
+                  [class.border-base-content/50]="!isOrgSelected(org.id)"
+                  [class.bg-base-100]="!isOrgSelected(org.id)"
+                  aria-hidden="true"
+                >
+                  @if (isOrgSelected(org.id)) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-semibold text-base-content">{{ org.name }}</span>
+                    @if (canViewFlag(org.id) === true) {
+                      <span class="badge badge-success badge-sm font-bold">
+                        {{ 'processDetail.actions.documentsModal.flagOn' | transloco }}
+                      </span>
+                    } @else if (canViewFlag(org.id) === false) {
+                      <span class="badge badge-warning badge-sm font-bold">
+                        {{ 'processDetail.actions.documentsModal.flagOff' | transloco }}
+                      </span>
+                    }
+                  </span>
+                  @if (canViewFlag(org.id) === false) {
+                    <span class="block text-[11px] text-warning mt-1 leading-snug">
+                      {{ 'processDetail.actions.documentsModal.orgWithoutFlag' | transloco }}
+                    </span>
+                  }
+                </span>
+              </button>
+            }
+          </div>
+
+          @if (selectedOrgIds().size) {
+            <p class="text-xs font-semibold text-primary">
+              {{ 'processDetail.actions.documentsModal.orgsSelected' | transloco: { count: selectedOrgIds().size } }}
+            </p>
+          }
+        </div>
+      }
+    </section>
+  </div>
+
+  <div
+    class="action-documents-modal__footer px-6 pt-5 sm:px-8 border-t border-base-200/50 bg-base-200/20 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3 shrink-0"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost btn-md normal-case font-bold px-8 rounded-xl w-full sm:w-auto text-base-content/60 hover:bg-base-300/40"
+      [disabled]="uploading() || savingAclId() != null || deletingId() != null || confirmUploadOpen()"
+      (click)="onClose()"
+    >
+      {{ 'common.cancel' | transloco }}
+    </button>
+    @if (hasOrganizations()) {
+      <button
+        type="button"
+        class="btn btn-neutral btn-md normal-case font-bold px-12 rounded-xl w-full sm:w-auto shadow-lg transition-all active:scale-95"
+        [disabled]="!canUpload() || confirmUploadOpen()"
+        (click)="onUpload()"
+      >
+        @if (uploading()) {
+          <span class="loading loading-spinner loading-xs mr-2"></span>
+          {{ 'processDetail.actions.documentsModal.uploading' | transloco }}
+        } @else {
+          {{ 'processDetail.actions.documentsModal.upload' | transloco }}
+        }
+      </button>
+    }
+  </div>
+</div>
+}
+
+<app-confirmation-dialog
+  [open]="confirmUploadOpen()"
+  [title]="'processDetail.actions.documentsModal.confirmTitle' | transloco"
+  [message]="'processDetail.actions.documentsModal.confirmMessage' | transloco"
+  [confirmLabel]="'processDetail.actions.documentsModal.confirmButton' | transloco"
+  [cancelLabel]="'common.cancel' | transloco"
+  confirmClass="btn-neutral"
+  (confirm)="onConfirmUpload()"
+  (cancel)="onCancelConfirmUpload()"
+/>

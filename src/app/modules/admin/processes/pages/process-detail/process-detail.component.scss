@@ -251,3 +251,38 @@
   }
 }
 
+/* Modal documentos PDF: aire respecto al viewport (no pegada arriba/abajo) */
+dialog.action-documents-dialog.modal:is(.modal-open, [open]) {
+  align-items: end;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: 640px) {
+    align-items: center;
+    padding: 1.75rem;
+  }
+}
+
+dialog.action-documents-dialog .action-documents-dialog__shell.modal-box {
+  margin: 0 !important;
+  max-height: calc(100dvh - 2.5rem) !important;
+  width: min(100%, 48rem) !important;
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+dialog.action-documents-dialog.action-documents-dialog--viewer {
+  padding: 0.5rem !important;
+
+  @media (min-width: 640px) {
+    padding: 0.75rem !important;
+  }
+}
+
+dialog.action-documents-dialog.action-documents-dialog--viewer .action-documents-dialog__shell.modal-box {
+  width: min(100vw - 1rem, 96rem) !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 1rem) !important;
+}
+

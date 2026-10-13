@@ -15,15 +15,20 @@ import { finalize } from 'rxjs/operators';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
   OrganizationDetail,
+  UpdateOrganizationSettingsPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogDetailRow,
+} from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 
 export type OrganizationSettingsTab = 'info' | 'settings';
 
 @Component({
   selector: 'app-organization-settings-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, ConfirmationDialogComponent],
   templateUrl: './organization-settings-modal.component.html',
   styleUrls: ['./organization-settings-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,10 +51,14 @@ export class OrganizationSettingsModalComponent implements OnInit {
   public detail = signal<OrganizationDetail | null>(null);
   public loadError = signal<string | null>(null);
   public saveError = signal<string | null>(null);
+  public confirmSaveOpen = signal(false);
+  public confirmDetailRows = signal<ConfirmationDialogDetailRow[]>([]);
+  private _pendingPayload: UpdateOrganizationSettingsPayload | null = null;
 
   public settingsForm: FormGroup = this._fb.group({
     useDefault: [true],
     max_active_processes: [{ value: null as number | null, disabled: true }, [Validators.min(0)]],
+    can_view_action_documents: [false],
   });
 
   ngOnInit(): void {
@@ -97,7 +106,7 @@ export class OrganizationSettingsModalComponent implements OnInit {
   }
 
   onClose(): void {
-    if (this.saving()) return;
+    if (this.saving() || this.confirmSaveOpen()) return;
     this.closed.emit();
   }
 
@@ -114,7 +123,7 @@ export class OrganizationSettingsModalComponent implements OnInit {
   }
 
   onSave(): void {
-    if (this.saving() || this.loading() || !this.detail()) return;
+    if (this.saving() || this.loading() || !this.detail() || this.confirmSaveOpen()) return;
 
     this.saveError.set(null);
     const useDefault = !!this.settingsForm.get('useDefault')?.value;
@@ -132,14 +141,53 @@ export class OrganizationSettingsModalComponent implements OnInit {
       maxActiveProcesses = parsed;
     }
 
+    const canViewActionDocuments = !!this.settingsForm.get('can_view_action_documents')?.value;
+    this._pendingPayload = {
+      max_active_processes: maxActiveProcesses,
+      can_view_action_documents: canViewActionDocuments,
+    };
+
+    this.confirmDetailRows.set([
+      {
+        label: this._transloco.translate('clients.settings.limitInputLabel'),
+        value: useDefault
+          ? this._transloco.translate('clients.settings.usingDefault', {
+              value: this.defaultHintValue(),
+            })
+          : this.formatLimit(maxActiveProcesses),
+      },
+      {
+        label: this._transloco.translate('clients.settings.canViewActionDocuments'),
+        value: canViewActionDocuments
+          ? this._transloco.translate('clients.settings.confirmYes')
+          : this._transloco.translate('clients.settings.confirmNo'),
+      },
+    ]);
+    this.confirmSaveOpen.set(true);
+  }
+
+  onCancelConfirmSave(): void {
+    if (this.saving()) return;
+    this.confirmSaveOpen.set(false);
+    this._pendingPayload = null;
+  }
+
+  onConfirmSave(): void {
+    if (this.saving() || !this._pendingPayload) {
+      this.confirmSaveOpen.set(false);
+      return;
+    }
+
+    const payload = this._pendingPayload;
+    this.confirmSaveOpen.set(false);
     this.saving.set(true);
+
     this._organizationService
-      .updateOrganizationSettings(this.organizationId(), {
-        max_active_processes: maxActiveProcesses,
-      })
+      .updateOrganizationSettings(this.organizationId(), payload)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (response) => {
+          this._pendingPayload = null;
           this.saved.emit(response);
         },
         error: (err) => {
@@ -177,6 +225,7 @@ export class OrganizationSettingsModalComponent implements OnInit {
       {
         useDefault,
         max_active_processes: inputValue,
+        can_view_action_documents: !!detail.settings.can_view_action_documents,
       },
       { emitEvent: false }
     );

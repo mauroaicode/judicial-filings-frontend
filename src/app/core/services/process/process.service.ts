@@ -28,6 +28,9 @@ import {
   TrashProcessesPayload,
   TrashProcessPayload,
   TrashProcessesResponse,
+  UploadActionDocumentsResponse,
+  UpdateMediaOrganizationsPayload,
+  UpdateMediaOrganizationsResponse,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 
@@ -413,5 +416,52 @@ export class ProcessService {
   trashProcess(processId: string, payload: TrashProcessPayload): Observable<TrashProcessesResponse> {
     const url = `${environment.apiBaseUrl}/processes/${processId}`;
     return this._http.delete<TrashProcessesResponse>(url, { body: payload });
+  }
+
+  /**
+   * Subir PDFs a una actuación (admin).
+   * POST /processes/{processId}/actions/{actionId}/documents
+   */
+  uploadActionDocuments(
+    processId: string,
+    actionId: string,
+    files: File[],
+    organizationIds: string[]
+  ): Observable<UploadActionDocumentsResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}/actions/${actionId}/documents`;
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files[]', file, file.name));
+    organizationIds.forEach((id) => formData.append('organization_ids[]', id));
+    return this._http.post<UploadActionDocumentsResponse>(url, formData);
+  }
+
+  /**
+   * Reemplaza el ACL de organizaciones de un media (admin).
+   * PUT /media/{mediaId}/organizations
+   */
+  updateMediaOrganizations(
+    mediaId: number,
+    payload: UpdateMediaOrganizationsPayload
+  ): Observable<UpdateMediaOrganizationsResponse> {
+    const url = `${environment.apiBaseUrl}/media/${mediaId}/organizations`;
+    return this._http.put<UpdateMediaOrganizationsResponse>(url, payload);
+  }
+
+  /**
+   * Descarga autenticada del PDF (Sanctum). Para visor: blob + object URL.
+   * GET /media/{mediaId}/download — no usar /storage público.
+   */
+  downloadMediaBlob(mediaId: number): Observable<Blob> {
+    const url = `${environment.apiBaseUrl}/media/${mediaId}/download`;
+    return this._http.get(url, { responseType: 'blob' });
+  }
+
+  /**
+   * Elimina un documento (media Spatie) (admin).
+   * DELETE /media/{mediaId}
+   */
+  deleteMedia(mediaId: number): Observable<{ message: string }> {
+    const url = `${environment.apiBaseUrl}/media/${mediaId}`;
+    return this._http.delete<{ message: string }>(url);
   }
 }

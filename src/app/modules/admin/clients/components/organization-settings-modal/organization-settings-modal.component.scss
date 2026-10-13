@@ -3,8 +3,26 @@
 }
 
 .org-settings-modal {
+  // DaisyUI modal-box defaults can fight flex scroll; keep layout explicit.
+  .modal-box {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
   .tab.tab-active {
     background-color: hsl(var(--p) / 0.12);
     color: hsl(var(--p));
+  }
+}
+
+@media (max-width: 639px) {
+  .org-settings-modal .modal-box {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }

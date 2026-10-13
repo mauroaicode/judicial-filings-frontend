@@ -131,8 +131,9 @@ export class OrganizationService {
   }
 
   /**
-   * Guardar configuración de límites (PUT /organizations/{id}/settings).
-   * `max_active_processes` debe ir siempre presente; `null` restaura el default.
+   * Guardar configuración (PUT /organizations/{id}/settings).
+   * Puede incluir cupos (`max_active_processes`, `null` = default) y/o
+   * `can_view_action_documents`.
    */
   updateOrganizationSettings(
     organizationId: string,

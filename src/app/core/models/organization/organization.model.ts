@@ -130,6 +130,8 @@ export interface OrganizationSettings {
   default_max_active_processes: number | null;
   remaining_slots: number | null;
   active_processes_count?: number;
+  /** Si true, la org puede ver/descargar PDF de actuaciones (ACL + app). */
+  can_view_action_documents?: boolean;
 }
 
 /**
@@ -154,11 +156,12 @@ export interface OrganizationDetail {
 
 /**
  * Payload PUT /organizations/{id}/settings
- * La key `max_active_processes` debe ir siempre presente.
- * `null` quita el override y vuelve al default del sistema.
+ * Puede enviar solo el flag, solo cupos, o ambos.
+ * `max_active_processes: null` quita el override y vuelve al default del sistema.
  */
 export interface UpdateOrganizationSettingsPayload {
-  max_active_processes: number | null;
+  max_active_processes?: number | null;
+  can_view_action_documents?: boolean;
 }
 
 /**

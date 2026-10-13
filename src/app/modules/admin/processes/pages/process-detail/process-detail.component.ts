@@ -44,6 +44,10 @@ import { RoleSelectionModalComponent } from '../../components/role-selection-mod
 import { SubjectFormModalComponent } from '../../components/subject-form-modal/subject-form-modal.component';
 import { ProcessGeneralInfoModalComponent } from '../../components/process-general-info-modal/process-general-info-modal.component';
 import { ActionDatesModalComponent } from '../../components/action-dates-modal/action-dates-modal.component';
+import {
+  ActionDocumentsModalComponent,
+  ActionDocumentsChangedEvent,
+} from '../../components/action-documents-modal/action-documents-modal.component';
 import { AddProcessOrganizationsModalComponent } from '../../components/add-process-organizations-modal/add-process-organizations-modal.component';
 import { TrashProcessesModalComponent } from '../../components/trash-processes-modal/trash-processes-modal.component';
 
@@ -62,6 +66,7 @@ import { TrashProcessesModalComponent } from '../../components/trash-processes-m
     SubjectFormModalComponent,
     ProcessGeneralInfoModalComponent,
     ActionDatesModalComponent,
+    ActionDocumentsModalComponent,
     AddProcessOrganizationsModalComponent,
     ConfirmationDialogComponent,
     TrashProcessesModalComponent,
@@ -157,6 +162,12 @@ export class ProcessDetailComponent {
   /** Modal editar fechas de una actuación */
   public showActionDatesModal = signal<boolean>(false);
   public selectedActionForEdit = signal<Action | null>(null);
+
+  /** Modal documentos PDF de una actuación */
+  public showActionDocumentsModal = signal<boolean>(false);
+  public selectedActionForDocuments = signal<Action | null>(null);
+  /** Shell a ancho completo mientras el visor PDF está abierto. */
+  public actionDocumentsViewerOpen = signal(false);
 
   /** Confirmación eliminar sujeto manual */
   public confirmSubjectDeleteOpen = signal<boolean>(false);
@@ -297,6 +308,13 @@ export class ProcessDetailComponent {
         width: '150px',
         align: 'center',
         render: formatDateFn,
+      },
+      {
+        key: 'documents',
+        label: 'processDetail.actions.table.documents',
+        width: '72px',
+        align: 'center',
+        action: 'documents',
       },
       {
         key: 'edit_dates',
@@ -629,9 +647,78 @@ export class ProcessDetailComponent {
     this.selectedActionForEdit.set(null);
   }
 
+  public openActionDocuments(action: Action): void {
+    this.selectedActionForDocuments.set(action);
+    this.actionDocumentsViewerOpen.set(false);
+    this.showActionDocumentsModal.set(true);
+    this.accordionSection.set('actions');
+  }
+
+  public closeActionDocumentsModal(): void {
+    this.actionDocumentsViewerOpen.set(false);
+    this.showActionDocumentsModal.set(false);
+    this.selectedActionForDocuments.set(null);
+  }
+
+  public onActionDocumentsChanged(event: ActionDocumentsChangedEvent): void {
+    const actionId = this.selectedActionForDocuments()?.id;
+    if (!actionId) return;
+
+    const applyDocs = (docs: NonNullable<Action['documents']>): NonNullable<Action['documents']> => {
+      if (event.type === 'uploaded') return [...docs, ...event.documents];
+      if (event.type === 'updated') {
+        return docs.map((doc) => (doc.id === event.document.id ? { ...doc, ...event.document } : doc));
+      }
+      return docs.filter((doc) => doc.id !== event.mediaId);
+    };
+
+    this.actions.update((list) =>
+      list.map((item) =>
+        item.id === actionId ? { ...item, documents: applyDocs([...(item.documents ?? [])]) } : item
+      )
+    );
+
+    this.selectedActionForDocuments.update((current) =>
+      current && current.id === actionId
+        ? { ...current, documents: applyDocs([...(current.documents ?? [])]) }
+        : current
+    );
+
+    if (event.type === 'uploaded' || event.type === 'updated') {
+      const enabledIds = new Set(event.enabledOrganizationIds ?? []);
+      if (enabledIds.size) {
+        // Backend enciende can_view_action_documents al dar acceso; desmarcar no lo apaga.
+        this.organizations.update((list) =>
+          list.map((org) =>
+            enabledIds.has(org.id) ? { ...org, can_view_action_documents: true } : org
+          )
+        );
+      }
+    }
+
+    if (event.type === 'uploaded') {
+      this.showToast(
+        'success',
+        this._transloco.translate('processDetail.actions.documentsModal.uploaded')
+      );
+    } else if (event.type === 'updated') {
+      this.showToast(
+        'success',
+        this._transloco.translate('processDetail.actions.documentsModal.aclUpdated')
+      );
+    } else {
+      this.showToast(
+        'success',
+        this._transloco.translate('processDetail.actions.documentsModal.deleted')
+      );
+    }
+  }
+
   public onActionTableAction(event: { key: string; row: Action }): void {
     if (event.key === 'edit_dates') {
       this.openEditActionDates(event.row);
+    } else if (event.key === 'documents') {
+      this.openActionDocuments(event.row);
     }
   }
 

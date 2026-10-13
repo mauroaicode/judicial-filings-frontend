@@ -1,0 +1,21 @@
+:host {
+  display: contents;
+}
+
+.action-documents-modal {
+  max-height: min(calc(100dvh - 3.5rem), 56rem);
+}
+
+.action-documents-modal__footer {
+  // Evita que Cancelar / Guardar queden pegados al borde inferior (móvil + notch).
+  padding-bottom: max(1.75rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
+}
+
+.action-documents-viewer {
+  height: min(calc(100dvh - 1.5rem), 56rem);
+  max-height: min(calc(100dvh - 1.5rem), 56rem);
+
+  iframe {
+    min-height: 0;
+  }
+}
