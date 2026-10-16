@@ -1,4 +1,21 @@
 /**
+ * Modo de estado de la organización (fuente de verdad para la UI).
+ * - active: login + seguimiento + canales on
+ * - tracking_paused: login OK, sin consulta de procesos ni notificaciones; canales off
+ * - inactive: sin login + sin seguimiento + canales off
+ */
+export type OrganizationStatusMode = 'active' | 'inactive' | 'tracking_paused';
+
+/**
+ * Payload POST /organizations/{id}/active-status
+ */
+export interface UpdateOrganizationActiveStatusPayload {
+  mode: OrganizationStatusMode;
+  /** Solo aplica en inactive / tracking_paused; opt-in (default false). */
+  notify_users?: boolean;
+}
+
+/**
  * Organization (Client) Model - Based on API response
  */
 export interface Organization {
@@ -13,6 +30,10 @@ export interface Organization {
   email: string | null;
   contact_person: string | null;
   is_active: boolean;
+  /** Si false, no se consultan procesos ni se notifican actuaciones. */
+  is_process_tracking_enabled?: boolean;
+  /** Modo compuesto; preferir este campo para badges y acciones. */
+  status_mode?: OrganizationStatusMode;
   created_at: string;
   updated_at: string;
   password?: string; // Generated password returned by backend
@@ -150,6 +171,8 @@ export interface OrganizationDetail {
   address?: string | null;
   contact_person: string | null;
   is_active: boolean;
+  is_process_tracking_enabled?: boolean;
+  status_mode?: OrganizationStatusMode;
   active_processes_count: number;
   settings: OrganizationSettings;
 }

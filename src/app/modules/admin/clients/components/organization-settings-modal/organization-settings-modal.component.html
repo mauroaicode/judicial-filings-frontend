@@ -152,11 +152,10 @@
               </dt>
               <dd class="mt-1">
                 <span
-                  class="badge whitespace-nowrap uppercase text-xs"
-                  [class.badge-success]="org.is_active"
-                  [class.badge-neutral]="!org.is_active"
+                  class="badge whitespace-nowrap normal-case text-xs"
+                  [ngClass]="getStatusBadgeClass(org)"
                 >
-                  {{ org.is_active ? ('clients.table.active' | transloco) : ('clients.table.inactive' | transloco) }}
+                  {{ getStatusBadgeLabelKey(org) | transloco }}
                 </span>
               </dd>
             </div>

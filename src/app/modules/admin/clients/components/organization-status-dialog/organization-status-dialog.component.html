@@ -1,0 +1,120 @@
+<dialog class="modal organization-status-dialog" [class.modal-open]="open()">
+  <div class="modal-box organization-status-dialog__box max-w-lg">
+    <h3 class="font-bold text-lg text-base-content pr-2">{{ titleKey | transloco }}</h3>
+    <p class="mt-1 text-sm text-base-content/70">
+      {{ 'clients.statusDialog.orgLabel' | transloco: { name: organizationName() } }}
+    </p>
+
+    @if (variant() === 'deactivate') {
+      <p class="mt-4 text-sm leading-relaxed text-base-content/80">
+        {{ 'clients.statusDialog.deactivateLead' | transloco }}
+      </p>
+
+      <div class="mt-4 grid grid-cols-1 gap-3" role="radiogroup" [attr.aria-label]="'clients.statusDialog.modeGroupAria' | transloco">
+        <label
+          class="relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition-all"
+          [class.border-primary]="selectedMode() === 'inactive'"
+          [class.bg-primary/5]="selectedMode() === 'inactive'"
+          [class.border-base-200]="selectedMode() !== 'inactive'"
+        >
+          <input
+            type="radio"
+            name="org-status-mode"
+            class="radio radio-primary mt-0.5 shrink-0"
+            [checked]="selectedMode() === 'inactive'"
+            (change)="selectedMode.set('inactive')"
+          />
+          <div class="min-w-0">
+            <span class="block font-semibold text-base-content">
+              {{ 'clients.statusDialog.optionInactiveTitle' | transloco }}
+            </span>
+            <ul class="mt-1.5 list-inside list-disc space-y-0.5 text-xs text-base-content/65">
+              <li>{{ 'clients.statusDialog.optionInactiveBullet1' | transloco }}</li>
+              <li>{{ 'clients.statusDialog.optionInactiveBullet2' | transloco }}</li>
+            </ul>
+          </div>
+        </label>
+
+        <label
+          class="relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition-all"
+          [class.border-primary]="selectedMode() === 'tracking_paused'"
+          [class.bg-primary/5]="selectedMode() === 'tracking_paused'"
+          [class.border-base-200]="selectedMode() !== 'tracking_paused'"
+        >
+          <input
+            type="radio"
+            name="org-status-mode"
+            class="radio radio-primary mt-0.5 shrink-0"
+            [checked]="selectedMode() === 'tracking_paused'"
+            (change)="selectedMode.set('tracking_paused')"
+          />
+          <div class="min-w-0">
+            <span class="block font-semibold text-base-content">
+              {{ 'clients.statusDialog.optionPausedTitle' | transloco }}
+            </span>
+            <ul class="mt-1.5 list-inside list-disc space-y-0.5 text-xs text-base-content/65">
+              <li>{{ 'clients.statusDialog.optionPausedBullet1' | transloco }}</li>
+              <li>{{ 'clients.statusDialog.optionPausedBullet2' | transloco }}</li>
+            </ul>
+          </div>
+        </label>
+      </div>
+    }
+
+    @if (variant() === 'deactivate-access') {
+      <p class="mt-4 text-sm leading-relaxed text-base-content/80">
+        {{ 'clients.statusDialog.deactivateAccessMessage' | transloco }}
+      </p>
+    }
+
+    @if (variant() === 'activate') {
+      <p class="mt-4 text-sm leading-relaxed text-base-content/80">
+        {{ 'clients.statusDialog.activateMessage' | transloco }}
+      </p>
+    }
+
+    @if (variant() === 'resume') {
+      <p class="mt-4 text-sm leading-relaxed text-base-content/80">
+        {{ 'clients.statusDialog.resumeMessage' | transloco }}
+      </p>
+    }
+
+    @if (showsNotifyCheckbox) {
+      <label class="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-base-300 bg-base-200/40 p-3.5">
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm mt-0.5 shrink-0"
+          [checked]="notifyUsers()"
+          (change)="notifyUsers.set($any($event.target).checked)"
+        />
+        <span class="text-sm leading-snug text-base-content/85">
+          {{ 'clients.statusDialog.notifyUsers' | transloco }}
+        </span>
+      </label>
+    }
+
+    <div class="modal-action mt-6 flex-shrink-0">
+      <button
+        type="button"
+        class="btn btn-ghost normal-case font-semibold"
+        [disabled]="submitting()"
+        (click)="onCancel()"
+      >
+        {{ 'common.cancel' | transloco }}
+      </button>
+      <button
+        type="button"
+        class="btn normal-case font-semibold"
+        [ngClass]="confirmBtnClass"
+        [disabled]="submitting()"
+        (click)="onConfirm()"
+      >
+        @if (submitting()) {
+          <span class="loading loading-spinner loading-sm"></span>
+        }
+        {{ confirmLabelKey | transloco }}
+      </button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop" (click)="onCancel()"></form>
+</dialog>

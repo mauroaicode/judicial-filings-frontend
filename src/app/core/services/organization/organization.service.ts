@@ -12,6 +12,7 @@ import {
   OrganizationSettings,
   OrganizationStats,
   SelectOptionsResponse,
+  UpdateOrganizationActiveStatusPayload,
   UpdateOrganizationSettingsPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
@@ -108,6 +109,22 @@ export class OrganizationService {
   updateNotificationStatus(organizationId: string, isActive: boolean): Observable<void> {
     const url = `${environment.apiBaseUrl}/organizations/${organizationId}/notifications-status`;
     return this._http.post<void>(url, { is_active: isActive });
+  }
+
+  /**
+   * Cambiar modo de estado (POST /organizations/{id}/active-status) → 204.
+   * Sincroniza login, seguimiento de procesos y canales; no llamar notifications-status aparte.
+   */
+  updateActiveStatus(
+    organizationId: string,
+    payload: UpdateOrganizationActiveStatusPayload
+  ): Observable<void> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/active-status`;
+    const body: UpdateOrganizationActiveStatusPayload = { mode: payload.mode };
+    if (payload.mode !== 'active' && payload.notify_users) {
+      body.notify_users = true;
+    }
+    return this._http.post<void>(url, body);
   }
 
   /**

@@ -1,0 +1,6 @@
+.organization-status-dialog {
+  .organization-status-dialog__box {
+    max-height: min(90vh, 40rem);
+    overflow-y: auto;
+  }
+}

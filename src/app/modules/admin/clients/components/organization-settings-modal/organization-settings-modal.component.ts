@@ -15,6 +15,7 @@ import { finalize } from 'rxjs/operators';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
   OrganizationDetail,
+  OrganizationStatusMode,
   UpdateOrganizationSettingsPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
@@ -195,6 +196,37 @@ export class OrganizationSettingsModalComponent implements OnInit {
           this.activeTab.set('settings');
         },
       });
+  }
+
+  getStatusMode(
+    org: Pick<OrganizationDetail, 'status_mode' | 'is_active' | 'is_process_tracking_enabled'>
+  ): OrganizationStatusMode {
+    if (org.status_mode === 'active' || org.status_mode === 'inactive' || org.status_mode === 'tracking_paused') {
+      return org.status_mode;
+    }
+    if (!org.is_active) return 'inactive';
+    if (org.is_process_tracking_enabled === false) return 'tracking_paused';
+    return 'active';
+  }
+
+  getStatusBadgeLabelKey(org: OrganizationDetail): string {
+    switch (this.getStatusMode(org)) {
+      case 'tracking_paused':
+        return 'clients.table.statusTrackingPaused';
+      case 'inactive':
+        return 'clients.table.statusInactive';
+      default:
+        return 'clients.table.statusActive';
+    }
+  }
+
+  getStatusBadgeClass(org: OrganizationDetail): Record<string, boolean> {
+    const mode = this.getStatusMode(org);
+    return {
+      'badge-success': mode === 'active',
+      'badge-warning': mode === 'tracking_paused',
+      'badge-neutral': mode === 'inactive',
+    };
   }
 
   formatLimit(value: number | null | undefined): string {

@@ -36,7 +36,7 @@
 // Anchos columnas fijas (# + nombre) — el segundo `left` debe coincidir con el ancho del #
 $clients-sticky-index-width: 64px;
 $clients-sticky-name-min: 240px;
-$clients-sticky-actions-width: 148px;
+$clients-sticky-actions-width: 220px;
 $clients-sticky-base: #ffffff;
 $clients-sticky-zebra: #f4f5f9;
 /** Hover opaco (sin alpha): si no, al hacer scroll se ve el texto de las columnas detrás */
@@ -152,6 +152,17 @@ $clients-hover-bg: #ebeaf3;
     max-width: $clients-sticky-actions-width !important;
     width: $clients-sticky-actions-width !important;
     box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1) !important;
+    overflow: visible !important;
+  }
+
+  /** Tooltips DaisyUI en columna sticky: por encima del scroll horizontal */
+  .clients-action-tooltip {
+    z-index: 40;
+
+    &:hover,
+    &:focus-within {
+      z-index: 60;
+    }
   }
 
   tbody tr:nth-child(2n) td.clients-sticky-index,

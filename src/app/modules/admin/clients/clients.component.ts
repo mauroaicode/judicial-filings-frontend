@@ -18,13 +18,19 @@ import {
   OrganizationFilter,
   OrganizationResponseMeta,
   OrganizationStats,
+  OrganizationStatusMode,
   SelectOption,
+  UpdateOrganizationActiveStatusPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { ConfirmationDialogComponent } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { OrganizationSettingsModalComponent } from './components/organization-settings-modal/organization-settings-modal.component';
 import { ProcessExportModalComponent } from './components/process-export-modal/process-export-modal.component';
+import {
+  OrganizationStatusDialogComponent,
+  OrganizationStatusDialogVariant,
+} from './components/organization-status-dialog/organization-status-dialog.component';
 import { ProcessExportItem } from '@app/core/models/process/process-export.model';
 
 @Component({
@@ -38,6 +44,7 @@ import { ProcessExportItem } from '@app/core/models/process/process-export.model
     ConfirmationDialogComponent,
     OrganizationSettingsModalComponent,
     ProcessExportModalComponent,
+    OrganizationStatusDialogComponent,
   ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
@@ -91,6 +98,11 @@ export class ClientsComponent {
   public notifyingOrg = signal<Organization | null>(null);
   /** Modal confirmación notificaciones */
   public confirmNotificationOpen = signal<boolean>(false);
+  /** Organización cuyo status_mode se está cambiando */
+  public statusTargetOrg = signal<Organization | null>(null);
+  public statusDialogVariant = signal<OrganizationStatusDialogVariant>('deactivate');
+  public statusDialogOpen = signal<boolean>(false);
+  public statusSubmitting = signal<boolean>(false);
   /** Modal configuración rápida de organización */
   public settingsModalOpen = signal<boolean>(false);
   public settingsOrganizationId = signal<string | null>(null);
@@ -552,7 +564,120 @@ export class ClientsComponent {
     this.createdOrganization.set(null);
   }
 
+  /**
+   * Resuelve status_mode desde el API o, en fallback, desde is_active /
+   * is_process_tracking_enabled (respuestas antiguas sin status_mode).
+   */
+  getStatusMode(org: Pick<Organization, 'status_mode' | 'is_active' | 'is_process_tracking_enabled'>): OrganizationStatusMode {
+    if (org.status_mode === 'active' || org.status_mode === 'inactive' || org.status_mode === 'tracking_paused') {
+      return org.status_mode;
+    }
+    if (!org.is_active) return 'inactive';
+    if (org.is_process_tracking_enabled === false) return 'tracking_paused';
+    return 'active';
+  }
+
+  getStatusBadgeLabelKey(org: Organization): string {
+    switch (this.getStatusMode(org)) {
+      case 'tracking_paused':
+        return 'clients.table.statusTrackingPaused';
+      case 'inactive':
+        return 'clients.table.statusInactive';
+      default:
+        return 'clients.table.statusActive';
+    }
+  }
+
+  getStatusBadgeClass(org: Organization): Record<string, boolean> {
+    const mode = this.getStatusMode(org);
+    return {
+      'badge-success': mode === 'active',
+      'badge-warning': mode === 'tracking_paused',
+      'badge-neutral': mode === 'inactive',
+    };
+  }
+
+  openStatusDialog(org: Organization, variant: OrganizationStatusDialogVariant): void {
+    this.statusTargetOrg.set(org);
+    this.statusDialogVariant.set(variant);
+    this.statusDialogOpen.set(true);
+  }
+
+  closeStatusDialog(): void {
+    if (this.statusSubmitting()) return;
+    this.statusDialogOpen.set(false);
+    this.statusTargetOrg.set(null);
+  }
+
+  onConfirmStatusChange(payload: UpdateOrganizationActiveStatusPayload): void {
+    const org = this.statusTargetOrg();
+    if (!org || this.statusSubmitting()) return;
+
+    this.statusSubmitting.set(true);
+    this._organizationService.updateActiveStatus(org.id, payload).subscribe({
+      next: () => {
+        this._applyLocalStatus(org.id, payload.mode);
+        this.statusSubmitting.set(false);
+        this.statusDialogOpen.set(false);
+        this.statusTargetOrg.set(null);
+        this.showSuccessToast(this._transloco.translate(this._toastKeyForMode(payload.mode)));
+        this.loadOrganizations(this.pagination()?.current_page ?? 1, this.pagination()?.per_page ?? 10);
+        this.loadOrganizationStats();
+      },
+      error: () => {
+        this.statusSubmitting.set(false);
+      },
+    });
+  }
+
+  private _toastKeyForMode(mode: OrganizationStatusMode): string {
+    switch (mode) {
+      case 'inactive':
+        return 'clients.statusDialog.toastInactive';
+      case 'tracking_paused':
+        return 'clients.statusDialog.toastPaused';
+      default:
+        return 'clients.statusDialog.toastActive';
+    }
+  }
+
+  private _applyLocalStatus(organizationId: string, mode: OrganizationStatusMode): void {
+    this.organizations.update((orgs) =>
+      orgs.map((org) => {
+        if (org.id !== organizationId) return org;
+        if (mode === 'inactive') {
+          return {
+            ...org,
+            status_mode: 'inactive',
+            is_active: false,
+            is_process_tracking_enabled: false,
+            is_receiving_notifications: false,
+          };
+        }
+        if (mode === 'tracking_paused') {
+          return {
+            ...org,
+            status_mode: 'tracking_paused',
+            is_active: true,
+            is_process_tracking_enabled: false,
+            is_receiving_notifications: false,
+          };
+        }
+        return {
+          ...org,
+          status_mode: 'active',
+          is_active: true,
+          is_process_tracking_enabled: true,
+          is_receiving_notifications: true,
+        };
+      })
+    );
+  }
+
   onToggleNotifications(org: Organization): void {
+    if (this.getStatusMode(org) !== 'active') {
+      return;
+    }
     this.notifyingOrg.set(org);
     this.confirmNotificationOpen.set(true);
   }

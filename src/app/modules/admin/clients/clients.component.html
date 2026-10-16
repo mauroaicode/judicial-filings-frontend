@@ -327,11 +327,11 @@
                     </div>
                   </div>
                   <span
-                    class="badge badge-sm uppercase text-[0.65rem] shrink-0 whitespace-nowrap"
-                    [class.badge-success]="org.is_active"
-                    [class.badge-neutral]="!org.is_active"
+                    class="badge badge-sm text-[0.65rem] shrink-0 whitespace-nowrap normal-case max-w-[11rem] truncate"
+                    [ngClass]="getStatusBadgeClass(org)"
+                    [title]="getStatusBadgeLabelKey(org) | transloco"
                   >
-                    {{ org.is_active ? ('clients.table.active' | transloco) : ('clients.table.inactive' | transloco) }}
+                    {{ getStatusBadgeLabelKey(org) | transloco }}
                   </span>
                 </div>
               </div>
@@ -385,8 +385,45 @@
                       type="checkbox"
                       class="toggle toggle-secondary toggle-sm shrink-0"
                       [checked]="org.is_receiving_notifications"
+                      [disabled]="getStatusMode(org) !== 'active'"
                       (click)="$event.preventDefault(); onToggleNotifications(org)"
                     />
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    @if (getStatusMode(org) === 'active') {
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm rounded-lg border-base-300"
+                        (click)="openStatusDialog(org, 'deactivate')"
+                      >
+                        {{ 'clients.statusActions.deactivate' | transloco }}
+                      </button>
+                    }
+                    @if (getStatusMode(org) === 'tracking_paused') {
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm rounded-lg"
+                        (click)="openStatusDialog(org, 'resume')"
+                      >
+                        {{ 'clients.statusActions.resume' | transloco }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm rounded-lg border-base-300"
+                        (click)="openStatusDialog(org, 'deactivate-access')"
+                      >
+                        {{ 'clients.statusActions.deactivateAccess' | transloco }}
+                      </button>
+                    }
+                    @if (getStatusMode(org) === 'inactive') {
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm rounded-lg"
+                        (click)="openStatusDialog(org, 'activate')"
+                      >
+                        {{ 'clients.statusActions.activate' | transloco }}
+                      </button>
+                    }
                   </div>
                   <div class="flex items-center justify-between gap-3">
                     <p class="text-xs text-base-content/55 tabular-nums">
@@ -394,51 +431,63 @@
                       <span class="text-base-content/80">{{ formatDate(org.created_at) }}</span>
                     </p>
                     <div class="flex items-center gap-1">
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-success"
-                        (click)="openExportModal(org)"
-                        [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
-                        [title]="'historialExportaciones.actions.export' | transloco"
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'historialExportaciones.actions.export' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-base-content/60"
-                        (click)="goToExportHistory(org)"
-                        [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
-                        [title]="'historialExportaciones.actions.history' | transloco"
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-success"
+                          (click)="openExportModal(org)"
+                          [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'historialExportaciones.actions.history' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-primary"
-                        (click)="openSettingsModal(org)"
-                        [attr.aria-label]="'clients.settings.configureAria' | transloco"
-                        [title]="'clients.settings.configure' | transloco"
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-base-content/60"
+                          (click)="goToExportHistory(org)"
+                          [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'clients.settings.configure' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                          />
-                        </svg>
-                      </button>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-primary"
+                          (click)="openSettingsModal(org)"
+                          [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                            />
+                          </svg>
+                        </button>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -462,7 +511,7 @@
                 <th class="text-left" style="width: 160px;">{{ 'clients.table.contactPerson' | transloco }}</th>
                 <th class="text-center" style="width: 110px;">{{ 'clients.table.processes' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.notifications' | transloco }}</th>
-                <th class="text-center" style="width: 100px;">{{ 'clients.table.status' | transloco }}</th>
+                <th class="text-center" style="width: 180px;">{{ 'clients.table.status' | transloco }}</th>
                 <th class="text-center" style="width: 120px;">{{ 'clients.table.createdAt' | transloco }}</th>
                 <th class="clients-sticky-actions text-center">{{ 'common.actions' | transloco }}</th>
               </tr>
@@ -486,66 +535,145 @@
                       type="checkbox"
                       class="toggle toggle-secondary toggle-sm"
                       [checked]="org.is_receiving_notifications"
+                      [disabled]="getStatusMode(org) !== 'active'"
                       (click)="$event.preventDefault(); onToggleNotifications(org)"
                     />
                   </td>
                   <td class="text-center align-middle">
                     <span
-                      class="badge whitespace-nowrap uppercase text-xs"
-                      [class.badge-success]="org.is_active"
-                      [class.badge-neutral]="!org.is_active"
+                      class="badge whitespace-nowrap normal-case text-xs"
+                      [ngClass]="getStatusBadgeClass(org)"
                     >
-                      {{ org.is_active ? ('clients.table.active' | transloco) : ('clients.table.inactive' | transloco) }}
+                      {{ getStatusBadgeLabelKey(org) | transloco }}
                     </span>
                   </td>
                   <td class="text-center align-middle whitespace-nowrap">{{ formatDate(org.created_at) }}</td>
                   <td class="clients-sticky-actions text-center align-middle">
-                    <div class="flex items-center justify-center gap-2 px-1">
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-success hover:bg-success/10"
-                        (click)="openExportModal(org)"
-                        [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
-                        [title]="'historialExportaciones.actions.export' | transloco"
+                    <div class="flex items-center justify-center gap-1 px-1 flex-wrap">
+                      @if (getStatusMode(org) === 'active') {
+                        <span
+                          class="tooltip tooltip-left clients-action-tooltip"
+                          [attr.data-tip]="'clients.statusActions.deactivate' | transloco"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm btn-circle text-warning hover:bg-warning/10"
+                            (click)="openStatusDialog(org, 'deactivate')"
+                            [attr.aria-label]="'clients.statusActions.deactivateAria' | transloco"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        </span>
+                      }
+                      @if (getStatusMode(org) === 'tracking_paused') {
+                        <span
+                          class="tooltip tooltip-left clients-action-tooltip"
+                          [attr.data-tip]="'clients.statusActions.resume' | transloco"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm btn-circle text-success hover:bg-success/10"
+                            (click)="openStatusDialog(org, 'resume')"
+                            [attr.aria-label]="'clients.statusActions.resumeAria' | transloco"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                        </span>
+                        <span
+                          class="tooltip tooltip-left clients-action-tooltip"
+                          [attr.data-tip]="'clients.statusActions.deactivateAccess' | transloco"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
+                            (click)="openStatusDialog(org, 'deactivate-access')"
+                            [attr.aria-label]="'clients.statusActions.deactivateAccessAria' | transloco"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        </span>
+                      }
+                      @if (getStatusMode(org) === 'inactive') {
+                        <span
+                          class="tooltip tooltip-left clients-action-tooltip"
+                          [attr.data-tip]="'clients.statusActions.activate' | transloco"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm btn-circle text-success hover:bg-success/10"
+                            (click)="openStatusDialog(org, 'activate')"
+                            [attr.aria-label]="'clients.statusActions.activateAria' | transloco"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                        </span>
+                      }
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'historialExportaciones.actions.export' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:bg-base-200"
-                        (click)="goToExportHistory(org)"
-                        [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
-                        [title]="'historialExportaciones.actions.history' | transloco"
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-success hover:bg-success/10"
+                          (click)="openExportModal(org)"
+                          [attr.aria-label]="'historialExportaciones.actions.exportAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'historialExportaciones.actions.history' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
-                        (click)="openSettingsModal(org)"
-                        [attr.aria-label]="'clients.settings.configureAria' | transloco"
-                        [title]="'clients.settings.configure' | transloco"
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-base-content/60 hover:bg-base-200"
+                          (click)="goToExportHistory(org)"
+                          [attr.aria-label]="'historialExportaciones.actions.historyAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                      <span
+                        class="tooltip tooltip-left clients-action-tooltip"
+                        [attr.data-tip]="'clients.settings.configure' | transloco"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                          />
-                        </svg>
-                      </button>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
+                          (click)="openSettingsModal(org)"
+                          [attr.aria-label]="'clients.settings.configureAria' | transloco"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                            />
+                          </svg>
+                        </button>
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -1051,6 +1179,15 @@
     confirmClass="btn-neutral"
     (confirm)="onConfirmNotificationToggle()"
     (cancel)="onCancelNotificationToggle()"
+  />
+
+  <app-organization-status-dialog
+    [open]="statusDialogOpen()"
+    [organizationName]="statusTargetOrg()?.name ?? ''"
+    [variant]="statusDialogVariant()"
+    [submitting]="statusSubmitting()"
+    (confirmed)="onConfirmStatusChange($event)"
+    (cancelled)="closeStatusDialog()"
   />
 
   <!-- Toast éxito (DaisyUI, auto-dismiss) -->
