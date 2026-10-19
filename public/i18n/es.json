@@ -1172,10 +1172,37 @@
     "confirmRowProcesses": "Procesos",
     "confirmRowActions": "Actuaciones pendientes",
     "confirmFootnote": "El envío de correos puede demorar unos minutos mientras se procesa la cola.",
+    "openDetailHint": "Ver detalle de procesos y actuaciones",
     "errors": {
       "loadFailed": "No se pudo cargar el paquete pendiente.",
       "sendGeneric": "No se pudo enviar el paquete. Intenta de nuevo.",
       "discardGeneric": "No se pudo descartar el consolidado. Intenta de nuevo."
+    },
+    "detail": {
+      "title": "Consolidado pendiente",
+      "subtitle": "Detalle de procesos y actuaciones que se enviarán",
+      "back": "Volver al paquete de consolidados",
+      "showSummary": "Mostrar resumen",
+      "hideSummary": "Ocultar resumen",
+      "publicationLabel": "Publicación",
+      "movementsLabel": "Movimientos detectados",
+      "processesLabel": "Procesos",
+      "processesHint": "en esta página",
+      "notifiedLabel": "Notificado",
+      "pendingChannel": "Pendiente de enviar",
+      "comingSoon": "Próximamente",
+      "waiting": "En espera",
+      "horizontalScrollHint": "Desplaza horizontalmente para ver todas las columnas",
+      "viewMore": "Ver detalle",
+      "actionDetailTitle": "Detalle de la actuación",
+      "autoNotified": "Auto",
+      "close": "Cerrar",
+      "copied": "Radicado copiado",
+      "emptyTitle": "Sin actuaciones pendientes",
+      "emptySubtitle": "No hay actuaciones para mostrar en este consolidado.",
+      "errors": {
+        "loadFailed": "No se pudo cargar el detalle del consolidado pendiente."
+      }
     }
   }
 }

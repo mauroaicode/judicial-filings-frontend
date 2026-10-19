@@ -1,0 +1,589 @@
+<dialog class="modal digest-detail-dialog" [class.modal-open]="isOpen()">
+  <div class="modal-box digest-detail-modal w-[98vw] max-w-[98vw] h-[98vh] max-h-[98vh] p-0 flex flex-col bg-base-100 rounded-2xl overflow-hidden shadow-2xl relative">
+
+    @if (copiedMessage(); as msg) {
+      <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+        <div class="alert alert-success shadow-lg border-none rounded-2xl font-semibold pointer-events-none">
+          <span>{{ msg }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <!-- Sticky header -->
+      <div class="sticky top-0 z-50 shrink-0 bg-base-100 border-b border-base-200 px-6 py-4 space-y-4">
+        <div class="flex flex-wrap justify-between items-start gap-4">
+          <div class="space-y-1 min-w-0">
+            <h2 class="text-2xl font-bold text-base-content tracking-tight">
+              {{ 'digestPackages.detail.title' | transloco }}
+            </h2>
+            <p class="text-sm text-base-content/65">
+              @if (digest()?.organization_name; as orgName) {
+                <span class="font-semibold text-primary">{{ orgName }}</span>
+              } @else {
+                {{ 'digestPackages.detail.subtitle' | transloco }}
+              }
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm rounded-xl border border-base-200 gap-2"
+              [disabled]="loading()"
+              (click)="load()"
+            >
+              @if (loading()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              }
+              {{ 'digestPackages.refresh' | transloco }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex btn btn-sm btn-circle btn-ghost bg-base-200/50 hover:bg-base-200"
+              (click)="close()"
+              [attr.aria-label]="'digestPackages.detail.close' | transloco"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile summary toggle -->
+        @if (!loading() && !loadError() && digest()) {
+          <div class="sm:hidden">
+            <button
+              type="button"
+              class="w-full btn btn-sm btn-outline btn-primary justify-between"
+              (click)="toggleMobileSummary($event)"
+            >
+              <span class="text-[11px] uppercase tracking-widest font-bold">
+                {{ mobileSummaryExpanded() ? ('digestPackages.detail.hideSummary' | transloco) : ('digestPackages.detail.showSummary' | transloco) }}
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" [class.rotate-180]="mobileSummaryExpanded()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- Stats: mobile expandable -->
+        @if (!loading() && !loadError() && digest(); as d) {
+          @if (mobileSummaryExpanded()) {
+            <div class="grid grid-cols-1 gap-3 sm:hidden">
+              <ng-container *ngTemplateOutlet="statsCards; context: { d }" />
+            </div>
+          }
+          <div class="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <ng-container *ngTemplateOutlet="statsCards; context: { d }" />
+          </div>
+        }
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 min-h-0 overflow-y-auto lg:overflow-y-hidden p-4 sm:p-6 bg-base-100/50">
+        @if (loading()) {
+          <div class="flex justify-center items-center h-48">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+          </div>
+        } @else if (loadError()) {
+          <div class="flex flex-col items-center justify-center h-48 gap-3 text-center">
+            <p class="text-sm font-semibold text-base-content/70">{{ 'digestPackages.detail.errors.loadFailed' | transloco }}</p>
+            <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="load()">
+              {{ 'digestPackages.retry' | transloco }}
+            </button>
+          </div>
+        } @else if (rows().length === 0) {
+          <div class="flex flex-col items-center justify-center h-48 text-center text-base-content/50">
+            <p class="text-base font-semibold text-base-content">{{ 'digestPackages.detail.emptyTitle' | transloco }}</p>
+            <p class="text-sm text-base-content/55 max-w-sm mt-1">{{ 'digestPackages.detail.emptySubtitle' | transloco }}</p>
+          </div>
+        } @else {
+          <div class="hidden lg:block mb-3">
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning/5 px-3 py-2 text-warning">
+              <span class="text-[11px] font-black uppercase tracking-widest">
+                {{ 'digestPackages.detail.horizontalScrollHint' | transloco }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="block lg:hidden space-y-3">
+            @for (action of rows(); track rowTrack(action, i); let i = $index) {
+              <div class="card border border-base-200 bg-base-100 shadow-sm overflow-hidden">
+                <div class="p-3 flex items-start justify-between gap-3 border-b border-base-200/70">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[11px] text-base-content/40 font-bold">#{{ rowIndex(i) }}</span>
+                      @if (action.alert_level) {
+                        <app-process-alert-tooltip
+                          [alertLevel]="action.alert_level"
+                          [lawyerRole]="action.lawyer_role"
+                          position="bottom"
+                          [leftAligned]="true"
+                        />
+                      }
+                    </div>
+                    <div class="mt-1 flex items-center gap-1.5">
+                      @if (action.process_id) {
+                        <button
+                          type="button"
+                          class="font-bold text-sm text-base-content hover:underline text-left"
+                          (click)="goToProcess(action.process_id, $event)"
+                        >
+                          {{ action.process_number | processNumber }}
+                        </button>
+                      } @else {
+                        <span class="font-bold text-sm">{{ action.process_number | processNumber }}</span>
+                      }
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs btn-circle text-base-content/35"
+                        (click)="copyToClipboard(action.process_number, $event)"
+                        [attr.title]="'processes.copy.tooltip' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                        </svg>
+                      </button>
+                    </div>
+                    <p class="mt-1 text-xs text-base-content/60 truncate">{{ action.court || '–' }}</p>
+                  </div>
+                </div>
+                <div class="p-3 space-y-2 text-sm">
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p class="text-[10px] uppercase font-black text-base-content/35">{{ 'processes.table.plaintiff' | transloco }}</p>
+                      <p class="truncate">{{ (action.plaintiffs?.[0] || action.plaintiff) || '–' }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] uppercase font-black text-base-content/35">{{ 'processes.table.defendant' | transloco }}</p>
+                      <p class="truncate">{{ (action.defendants?.[0] || action.defendant) || '–' }}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="w-full text-left rounded-lg p-2 hover:bg-primary/5 transition-colors"
+                    (click)="openActionDetail(action, $event)"
+                  >
+                    @if (action.is_merged) {
+                      <div class="flex flex-col gap-1.5">
+                        <div class="flex items-start gap-1.5">
+                          <span class="digest-badge digest-badge--primary badge badge-sm bg-primary/10 text-primary font-bold text-[9px] px-1.5 min-h-4 h-auto py-0.5 uppercase tracking-tighter shrink-0">
+                            {{ getFijacionBadgeLabel(action.action_text || action.action) }}
+                          </span>
+                          <span class="font-semibold text-base-content/90">{{ actionLineText(action) }}</span>
+                        </div>
+                        @if (action.linked_action_text) {
+                          <div class="flex items-start gap-1.5">
+                            <span class="digest-badge digest-badge--accent badge badge-sm bg-accent/10 text-accent font-bold text-[9px] px-1.5 min-h-4 h-auto py-0.5 uppercase tracking-tighter shrink-0">Auto</span>
+                            <span class="font-semibold text-base-content">{{ linkedActionText(action) }}</span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <span class="font-medium">{{ actionLineText(action) }}</span>
+                    }
+                    <div class="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary/70">
+                      <span>{{ 'digestPackages.detail.viewMore' | transloco }}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Desktop table -->
+          <div class="hidden lg:block h-full min-h-0">
+            <div class="overflow-x-auto overflow-y-auto w-full h-full min-h-0 border border-base-200 rounded-xl bg-base-100 digest-detail-table-scroll">
+              <table class="table table-zebra digest-detail-table" style="min-width: 1480px;">
+                <thead>
+                  <tr>
+                    <th class="text-center digest-th-compact" style="width: 48px;">{{ 'processDetail.actions.table.index' | transloco }}</th>
+                    <th class="text-center digest-th-compact" style="width: 80px;">{{ 'alertSemafor.alertLevel' | transloco }}</th>
+                    <th class="text-left digest-th-left">{{ 'processes.table.processNumber' | transloco }}</th>
+                    <th class="text-left digest-th-left" style="width: 320px;">{{ 'processes.table.court' | transloco }}</th>
+                    <th class="text-left digest-th-left" style="width: 180px;">{{ 'processes.table.plaintiff' | transloco }}</th>
+                    <th class="text-left digest-th-left" style="width: 180px;">{{ 'processes.table.defendant' | transloco }}</th>
+                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.registrationDate' | transloco }}</th>
+                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.termStartDate' | transloco }}</th>
+                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.termEndDate' | transloco }}</th>
+                    <th class="text-left digest-th-left" style="width: 280px;">{{ 'processDetail.actions.table.action' | transloco }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (action of rows(); track rowTrack(action, i); let i = $index) {
+                    @let trackId = rowTrack(action, i);
+                    <tr
+                      class="transition-colors border-b border-base-200/60"
+                      [class.process-row-hovered]="hoveredRowId() === trackId"
+                      (mouseenter)="hoveredRowId.set(trackId)"
+                      (mouseleave)="hoveredRowId.set(null)"
+                    >
+                      <td class="text-center align-middle font-bold text-[11px] text-base-content/40">
+                        {{ rowIndex(i) }}
+                      </td>
+                      <td class="text-center align-middle">
+                        <div class="flex justify-center w-full">
+                          @if (action.alert_level) {
+                            <app-process-alert-tooltip
+                              [alertLevel]="action.alert_level"
+                              [lawyerRole]="action.lawyer_role"
+                              [position]="i < 3 ? 'bottom' : 'top'"
+                              [leftAligned]="true"
+                            />
+                          } @else {
+                            <div class="flex flex-col items-center gap-1.5 opacity-40">
+                              <div class="w-3.5 h-3.5 rounded-full bg-base-300 ring-2 ring-base-200 shadow-inner"></div>
+                              <span class="text-[8px] uppercase font-black tracking-widest text-base-content/40 text-center leading-none">
+                                {{ 'digestPackages.detail.waiting' | transloco }}
+                              </span>
+                            </div>
+                          }
+                        </div>
+                      </td>
+                      <td class="align-middle">
+                        <div class="radicado-row">
+                          @if (action.process_id) {
+                            <button
+                              type="button"
+                              class="radicado-number font-bold text-base-content/90 cursor-pointer hover:underline underline-offset-2 text-left"
+                              (click)="goToProcess(action.process_id, $event)"
+                            >
+                              {{ action.process_number | processNumber }}
+                            </button>
+                          } @else {
+                            <span class="radicado-number font-bold text-base-content/90">{{ action.process_number | processNumber }}</span>
+                          }
+                          <button
+                            type="button"
+                            class="radicado-copy-btn btn btn-ghost btn-xs btn-circle h-6 w-6 min-h-6 min-w-6 text-base-content/35 hover:bg-base-200"
+                            (click)="copyToClipboard(action.process_number, $event)"
+                            [attr.title]="'processes.copy.tooltip' | transloco"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                            </svg>
+                          </button>
+                        </div>
+                        @if (action.lawyer_role) {
+                          <div class="flex items-center mt-1">
+                            <span class="process-role-badge px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">
+                              {{ action.lawyer_role }}
+                            </span>
+                          </div>
+                        }
+                      </td>
+                      <td class="align-middle text-sm font-medium text-base-content/90 leading-snug">
+                        {{ action.court || '–' }}
+                      </td>
+                      <td class="align-middle text-sm text-base-content/80 max-w-[180px]">
+                        @let plaintiffDisplay = getPartyDisplay(action.plaintiffs ?? (action.plaintiff ? [action.plaintiff] : []));
+                        @if (plaintiffDisplay.mainText || plaintiffDisplay.extraCount > 0) {
+                          <span>
+                            <span class="truncate block max-w-full" [title]="plaintiffDisplay.mainText">{{ plaintiffDisplay.mainText }}</span>
+                            @if (plaintiffDisplay.extraCount > 0) {
+                              <span class="process-list-tooltip" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of plaintiffDisplay.fullList; track name; let j = $index) {
+                                    <div class="text-base-content">{{ j + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                  (+{{ plaintiffDisplay.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="opacity-50">–</span>
+                        }
+                      </td>
+                      <td class="align-middle text-sm text-base-content/80 max-w-[180px]">
+                        @let defendantDisplay = getPartyDisplay(action.defendants ?? (action.defendant ? [action.defendant] : []));
+                        @if (defendantDisplay.mainText || defendantDisplay.extraCount > 0) {
+                          <span>
+                            <span class="truncate block max-w-full" [title]="defendantDisplay.mainText">{{ defendantDisplay.mainText }}</span>
+                            @if (defendantDisplay.extraCount > 0) {
+                              <span class="process-list-tooltip" (click)="$event.stopPropagation()">
+                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
+                                  @for (name of defendantDisplay.fullList; track name; let j = $index) {
+                                    <div class="text-base-content">{{ j + 1 }}. {{ name }}</div>
+                                  }
+                                </div>
+                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                  (+{{ defendantDisplay.extraCount }})
+                                </span>
+                              </span>
+                            }
+                          </span>
+                        } @else {
+                          <span class="opacity-50">–</span>
+                        }
+                      </td>
+                      <td class="text-center align-middle text-sm font-semibold text-base-content/80 whitespace-nowrap">
+                        {{ action.registration_date || '–' }}
+                      </td>
+                      <td class="text-center align-middle text-sm font-medium whitespace-nowrap">
+                        {{ action.term_start_date || '–' }}
+                      </td>
+                      <td class="text-center align-middle text-sm font-medium whitespace-nowrap">
+                        {{ action.term_end_date || '–' }}
+                      </td>
+                      <td class="align-middle text-sm text-base-content leading-snug">
+                        <button
+                          type="button"
+                          class="w-full text-left rounded-lg p-1.5 -m-1.5 hover:bg-primary/5 transition-colors cursor-pointer"
+                          (click)="openActionDetail(action, $event)"
+                        >
+                          <div class="flex flex-col gap-2">
+                            <div class="min-w-0 flex-1 flex flex-col gap-1.5">
+                              @if (action.is_merged) {
+                                <div class="flex flex-col gap-1.5">
+                                  <div class="flex items-start gap-1.5">
+                                    <span class="digest-badge digest-badge--primary badge badge-sm bg-primary/10 text-primary font-bold text-[9px] px-1.5 min-h-4 h-auto py-0.5 uppercase tracking-tighter shrink-0">
+                                      {{ getFijacionBadgeLabel(action.action_text || action.action) }}
+                                    </span>
+                                    <span class="font-semibold text-base-content/90">{{ actionLineText(action) }}</span>
+                                  </div>
+                                  @if (action.linked_action_text) {
+                                    <div class="flex items-start gap-1.5">
+                                      <span class="digest-badge digest-badge--accent badge badge-sm bg-accent/10 text-accent font-bold text-[9px] px-1.5 min-h-4 h-auto py-0.5 uppercase tracking-tighter shrink-0">Auto</span>
+                                      <span class="font-semibold text-base-content leading-snug">{{ linkedActionText(action) }}</span>
+                                    </div>
+                                  }
+                                </div>
+                              } @else {
+                                <span class="font-medium">{{ actionLineText(action) }}</span>
+                              }
+                            </div>
+                            <div class="self-start inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary/70 hover:text-primary transition-colors">
+                              <span>{{ 'digestPackages.detail.viewMore' | transloco }}</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (!loading() && !loadError() && pagination(); as paginationInfo) {
+        <div class="digest-pagination border-t border-base-300 bg-base-100 shrink-0">
+          <div class="digest-pagination__results">
+            {{ 'table.showing' | transloco }}
+            <span class="font-semibold">{{ paginationInfo.from }}</span>
+            {{ 'table.to' | transloco }}
+            <span class="font-semibold">{{ paginationInfo.to }}</span>
+            {{ 'table.of' | transloco }}
+            <span class="font-semibold">{{ paginationInfo.total }}</span>
+            {{ 'table.results' | transloco }}
+          </div>
+          <div class="digest-pagination__controls join">
+            <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === 1" (click)="onPageChange(1, paginationInfo.per_page)">««</button>
+            <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === 1" (click)="onPageChange(paginationInfo.current_page - 1, paginationInfo.per_page)">«</button>
+            @for (page of getPageNumbers(); track page) {
+              <button type="button" class="join-item btn btn-sm" [class.btn-active]="page === paginationInfo.current_page" (click)="onPageChange(page, paginationInfo.per_page)">{{ page }}</button>
+            }
+            <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === paginationInfo.last_page" (click)="onPageChange(paginationInfo.current_page + 1, paginationInfo.per_page)">»</button>
+            <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === paginationInfo.last_page" (click)="onPageChange(paginationInfo.last_page, paginationInfo.per_page)">»»</button>
+          </div>
+          <div class="digest-pagination__page-size">
+            <select class="select select-bordered select-sm" [value]="paginationInfo.per_page" (change)="onPageChange(1, +$any($event.target).value)">
+              @for (size of pageSizeOptions; track size) {
+                <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
+                  {{ size }} {{ 'table.perPage' | transloco }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <form method="dialog" class="modal-backdrop bg-base-content/45" (click)="close()">
+    <button type="button">close</button>
+  </form>
+</dialog>
+
+<!-- Action detail nested modal -->
+<dialog class="modal" [class.modal-open]="showActionDetailModal()">
+  @if (selectedActionDetail(); as detail) {
+    <div class="modal-box w-11/12 max-w-4xl bg-base-100 rounded-3xl p-0 overflow-hidden shadow-2xl">
+      <div class="p-5 md:p-6">
+        <div class="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.22em] font-black text-primary mb-2">
+              {{ 'digestPackages.detail.actionDetailTitle' | transloco }}
+            </p>
+            @if (detail.process_id) {
+              <button
+                type="button"
+                class="text-base md:text-lg font-bold text-base-content/90 cursor-pointer hover:underline text-left"
+                (click)="goToProcess(detail.process_id, $event)"
+              >
+                {{ detail.process_number | processNumber }}
+              </button>
+            } @else {
+              <h3 class="text-base md:text-lg font-bold text-base-content">{{ detail.process_number | processNumber }}</h3>
+            }
+          </div>
+          <button type="button" class="btn btn-ghost btn-circle text-base-content/40 hover:text-base-content" (click)="closeActionDetail()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.22em] font-black text-base-content/35 mb-2">{{ 'processes.table.court' | transloco }}</p>
+            <p class="text-sm md:text-base font-semibold leading-tight text-base-content">{{ detail.court || '–' }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.22em] font-black text-base-content/35 mb-2">{{ 'processDetail.actions.table.actionDate' | transloco }}</p>
+            <p class="text-sm md:text-base font-semibold leading-tight text-base-content">{{ detail.action_date || '–' }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 mb-6">
+          <div>
+            <span class="digest-badge digest-badge--primary badge bg-primary/10 text-primary font-bold text-[10px] px-2.5 py-1.5 uppercase tracking-wider">
+              {{ getFijacionBadgeLabel(detail.action_text || detail.action) }}
+            </span>
+          </div>
+          <div class="rounded-2xl border border-base-200 bg-base-100 px-5 py-4">
+            <p class="text-sm md:text-base font-semibold text-base-content">{{ actionLineText(detail) }}</p>
+            @if (shouldShowMainAnnotation(detail)) {
+              <p class="mt-2 text-xs text-base-content/75 leading-relaxed">{{ formatMainAnnotation(detail) }}</p>
+            }
+          </div>
+        </div>
+
+        @if (detail.is_merged && detail.linked_action_text) {
+          <div class="space-y-3 mb-6">
+            <div>
+              <span class="badge bg-accent/10 text-accent border-none font-bold text-[10px] px-2.5 py-1.5 uppercase tracking-wider">
+                {{ 'digestPackages.detail.autoNotified' | transloco }}
+              </span>
+            </div>
+            <div class="rounded-2xl border border-accent/30 bg-accent/5 px-5 py-4">
+              <p class="text-sm md:text-base font-semibold text-accent">{{ linkedActionText(detail) }}</p>
+              @if (shouldShowLinkedAnnotation(detail)) {
+                <p class="mt-2 text-xs text-base-content/80 leading-relaxed">{{ formatLinkedAnnotation(detail) }}</p>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-7">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.22em] font-black text-base-content/35 mb-1">{{ 'processDetail.actions.table.termStartDate' | transloco }}</p>
+            <p class="text-sm md:text-base font-semibold text-base-content/70">{{ detail.term_start_date || '–' }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.22em] font-black text-base-content/35 mb-1">{{ 'processDetail.actions.table.termEndDate' | transloco }}</p>
+            <p class="text-sm md:text-base font-semibold text-base-content/70">{{ detail.term_end_date || '–' }}</p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary w-full rounded-2xl text-sm font-bold h-11 normal-case" (click)="closeActionDetail()">
+          {{ 'digestPackages.detail.close' | transloco }}
+        </button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-base-content/45" (click)="closeActionDetail()">
+      <button type="button">close</button>
+    </form>
+  }
+</dialog>
+
+<ng-template #statsCards let-d="d">
+  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+    <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
+      {{ 'digestPackages.detail.publicationLabel' | transloco }}
+    </p>
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-sm font-semibold text-base-content/80 truncate">{{ d.date || '–' }}</div>
+      <span [class]="'period-badge period-' + getPeriodClass(d.period || 'mañana')">{{ d.period || '–' }}</span>
+    </div>
+    <div class="mt-1.5 flex items-center gap-1.5 text-xs text-base-content/60 font-semibold">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ d.time || '–' }}</span>
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+    <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
+      {{ 'digestPackages.detail.movementsLabel' | transloco }}
+    </p>
+    <div class="text-2xl font-black text-base-content leading-none">{{ d.actions_count }}</div>
+    <p class="text-xs text-base-content/55 mt-1">{{ 'table.results' | transloco }}</p>
+  </div>
+
+  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+    <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
+      {{ 'digestPackages.detail.processesLabel' | transloco }}
+    </p>
+    <div class="text-2xl font-black text-base-content leading-none">{{ uniqueProcessesCount() }}</div>
+    <p class="text-xs text-base-content/55 mt-1">{{ 'digestPackages.detail.processesHint' | transloco }}</p>
+  </div>
+
+  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+    <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-2">
+      {{ 'digestPackages.detail.notifiedLabel' | transloco }}
+    </p>
+    <div class="flex items-center gap-2">
+      <div class="tooltip tooltip-top" [attr.data-tip]="d.email_notified_at || ('digestPackages.detail.pendingChannel' | transloco)">
+        <div
+          class="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+          [ngClass]="d.email_notified_at ? 'text-success bg-success/10 border-success/20' : 'text-base-content/20 bg-base-200 border-base-200'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+      <div class="tooltip tooltip-top" [attr.data-tip]="d.whatsapp_notified_at || ('digestPackages.detail.comingSoon' | transloco)">
+        <div
+          class="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+          [ngClass]="d.whatsapp_notified_at ? 'text-success bg-success/10 border-success/20' : 'text-base-content/20 bg-base-200 border-base-200'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.527 5.854L0 24l6.29-1.508A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.372l-.36-.214-3.732.894.944-3.637-.234-.374A9.818 9.818 0 1112 21.818z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tooltip tooltip-top" [attr.data-tip]="d.sms_notified_at || ('digestPackages.detail.comingSoon' | transloco)">
+        <div
+          class="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+          [ngClass]="d.sms_notified_at ? 'text-success bg-success/10 border-success/20' : 'text-base-content/20 bg-base-200 border-base-200'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

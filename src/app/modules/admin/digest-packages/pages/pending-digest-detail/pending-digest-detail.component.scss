@@ -1,0 +1,151 @@
+.digest-detail-dialog {
+  z-index: 60;
+}
+
+.digest-detail-modal {
+  display: flex;
+  flex-direction: column;
+}
+
+.digest-detail-table thead tr {
+  background-color: #24163e;
+  color: #ffffff;
+}
+
+.digest-detail-table thead th {
+  background-color: #24163e !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.digest-th-compact {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.digest-th-left {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.digest-detail-table tbody tr.process-row-hovered,
+.digest-detail-table tbody tr.process-row-hovered td {
+  background-color: #f3f0f9 !important;
+}
+
+.radicado-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.radicado-number {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  word-break: break-all;
+}
+
+.digest-badge {
+  border-width: 1px;
+  border-style: solid;
+
+  &--primary {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  }
+
+  &--accent {
+    border-color: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  }
+}
+
+.period-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &.period-manana {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.period-tarde {
+    background: #fff3cd;
+    color: #b45309;
+  }
+
+  &.period-noche {
+    background: #e0e7ff;
+    color: #4338ca;
+  }
+}
+
+.process-role-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #f1eef6;
+  border: 1px solid #ddd6e8;
+  color: #5a526e;
+}
+
+.process-list-tooltip {
+  position: relative;
+  display: inline-flex;
+
+  .tooltip-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.35rem);
+    z-index: 40;
+    min-width: 12rem;
+  }
+
+  &:hover .tooltip-content,
+  &:focus-within .tooltip-content {
+    display: block;
+  }
+}
+
+.digest-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 1rem;
+
+  &__results {
+    font-size: 0.8125rem;
+    color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
+  }
+
+  &__controls {
+    margin-inline: auto;
+  }
+
+  &__page-size {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .digest-pagination {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__controls,
+    &__page-size {
+      margin: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}

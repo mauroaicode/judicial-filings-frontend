@@ -2,11 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DigestPackageService } from '@app/core/services/digest-package/digest-package.service';
 import {
@@ -19,11 +22,17 @@ import {
   ConfirmationDialogComponent,
   ConfirmationDialogDetailRow,
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { PendingDigestDetailComponent } from './pages/pending-digest-detail/pending-digest-detail.component';
 
 @Component({
   selector: 'app-digest-packages',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe, ConfirmationDialogComponent],
+  imports: [
+    CommonModule,
+    TranslocoPipe,
+    ConfirmationDialogComponent,
+    PendingDigestDetailComponent,
+  ],
   templateUrl: './digest-packages.component.html',
   styleUrls: ['./digest-packages.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +40,9 @@ import {
 export class DigestPackagesComponent implements OnInit {
   private _service = inject(DigestPackageService);
   private _transloco = inject(TranslocoService);
+  private _router = inject(Router);
+  private _route = inject(ActivatedRoute);
+  private _destroyRef = inject(DestroyRef);
 
   public preview = signal<DigestPackagePreview | null>(null);
   public loading = signal<boolean>(true);
@@ -40,6 +52,9 @@ export class DigestPackagesComponent implements OnInit {
   public confirmOpen = signal<boolean>(false);
   public discardConfirmOpen = signal<boolean>(false);
   public discardTarget = signal<DigestPackageOrganization | null>(null);
+
+  /** Org del consolidado pendiente abierto en modal (deep link: ?organization=). */
+  public detailOrganizationId = signal<string | null>(null);
 
   public toastMessage = signal<string | null>(null);
   public toastKind = signal<'success' | 'error'>('success');
@@ -71,6 +86,11 @@ export class DigestPackagesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPreview();
+
+    this._route.queryParamMap.pipe(takeUntilDestroyed(this._destroyRef)).subscribe((q) => {
+      const orgId = q.get('organization')?.trim() || null;
+      this.detailOrganizationId.set(orgId);
+    });
   }
 
   loadPreview(): void {
@@ -146,6 +166,32 @@ export class DigestPackagesComponent implements OnInit {
           this._transloco.translate('digestPackages.errors.discardGeneric');
         this._showToast(msg, 'error');
       },
+    });
+  }
+
+  /** Abre el detalle en modal y deja la URL compartible. */
+  openOrgDetail(org: DigestPackageOrganization): void {
+    void this._router.navigate([], {
+      relativeTo: this._route,
+      queryParams: {
+        organization: org.organization_id,
+        page: null,
+        per_page: null,
+      },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  /** Cierra la modal y limpia query params de detalle. */
+  closeOrgDetail(): void {
+    void this._router.navigate([], {
+      relativeTo: this._route,
+      queryParams: {
+        organization: null,
+        page: null,
+        per_page: null,
+      },
+      queryParamsHandling: 'merge',
     });
   }
 

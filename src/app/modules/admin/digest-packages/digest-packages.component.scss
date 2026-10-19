@@ -9,6 +9,27 @@
   vertical-align: middle;
 }
 
+.dp-row--clickable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover td {
+    background-color: #f3f0f9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid hsl(var(--p));
+    outline-offset: -2px;
+  }
+}
+
+.dp-org-link {
+  color: hsl(var(--p));
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, hsl(var(--p)) 35%, transparent);
+  text-underline-offset: 2px;
+}
+
 .dp-pending-badge {
   display: inline-flex;
   align-items: center;

@@ -1144,10 +1144,37 @@
         "confirmRowProcesses": "Processes",
         "confirmRowActions": "Pending actions",
         "confirmFootnote": "Email delivery may take a few minutes while the queue is processed.",
+        "openDetailHint": "View process and action details",
         "errors": {
             "loadFailed": "Could not load the pending package.",
             "sendGeneric": "Could not send the package. Please try again.",
             "discardGeneric": "Could not discard the digest. Please try again."
+        },
+        "detail": {
+            "title": "Pending digest",
+            "subtitle": "Detail of processes and actions that will be sent",
+            "back": "Back to digest packages",
+            "showSummary": "Show summary",
+            "hideSummary": "Hide summary",
+            "publicationLabel": "Publication",
+            "movementsLabel": "Detected movements",
+            "processesLabel": "Processes",
+            "processesHint": "on this page",
+            "notifiedLabel": "Notified",
+            "pendingChannel": "Pending send",
+            "comingSoon": "Coming soon",
+            "waiting": "Waiting",
+            "horizontalScrollHint": "Scroll horizontally to see all columns",
+            "viewMore": "View detail",
+            "actionDetailTitle": "Action detail",
+            "autoNotified": "Auto",
+            "close": "Close",
+            "copied": "Process number copied",
+            "emptyTitle": "No pending actions",
+            "emptySubtitle": "There are no actions to show for this digest.",
+            "errors": {
+                "loadFailed": "Could not load the pending digest detail."
+            }
         }
     }
 }

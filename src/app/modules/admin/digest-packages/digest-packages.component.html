@@ -167,8 +167,18 @@
           </thead>
           <tbody>
             @for (org of p.organizations; track org.organization_id) {
-              <tr class="dp-row">
-                <td class="font-semibold text-base-content">{{ org.organization_name }}</td>
+              <tr
+                class="dp-row dp-row--clickable"
+                role="link"
+                tabindex="0"
+                [attr.title]="'digestPackages.openDetailHint' | transloco"
+                (click)="openOrgDetail(org)"
+                (keydown.enter)="openOrgDetail(org)"
+                (keydown.space)="$event.preventDefault(); openOrgDetail(org)"
+              >
+                <td class="font-semibold text-base-content">
+                  <span class="dp-org-link">{{ org.organization_name }}</span>
+                </td>
                 <td class="text-right">
                   <span class="dp-pending-badge dp-pending-badge--primary">{{ org.pending_processes }}</span>
                 </td>
@@ -176,7 +186,7 @@
                   <span class="dp-pending-badge dp-pending-badge--muted">{{ org.pending_actions }}</span>
                 </td>
                 <td class="text-base-content/70 text-xs leading-relaxed">{{ formatChannels(org) }}</td>
-                <td class="text-right">
+                <td class="text-right" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                   <button
                     type="button"
                     class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-error font-bold normal-case hover:bg-error/10"
@@ -219,6 +229,12 @@
     confirmClass="btn-error"
     (confirm)="onConfirmDiscard()"
     (cancel)="cancelDiscardConfirm()"
+  />
+
+  <!-- Detalle consolidado pendiente (modal + deep link ?organization=) -->
+  <app-pending-digest-detail
+    [organizationId]="detailOrganizationId()"
+    (closed)="closeOrgDetail()"
   />
 
 </div>
