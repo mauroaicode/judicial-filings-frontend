@@ -44,6 +44,11 @@ export default [
     loadChildren: () =>
       import('./digest-packages/digest-packages.routes').then((m) => m.default),
   },
+  {
+    path: 'presence',
+    loadChildren: () =>
+      import('./presence/presence.routes').then((m) => m.default),
+  },
   // More admin routes will be added here as modules are created
   // Example structure for future modules with role guards:
   // {

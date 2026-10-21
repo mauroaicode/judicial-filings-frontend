@@ -1,0 +1,497 @@
+<div class="w-full space-y-6 pb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-base-content md:text-3xl">
+      {{ 'presence.title' | transloco }}
+    </h1>
+    <p class="mt-1 text-sm text-base-content/70">{{ 'presence.description' | transloco }}</p>
+  </div>
+
+  <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
+    <div class="card-body p-4 md:p-5">
+      <label class="label py-0" for="presence-organization">
+        <span class="label-text font-semibold">{{ 'presence.organization' | transloco }}</span>
+      </label>
+      <div class="max-w-md" id="presence-organization">
+        <app-searchable-select
+          [value]="organizationId()"
+          (valueChange)="onOrganizationChange($event)"
+          [options]="organizationOptions()"
+          [placeholder]="'presence.organizationAll' | transloco"
+          [searchPlaceholder]="'presence.organizationSearch' | transloco"
+          [noResultsText]="'presence.organizationEmpty' | transloco"
+          [loading]="organizationsLoading()"
+        ></app-searchable-select>
+      </div>
+    </div>
+  </div>
+
+  <section class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl overflow-hidden" aria-labelledby="presence-online-title">
+    <div class="card-body gap-4 p-4 md:p-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 id="presence-online-title" class="text-lg font-bold text-base-content">
+              {{ 'presence.online.title' | transloco }}
+            </h2>
+            @if (socketLive()) {
+              <span class="badge badge-success badge-outline gap-1">
+                <span class="inline-block h-1.5 w-1.5 rounded-full bg-success"></span>
+                {{ 'presence.live' | transloco }}
+              </span>
+            }
+            @if (onlineRefreshing()) {
+              <span class="inline-flex items-center gap-1 text-xs text-base-content/60">
+                <span class="loading loading-spinner loading-xs"></span>
+                {{ 'presence.refreshing' | transloco }}
+              </span>
+            }
+          </div>
+          <p class="mt-1 text-sm text-base-content/65">{{ 'presence.online.description' | transloco }}</p>
+          <p class="mt-1 text-xs text-base-content/45">{{ 'presence.locationHint' | transloco }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          @if (onlineState() === 'ready' && onlineTotal() !== null) {
+            <span class="badge badge-primary badge-lg font-bold tabular-nums" aria-live="polite">
+              {{ 'presence.online.count' | transloco: { count: onlineTotal() } }}
+            </span>
+          }
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm rounded-xl border border-base-200"
+            [disabled]="onlineLoading()"
+            (click)="loadOnline()"
+          >
+            {{ 'presence.refresh' | transloco }}
+          </button>
+        </div>
+      </div>
+
+      @if (onlineState() === 'loading') {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (onlineState() === 'unavailable') {
+        <div class="alert alert-warning rounded-xl">
+          <span>{{ 'presence.online.unavailable' | transloco }}</span>
+        </div>
+      } @else if (onlineState() === 'error') {
+        <div class="alert alert-error rounded-xl">
+          <span>{{ onlineError() }}</span>
+        </div>
+      } @else if (onlineUsers().length === 0) {
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <p class="text-base-content/60">{{ 'presence.online.empty' | transloco }}</p>
+        </div>
+      } @else {
+        @if (onlineError()) {
+          <div class="alert alert-error rounded-xl">
+            <span>{{ onlineError() }}</span>
+          </div>
+        }
+        <div class="overflow-x-auto -mx-4 md:-mx-5">
+          <table class="table table-zebra presence-table">
+            <thead>
+              <tr>
+                <th>{{ 'presence.table.person' | transloco }}</th>
+                <th>{{ 'presence.table.organization' | transloco }}</th>
+                <th>{{ 'presence.table.place' | transloco }}</th>
+                <th>{{ 'presence.online.lastSeen' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of onlineUsers(); track user.id + '|' + (user.organization_id || $index)) {
+                <tr>
+                  <td>
+                    <ng-container *ngTemplateOutlet="personCell; context: { row: user }"></ng-container>
+                  </td>
+                  <td>{{ onlineOrganization(user) }}</td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="placeCell; context: { row: user }"></ng-container>
+                  </td>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDateTime(user.last_seen_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl overflow-hidden" aria-labelledby="presence-daily-title">
+    <div class="card-body gap-4 p-4 md:p-5">
+      <div>
+        <h2 id="presence-daily-title" class="text-lg font-bold text-base-content">
+          {{ 'presence.daily.title' | transloco }}
+        </h2>
+        <p class="mt-1 text-sm text-base-content/65">{{ 'presence.daily.description' | transloco }}</p>
+        <p class="mt-1 text-xs text-base-content/45">{{ 'presence.daily.snapshot' | transloco }}</p>
+      </div>
+
+      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+        <div class="join">
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-primary]="isDailyToday()"
+            (click)="applyDailyToday()"
+          >
+            {{ 'presence.shortcuts.today' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-primary]="isDailyThisMonth()"
+            (click)="applyDailyThisMonth()"
+          >
+            {{ 'presence.shortcuts.thisMonth' | transloco }}
+          </button>
+        </div>
+        <div class="join">
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-active]="dailyMode() === 'day'"
+            (click)="setDailyMode('day')"
+          >
+            {{ 'presence.daily.modeDay' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-active]="dailyMode() === 'range'"
+            (click)="setDailyMode('range')"
+          >
+            {{ 'presence.daily.modeRange' | transloco }}
+          </button>
+        </div>
+        <div class="w-full max-w-xs">
+          @if (dailyMode() === 'day') {
+            <app-date-picker
+              [ngModel]="dailyDate()"
+              (ngModelChange)="onDailyDateChange($event)"
+              [placeholder]="'presence.daily.datePlaceholder' | transloco"
+              size="sm"
+            ></app-date-picker>
+          } @else {
+            <app-date-range-picker
+              [ngModel]="dailyRange()"
+              (ngModelChange)="onDailyRangeChange($event)"
+              [placeholder]="'presence.daily.rangePlaceholder' | transloco"
+              size="sm"
+            ></app-date-range-picker>
+          }
+        </div>
+      </div>
+
+      @if (dailyError()) {
+        <div class="alert alert-error rounded-xl">
+          <span>{{ dailyError() }}</span>
+        </div>
+      }
+
+      @if (dailyLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (dailyRangePending()) {
+        <p class="py-8 text-center text-sm text-base-content/60">
+          {{ 'presence.errors.rangeIncomplete' | transloco }}
+        </p>
+      } @else if (!dailyError() && dailyRows().length === 0) {
+        <p class="py-8 text-center text-sm text-base-content/60">
+          {{ 'presence.daily.empty' | transloco }}
+        </p>
+      } @else if (dailyRows().length > 0) {
+        <div class="overflow-x-auto -mx-4 md:-mx-5">
+          <table class="table table-zebra presence-table">
+            <thead>
+              <tr>
+                <th>{{ 'presence.daily.day' | transloco }}</th>
+                <th>{{ 'presence.table.person' | transloco }}</th>
+                <th>{{ 'presence.table.organization' | transloco }}</th>
+                <th [attr.title]="'presence.loginCountHint' | transloco">
+                  {{ 'presence.loginCount' | transloco }}
+                </th>
+                <th>{{ 'presence.daily.firstSeen' | transloco }}</th>
+                <th>{{ 'presence.daily.lastSeen' | transloco }}</th>
+                <th>{{ 'presence.table.place' | transloco }}</th>
+                <th>{{ 'presence.daily.isOnline' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of dailyRows(); track row.id) {
+                <tr>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDay(row.activity_date) }}</td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="personCell; context: { row: row }"></ng-container>
+                  </td>
+                  <td>{{ organizationName(row) }}</td>
+                  <td class="tabular-nums">{{ row.login_count }}</td>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDateTime(row.first_seen_at) }}</td>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDateTime(row.last_seen_at) }}</td>
+                  <td>
+                    <ng-container *ngTemplateOutlet="placeCell; context: { row: row }"></ng-container>
+                  </td>
+                  <td>
+                    @if (row.is_online) {
+                      <span class="badge badge-success badge-outline">{{ 'presence.daily.onlineYes' | transloco }}</span>
+                    } @else {
+                      <span class="badge badge-ghost">{{ 'presence.daily.onlineNo' | transloco }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (dailyMeta(); as meta) {
+          @if (meta.total > 0) {
+            <ng-container
+              *ngTemplateOutlet="pager; context: { meta: meta, onPage: changeDailyPage, onPerPage: changeDailyPerPage }"
+            ></ng-container>
+          }
+        }
+      }
+    </div>
+  </section>
+
+  <section class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl overflow-hidden" aria-labelledby="presence-summary-title">
+    <div class="card-body gap-4 p-4 md:p-5">
+      <div>
+        <h2 id="presence-summary-title" class="text-lg font-bold text-base-content">
+          {{ 'presence.summary.title' | transloco }}
+        </h2>
+        <p class="mt-1 text-sm text-base-content/65">{{ 'presence.summary.description' | transloco }}</p>
+        @if (summaryFrom() && summaryTo()) {
+          <p class="mt-1 text-xs font-medium text-base-content/70">
+            {{ 'presence.summary.period' | transloco }}:
+            {{ formatDay(summaryFrom()) }} – {{ formatDay(summaryTo()) }}
+          </p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+        <div class="join">
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-primary]="summaryPreset() === 'today'"
+            (click)="applySummaryToday()"
+          >
+            {{ 'presence.shortcuts.today' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-primary]="summaryPreset() === 'month'"
+            (click)="applySummaryMonth()"
+          >
+            {{ 'presence.shortcuts.thisMonth' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm join-item"
+            [class.btn-primary]="summaryPreset() === 'custom'"
+            (click)="applySummaryCustom()"
+          >
+            {{ 'presence.summary.custom' | transloco }}
+          </button>
+        </div>
+        @if (summaryPreset() === 'custom') {
+          <div class="w-full max-w-xs">
+            <app-date-range-picker
+              [ngModel]="summaryRange()"
+              (ngModelChange)="onSummaryRangeChange($event)"
+              [placeholder]="'presence.summary.rangePlaceholder' | transloco"
+              size="sm"
+            ></app-date-range-picker>
+          </div>
+        }
+      </div>
+
+      @if (summaryTotals(); as totals) {
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div class="card bg-primary text-primary-content shadow-sm rounded-2xl">
+            <div class="card-body p-4 gap-1">
+              <p class="text-xs font-semibold uppercase tracking-wide opacity-70">
+                {{ 'presence.users' | transloco }}
+              </p>
+              <p class="text-3xl font-extrabold tabular-nums">{{ totals.users }}</p>
+            </div>
+          </div>
+          <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
+            <div class="card-body p-4 gap-1">
+              <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50" [attr.title]="'presence.loginCountHint' | transloco">
+                {{ 'presence.loginCount' | transloco }}
+              </p>
+              <p class="text-3xl font-extrabold tabular-nums">{{ totals.login_count }}</p>
+            </div>
+          </div>
+          <div class="card bg-base-100 border border-base-200 shadow-sm rounded-2xl">
+            <div class="card-body p-4 gap-1">
+              <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50" [attr.title]="'presence.daysOnlineHint' | transloco">
+                {{ 'presence.daysOnline' | transloco }}
+              </p>
+              <p class="text-3xl font-extrabold tabular-nums">{{ totals.days_online }}</p>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-base-content/50">{{ 'presence.totalsHint' | transloco }}</p>
+      }
+
+      @if (summaryError()) {
+        <div class="alert alert-error rounded-xl">
+          <span>{{ summaryError() }}</span>
+        </div>
+      }
+
+      @if (summaryLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (summaryRangePending()) {
+        <p class="py-8 text-center text-sm text-base-content/60">
+          {{ 'presence.errors.rangeIncomplete' | transloco }}
+        </p>
+      } @else if (!summaryError() && summaryRows().length === 0) {
+        <p class="py-8 text-center text-sm text-base-content/60">
+          {{ 'presence.summary.empty' | transloco }}
+        </p>
+      } @else if (summaryRows().length > 0) {
+        <div class="overflow-x-auto -mx-4 md:-mx-5">
+          <table class="table table-zebra presence-table">
+            <thead>
+              <tr>
+                <th>{{ 'presence.table.person' | transloco }}</th>
+                <th>{{ 'presence.table.organization' | transloco }}</th>
+                <th [attr.title]="'presence.loginCountHint' | transloco">
+                  {{ 'presence.loginCount' | transloco }}
+                </th>
+                <th [attr.title]="'presence.daysOnlineHint' | transloco">
+                  {{ 'presence.daysOnline' | transloco }}
+                </th>
+                <th>{{ 'presence.summary.firstSeen' | transloco }}</th>
+                <th>{{ 'presence.summary.lastSeen' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of summaryRows(); track row.app_user_id + '|' + (row.organization_id || $index)) {
+                <tr>
+                  <td>
+                    <ng-container *ngTemplateOutlet="personCell; context: { row: row }"></ng-container>
+                  </td>
+                  <td>{{ organizationName(row) }}</td>
+                  <td class="tabular-nums">{{ row.login_count }}</td>
+                  <td class="tabular-nums">{{ row.days_online }}</td>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDateTime(row.first_seen_at) }}</td>
+                  <td class="whitespace-nowrap tabular-nums">{{ formatDateTime(row.last_seen_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (summaryMeta(); as meta) {
+          @if (meta.total > 0) {
+            <ng-container
+              *ngTemplateOutlet="pager; context: { meta: meta, onPage: changeSummaryPage, onPerPage: changeSummaryPerPage }"
+            ></ng-container>
+          }
+        }
+      }
+    </div>
+  </section>
+</div>
+
+<ng-template #personCell let-row="row">
+  <div class="font-medium text-base-content">{{ fullName(row) }}</div>
+  @if (row.email) {
+    <div class="text-xs text-base-content/60 break-all">{{ row.email }}</div>
+  }
+  @if (row.identification) {
+    <div class="text-xs text-base-content/45">{{ row.identification }}</div>
+  }
+</ng-template>
+
+<ng-template #placeCell let-row="row">
+  @if (row.place?.trim(); as place) {
+    <div>{{ place }}</div>
+    @if (row.ip_address?.trim(); as ip) {
+      <div class="text-xs text-base-content/50">{{ ip }}</div>
+    }
+  } @else if (row.ip_address?.trim(); as ip) {
+    <div>{{ ip }}</div>
+  } @else {
+    <span class="text-base-content/50">{{ 'presence.locationUnavailable' | transloco }}</span>
+  }
+</ng-template>
+
+<ng-template #pager let-meta="meta" let-onPage="onPage" let-onPerPage="onPerPage">
+  <div class="flex flex-col gap-3 border-t border-base-300 px-4 py-4 md:px-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="text-sm text-base-content/70">
+      {{ 'table.showing' | transloco }}
+      <span class="font-semibold">{{ showing(meta).from }}</span>
+      {{ 'table.to' | transloco }}
+      <span class="font-semibold">{{ showing(meta).to }}</span>
+      {{ 'table.of' | transloco }}
+      <span class="font-semibold">{{ meta.total }}</span>
+      {{ 'table.results' | transloco }}
+    </div>
+    <div class="join justify-center">
+      <button
+        type="button"
+        class="join-item btn btn-sm"
+        [disabled]="meta.current_page === 1"
+        (click)="onPage(1)"
+      >
+        ««
+      </button>
+      <button
+        type="button"
+        class="join-item btn btn-sm"
+        [disabled]="meta.current_page === 1"
+        (click)="onPage(meta.current_page - 1)"
+      >
+        «
+      </button>
+      @for (page of pageNumbers(meta); track page) {
+        <button
+          type="button"
+          class="join-item btn btn-sm"
+          [class.btn-active]="page === meta.current_page"
+          (click)="onPage(page)"
+        >
+          {{ page }}
+        </button>
+      }
+      <button
+        type="button"
+        class="join-item btn btn-sm"
+        [disabled]="meta.current_page === meta.last_page"
+        (click)="onPage(meta.current_page + 1)"
+      >
+        »
+      </button>
+      <button
+        type="button"
+        class="join-item btn btn-sm"
+        [disabled]="meta.current_page === meta.last_page"
+        (click)="onPage(meta.last_page)"
+      >
+        »»
+      </button>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-base-content/60">{{ 'table.perPage' | transloco }}</span>
+      <select
+        class="select select-bordered select-sm w-20"
+        [ngModel]="meta.per_page"
+        (ngModelChange)="onPerPage($event)"
+      >
+        @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</ng-template>

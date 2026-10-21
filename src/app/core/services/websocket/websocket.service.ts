@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { environment } from '@app/core/config/environment.config';
@@ -15,6 +15,14 @@ import { AuthService } from '@app/core/auth/auth.service';
 export class WebsocketService {
     private _authService = inject(AuthService);
     private _echo: Echo<any> | null = null;
+    private readonly _connectionId = signal(0);
+
+    /**
+     * Cambia cada vez que se crea una instancia de Echo.
+     * El layout vuelve a conectar al iniciar sesión; quien esté en un canal
+     * debe suscribirse de nuevo cuando este valor sube.
+     */
+    readonly connectionId = this._connectionId.asReadonly();
 
     constructor() {
         this._initializeEcho();
@@ -42,6 +50,7 @@ export class WebsocketService {
                 },
             },
         });
+        this._connectionId.update((value) => value + 1);
     }
 
     /**
@@ -98,6 +107,6 @@ export class WebsocketService {
      * @param channelName The name of the channel to leave
      */
     public leave(channelName: string): void {
-        this.echo.leave(channelName);
+        this._echo?.leave(channelName);
     }
 }

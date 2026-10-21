@@ -61,6 +61,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     icon: 'digestPackages',
     link: '/admin/digest-packages',
   },
+  {
+    id: 'presence',
+    title: 'navigation.presence',
+    type: 'basic',
+    icon: 'presence',
+    link: '/admin/presence',
+  },
   // More items will be added here as needed
 ];
 

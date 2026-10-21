@@ -80,6 +80,7 @@
         "exportHistory": "Export history",
         "judicialSync": "Branch sync",
         "digestPackages": "Digest packages",
+        "presence": "Activity",
         "toggleSidebar": "Toggle sidebar"
     },
     "header": {
@@ -1175,6 +1176,77 @@
             "errors": {
                 "loadFailed": "Could not load the pending digest detail."
             }
+        }
+    },
+    "presence": {
+        "title": "User activity",
+        "description": "Who is connected now and who entered the system.",
+        "organization": "Organization",
+        "organizationAll": "All organizations",
+        "organizationSearch": "Search organization",
+        "organizationEmpty": "No matches",
+        "shortcuts": {
+            "today": "Today",
+            "thisMonth": "This month"
+        },
+        "locationUnavailable": "Location unavailable",
+        "locationHint": "Location comes from the IP address. It is not GPS.",
+        "loginCount": "Sign-ins",
+        "loginCountHint": "Times they typed the password.",
+        "daysOnline": "Days in the system",
+        "daysOnlineHint": "Distinct days they entered, with a sign-in or with the session already open.",
+        "users": "Users",
+        "totalsHint": "Totals for the whole period, not only this page.",
+        "live": "Live",
+        "refreshing": "Updating",
+        "refresh": "Refresh",
+        "online": {
+            "title": "Online now",
+            "description": "Application users with an open session. The admin viewing this screen is not counted.",
+            "empty": "Nobody is connected right now.",
+            "unavailable": "Could not check who is online",
+            "lastSeen": "Last activity",
+            "count": "{{count}} online"
+        },
+        "daily": {
+            "title": "Who entered",
+            "description": "One row per person and organization. First activity is also recorded if they entered with a token they already had, without typing the password again.",
+            "snapshot": "“Online” is a snapshot from this request. Who is connected right now updates in the block above.",
+            "modeDay": "Single day",
+            "modeRange": "Range",
+            "datePlaceholder": "Choose a day",
+            "rangePlaceholder": "Choose a range",
+            "day": "Day",
+            "firstSeen": "First activity",
+            "lastSeen": "Last activity",
+            "isOnline": "Online",
+            "onlineYes": "Online",
+            "onlineNo": "Not online",
+            "empty": "Nobody entered in this period."
+        },
+        "summary": {
+            "title": "Period summary",
+            "description": "How many times they signed in and how many distinct days they were in the system.",
+            "custom": "Custom",
+            "rangePlaceholder": "Choose a period",
+            "period": "Period",
+            "firstSeen": "First activity",
+            "lastSeen": "Last activity",
+            "empty": "No activity in this period."
+        },
+        "table": {
+            "person": "Person",
+            "organization": "Organization",
+            "place": "Place"
+        },
+        "errors": {
+            "loadOnline": "Could not load who is online.",
+            "loadDaily": "Could not load who entered.",
+            "loadSummary": "Could not load the summary.",
+            "invalidDate": "The date must use the YYYY-MM-DD format.",
+            "rangeOrder": "The start date cannot be after the end date.",
+            "rangeIncomplete": "Choose a start and an end date.",
+            "invalidOrganization": "The organization is not valid."
         }
     }
 }

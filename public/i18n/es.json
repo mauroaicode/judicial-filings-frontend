@@ -79,6 +79,7 @@
     "exportHistory": "Historial exportaciones",
     "judicialSync": "Sincronización Rama",
     "digestPackages": "Consolidados",
+    "presence": "Actividad",
     "toggleSidebar": "Alternar menú lateral"
   },
   "header": {
@@ -1203,6 +1204,77 @@
       "errors": {
         "loadFailed": "No se pudo cargar el detalle del consolidado pendiente."
       }
+    }
+  },
+  "presence": {
+    "title": "Actividad de usuarios",
+    "description": "Quién está conectado ahora y quién entró al sistema.",
+    "organization": "Organización",
+    "organizationAll": "Todas las organizaciones",
+    "organizationSearch": "Buscar organización",
+    "organizationEmpty": "Sin coincidencias",
+    "shortcuts": {
+      "today": "Hoy",
+      "thisMonth": "Este mes"
+    },
+    "locationUnavailable": "Ubicación no disponible",
+    "locationHint": "La ubicación sale de la dirección IP. No es GPS.",
+    "loginCount": "Inicios de sesión",
+    "loginCountHint": "Veces que puso la contraseña.",
+    "daysOnline": "Días en el sistema",
+    "daysOnlineHint": "Días distintos en los que entró, con login o con la sesión abierta.",
+    "users": "Usuarios",
+    "totalsHint": "Totales de todo el periodo, no solo de esta página.",
+    "live": "En vivo",
+    "refreshing": "Actualizando",
+    "refresh": "Actualizar",
+    "online": {
+      "title": "Conectados ahora",
+      "description": "Usuarios de la aplicación con sesión abierta. El administrador que mira esta pantalla no se cuenta.",
+      "empty": "Nadie está conectado ahora.",
+      "unavailable": "No se pudo consultar quién está en línea",
+      "lastSeen": "Última actividad",
+      "count": "{{count}} conectados"
+    },
+    "daily": {
+      "title": "Quién entró",
+      "description": "Una fila por persona y organización. La primera actividad también se anota si entró con un token que ya tenía, sin escribir la contraseña de nuevo.",
+      "snapshot": "«En línea» es una foto al momento de esta consulta. Quien está conectado ahora se mueve en el bloque de arriba.",
+      "modeDay": "Un día",
+      "modeRange": "Rango",
+      "datePlaceholder": "Elegir día",
+      "rangePlaceholder": "Elegir rango",
+      "day": "Día",
+      "firstSeen": "Primera actividad",
+      "lastSeen": "Última actividad",
+      "isOnline": "En línea",
+      "onlineYes": "En línea",
+      "onlineNo": "No está en línea",
+      "empty": "Nadie entró en este periodo."
+    },
+    "summary": {
+      "title": "Resumen del periodo",
+      "description": "Cuántas veces inició sesión y cuántos días distintos estuvo en el sistema.",
+      "custom": "Personalizado",
+      "rangePlaceholder": "Elegir periodo",
+      "period": "Periodo",
+      "firstSeen": "Primera actividad",
+      "lastSeen": "Última actividad",
+      "empty": "No hay actividad en este periodo."
+    },
+    "table": {
+      "person": "Persona",
+      "organization": "Organización",
+      "place": "Lugar"
+    },
+    "errors": {
+      "loadOnline": "No se pudo cargar quién está conectado.",
+      "loadDaily": "No se pudo cargar quién entró.",
+      "loadSummary": "No se pudo cargar el resumen.",
+      "invalidDate": "La fecha debe tener el formato AAAA-MM-DD.",
+      "rangeOrder": "La fecha inicial no puede ser posterior a la final.",
+      "rangeIncomplete": "Elige la fecha inicial y la final.",
+      "invalidOrganization": "La organización no es válida."
     }
   }
 }
