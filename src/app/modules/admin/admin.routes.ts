@@ -45,6 +45,11 @@ export default [
       import('./digest-packages/digest-packages.routes').then((m) => m.default),
   },
   {
+    path: 'notification-digests',
+    loadChildren: () =>
+      import('./notification-digests/notification-digests.routes').then((m) => m.default),
+  },
+  {
     path: 'presence',
     loadChildren: () =>
       import('./presence/presence.routes').then((m) => m.default),

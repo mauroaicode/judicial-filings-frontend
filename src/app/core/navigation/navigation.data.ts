@@ -62,6 +62,13 @@ export const DEFAULT_NAVIGATION: NavigationItem[] = [
     link: '/admin/digest-packages',
   },
   {
+    id: 'notification-digests',
+    title: 'navigation.notificationDigests',
+    type: 'basic',
+    icon: 'notificationDigests',
+    link: '/admin/notification-digests',
+  },
+  {
     id: 'presence',
     title: 'navigation.presence',
     type: 'basic',

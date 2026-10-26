@@ -80,6 +80,7 @@
         "exportHistory": "Export history",
         "judicialSync": "Branch sync",
         "digestPackages": "Digest packages",
+        "notificationDigests": "Digest history",
         "presence": "Activity",
         "toggleSidebar": "Toggle sidebar"
     },
@@ -1247,6 +1248,71 @@
             "rangeOrder": "The start date cannot be after the end date.",
             "rangeIncomplete": "Choose a start and an end date.",
             "invalidOrganization": "The organization is not valid."
+        }
+    },
+    "notificationDigests": {
+        "title": "Digest history",
+        "description": "Digests from every organization, newest first.",
+        "filters": {
+            "title": "Filters",
+            "fabAria": "Show or hide filters",
+            "organization": "Organization",
+            "organizationAll": "All organizations",
+            "organizationSearch": "Search organization",
+            "organizationEmpty": "No matches",
+            "processNumber": "Process number",
+            "processNumberPlaceholder": "Case number",
+            "registrationDate": "Registration date",
+            "actionDate": "Action date",
+            "createdAt": "Digest date",
+            "createdAtHint": "When the digest was built, not the action date.",
+            "termStart": "Term start",
+            "termEnd": "Term end",
+            "rangePlaceholder": "Select a range",
+            "search": "Search",
+            "reset": "Clear filters"
+        },
+        "table": {
+            "organization": "Organization",
+            "date": "Date",
+            "time": "Time",
+            "period": "Period",
+            "actions": "Actions",
+            "notified": "Notified",
+            "viewed": "Viewed"
+        },
+        "notifiedYes": "Notified",
+        "notifiedNo": "Not notified",
+        "viewedYes": "Viewed",
+        "viewedNo": "Not viewed",
+        "views": {
+            "title": "Who viewed it",
+            "open": "See who opened it",
+            "close": "Close",
+            "loading": "Loading...",
+            "subtitle": "Each person's first open, from oldest to newest.",
+            "empty": "Nobody has opened this digest.",
+            "name": "First name",
+            "lastName": "Last name",
+            "email": "Email",
+            "viewedAt": "Time",
+            "origin": "Source",
+            "viaApp": "System / app",
+            "viaEmail": "Email",
+            "retry": "Retry",
+            "errors": {
+                "loadFailed": "Could not load who viewed this digest."
+            }
+        },
+        "channelEmail": "Email",
+        "channelWhatsapp": "WhatsApp",
+        "channelSms": "SMS",
+        "empty": "No digests match these filters.",
+        "errors": {
+            "loadFailed": "Could not load the digest history.",
+            "invalidOrganization": "The organization is not valid.",
+            "invalidDate": "The date must use the YYYY-MM-DD format.",
+            "rangeOrder": "The start date cannot be after the end date."
         }
     }
 }

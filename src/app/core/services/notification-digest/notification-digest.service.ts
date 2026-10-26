@@ -5,6 +5,9 @@ import { environment } from '@app/core/config/environment.config';
 import {
   NotificationDigestDetailResponse,
   NotificationDigestFilter,
+  NotificationDigestListQuery,
+  NotificationDigestListResponse,
+  NotificationDigestViewsResponse,
 } from '@app/core/models/notification-digest/notification-digest.model';
 
 @Injectable({
@@ -15,6 +18,50 @@ export class NotificationDigestService {
 
   private orgBase(organizationId: string): string {
     return `${environment.apiBaseUrl}/organizations/${organizationId}/notification-digests`;
+  }
+
+  /**
+   * GET /api/admin/notification-digests
+   * Listado de consolidados. No marca vistos y no envía is_viewed.
+   */
+  list(query: NotificationDigestListQuery = {}): Observable<NotificationDigestListResponse> {
+    const page = query.page ?? 1;
+    const perPage = query.per_page ?? 20;
+    let params = new HttpParams().set('page', String(page)).set('per_page', String(perPage));
+
+    const filters: [keyof NotificationDigestListQuery, string | undefined][] = [
+      ['organization_id', query.organization_id],
+      ['process_number', query.process_number],
+      ['registration_date_from', query.registration_date_from],
+      ['registration_date_to', query.registration_date_to],
+      ['action_date_from', query.action_date_from],
+      ['action_date_to', query.action_date_to],
+      ['created_at_from', query.created_at_from],
+      ['created_at_to', query.created_at_to],
+      ['term_start_date_from', query.term_start_date_from],
+      ['term_start_date_to', query.term_start_date_to],
+      ['term_end_date_from', query.term_end_date_from],
+      ['term_end_date_to', query.term_end_date_to],
+    ];
+
+    for (const [key, value] of filters) {
+      const trimmed = value?.trim();
+      if (trimmed) params = params.set(key, trimmed);
+    }
+
+    return this._http.get<NotificationDigestListResponse>(
+      `${environment.apiBaseUrl}/notification-digests`,
+      { params },
+    );
+  }
+
+  /**
+   * GET /api/admin/notification-digests/{digestId}/views
+   * Quién abrió el consolidado. No marca vistos y no es el detalle de actuaciones.
+   */
+  getViews(digestId: string): Observable<NotificationDigestViewsResponse> {
+    const url = `${environment.apiBaseUrl}/notification-digests/${digestId}/views`;
+    return this._http.get<NotificationDigestViewsResponse>(url);
   }
 
   /**

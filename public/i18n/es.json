@@ -79,6 +79,7 @@
     "exportHistory": "Historial exportaciones",
     "judicialSync": "Sincronización Rama",
     "digestPackages": "Consolidados",
+    "notificationDigests": "Historial consolidados",
     "presence": "Actividad",
     "toggleSidebar": "Alternar menú lateral"
   },
@@ -1275,6 +1276,71 @@
       "rangeOrder": "La fecha inicial no puede ser posterior a la final.",
       "rangeIncomplete": "Elige la fecha inicial y la final.",
       "invalidOrganization": "La organización no es válida."
+    }
+  },
+  "notificationDigests": {
+    "title": "Historial de consolidados",
+    "description": "Consolidados de todas las organizaciones, del más reciente al más antiguo.",
+    "filters": {
+      "title": "Filtros",
+      "fabAria": "Mostrar u ocultar filtros",
+      "organization": "Organización",
+      "organizationAll": "Todas las organizaciones",
+      "organizationSearch": "Buscar organización",
+      "organizationEmpty": "Sin coincidencias",
+      "processNumber": "Número de proceso",
+      "processNumberPlaceholder": "Radicado",
+      "registrationDate": "Fecha de registro",
+      "actionDate": "Fecha de actuación",
+      "createdAt": "Fecha del consolidado",
+      "createdAtHint": "Fecha en que se armó el consolidado, no la de la actuación.",
+      "termStart": "Inicio de término",
+      "termEnd": "Fin de término",
+      "rangePlaceholder": "Seleccionar rango",
+      "search": "Buscar",
+      "reset": "Limpiar filtros"
+    },
+    "table": {
+      "organization": "Organización",
+      "date": "Fecha",
+      "time": "Hora",
+      "period": "Periodo",
+      "actions": "Actuaciones",
+      "notified": "Notificado",
+      "viewed": "Visto"
+    },
+    "notifiedYes": "Notificado",
+    "notifiedNo": "Sin notificar",
+    "viewedYes": "Visto",
+    "viewedNo": "Sin ver",
+    "views": {
+      "title": "Quién lo vio",
+      "open": "Ver quién lo abrió",
+      "close": "Cerrar",
+      "loading": "Cargando...",
+      "subtitle": "Primera apertura de cada persona, de la más antigua a la más reciente.",
+      "empty": "Nadie ha abierto este consolidado.",
+      "name": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo",
+      "viewedAt": "Hora",
+      "origin": "Origen",
+      "viaApp": "Sistema / app",
+      "viaEmail": "Correo",
+      "retry": "Reintentar",
+      "errors": {
+        "loadFailed": "No se pudo cargar quién vio este consolidado."
+      }
+    },
+    "channelEmail": "Correo",
+    "channelWhatsapp": "WhatsApp",
+    "channelSms": "SMS",
+    "empty": "No hay consolidados con estos filtros.",
+    "errors": {
+      "loadFailed": "No se pudo cargar el historial de consolidados.",
+      "invalidOrganization": "La organización no es válida.",
+      "invalidDate": "La fecha debe tener el formato AAAA-MM-DD.",
+      "rangeOrder": "La fecha inicial no puede ser posterior a la final."
     }
   }
 }
