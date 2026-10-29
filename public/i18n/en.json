@@ -1270,7 +1270,11 @@
             "termEnd": "Term end",
             "rangePlaceholder": "Select a range",
             "search": "Search",
-            "reset": "Clear filters"
+            "reset": "Clear filters",
+            "viewed": "Viewed",
+            "viewedAll": "All",
+            "viewedYes": "Viewed",
+            "viewedNo": "Not viewed"
         },
         "table": {
             "organization": "Organization",

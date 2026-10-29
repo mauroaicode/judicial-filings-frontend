@@ -1116,13 +1116,6 @@
       "actionsCount": "actuaciones"
     }
   },
-  "table": {
-    "showing": "Mostrando",
-    "to": "a",
-    "of": "de",
-    "results": "resultados",
-    "perPage": "por página"
-  },
   "common": {
     "back": "Atrás",
     "cancel": "Cancelar",
@@ -1182,6 +1175,7 @@
     },
     "detail": {
       "title": "Consolidado pendiente",
+      "titleWithDate": "Consolidado del {{date}}",
       "subtitle": "Detalle de procesos y actuaciones que se enviarán",
       "back": "Volver al paquete de consolidados",
       "showSummary": "Mostrar resumen",
@@ -1298,7 +1292,11 @@
       "termEnd": "Fin de término",
       "rangePlaceholder": "Seleccionar rango",
       "search": "Buscar",
-      "reset": "Limpiar filtros"
+      "reset": "Limpiar filtros",
+      "viewed": "Visto",
+      "viewedAll": "Todos",
+      "viewedYes": "Vistos",
+      "viewedNo": "Sin ver"
     },
     "table": {
       "organization": "Organización",
@@ -1332,9 +1330,34 @@
         "loadFailed": "No se pudo cargar quién vio este consolidado."
       }
     },
+    "pdf": {
+      "download": "Descargar PDF",
+      "loading": "Generando PDF…",
+      "error": "No se pudo generar el PDF del consolidado. Intenta de nuevo."
+    },
     "channelEmail": "Correo",
     "channelWhatsapp": "WhatsApp",
     "channelSms": "SMS",
+    "cards": {
+      "publication": "Publicación",
+      "actionsDetected": "Actuaciones detectadas",
+      "notified": "Notificado",
+      "pending": "Pendiente",
+      "comingSoon": "Próximamente",
+      "total": "Total:",
+      "end": "Has llegado al final del historial"
+    },
+    "detail": {
+      "title": "Consolidado",
+      "back": "Volver al historial",
+      "actions": "Actuaciones",
+      "annotation": "Anotación",
+      "alert": "Alerta",
+      "empty": "Este consolidado no tiene actuaciones con estos filtros.",
+      "notFound": "No se encontró el consolidado de esta organización.",
+      "loadFailed": "No se pudo cargar el consolidado.",
+      "end": "Has llegado al final de las actuaciones"
+    },
     "empty": "No hay consolidados con estos filtros.",
     "errors": {
       "loadFailed": "No se pudo cargar el historial de consolidados.",

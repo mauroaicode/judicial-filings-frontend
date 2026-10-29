@@ -9,6 +9,12 @@
       </p>
     </div>
     <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+      @if (pagination(); as pageInfo) {
+        <div class="recent-total hidden items-center gap-2 rounded-xl border border-base-300 bg-base-100 px-3 py-2 sm:flex">
+          <span class="text-xs font-medium text-base-content/55">{{ 'notificationDigests.cards.total' | transloco }}</span>
+          <span class="recent-total__value text-sm font-semibold tabular-nums">{{ pageInfo.total }}</span>
+        </div>
+      }
       <button
         type="button"
         class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
@@ -76,6 +82,16 @@
               [noResultsText]="'notificationDigests.filters.organizationEmpty' | transloco"
               [loading]="organizationsLoading()"
             ></app-searchable-select>
+          </div>
+          <div class="form-control">
+            <label class="label" for="digest-viewed-filter">
+              <span class="label-text">{{ 'notificationDigests.filters.viewed' | transloco }}</span>
+            </label>
+            <select id="digest-viewed-filter" class="select select-bordered select-sm w-full" formControlName="is_viewed">
+              <option value="">{{ 'notificationDigests.filters.viewedAll' | transloco }}</option>
+              <option value="1">{{ 'notificationDigests.filters.viewedYes' | transloco }}</option>
+              <option value="0">{{ 'notificationDigests.filters.viewedNo' | transloco }}</option>
+            </select>
           </div>
           <div class="form-control">
             <label class="label">
@@ -163,173 +179,210 @@
     </div>
   }
 
-  <div class="card bg-base-100 border border-base-200 shadow-sm">
-    <div class="card-body p-0">
-      @if (loading()) {
-        <div class="flex items-center justify-center py-16">
-          <span class="loading loading-spinner loading-lg text-primary"></span>
+  @if (loading() && items().length === 0) {
+    <div class="flex items-center justify-center py-16">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  @if (!loading() && loadError() && items().length === 0) {
+    <div class="flex min-h-[10rem] flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+      <p class="text-sm font-semibold text-base-content/70">{{ loadError() }}</p>
+      <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="retryLoad()">
+        {{ 'digestPackages.retry' | transloco }}
+      </button>
+    </div>
+  }
+
+  @if (!loading() && !loadError() && items().length === 0) {
+    <div class="empty-state">
+      <p class="text-base-content/60">{{ 'notificationDigests.empty' | transloco }}</p>
+    </div>
+  }
+
+  @if (items().length > 0) {
+    <div class="history-grid">
+      @for (item of items(); track item.id) {
+        <div
+          class="history-card"
+          [class.history-card--live]="liveViewedIds().has(item.id)"
+          role="link"
+          tabindex="0"
+          (click)="openDigest(item)"
+          (keydown.enter)="openDigest(item)"
+        >
+          <div class="flex flex-col gap-3 p-5">
+            <div>
+              <p class="mb-0.5 text-[9px] font-black uppercase tracking-widest text-base-content/30">
+                {{ 'notificationDigests.table.organization' | transloco }}
+              </p>
+              <p class="text-sm font-bold leading-snug text-primary">{{ item.organization_name }}</p>
+            </div>
+
+            <div>
+              <p class="mb-0.5 text-[9px] font-black uppercase tracking-widest text-base-content/30">
+                {{ 'notificationDigests.cards.publication' | transloco }}
+              </p>
+              <p class="text-base font-bold capitalize leading-snug text-base-content">{{ item.date }}</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 text-sm font-semibold text-base-content/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ item.time }}</span>
+              </div>
+              <span [class]="'period-badge period-' + getPeriodClass(item.period)">{{ item.period }}</span>
+            </div>
+
+            <div class="border-t border-base-200"></div>
+
+            <div>
+              <p class="mb-0.5 text-[9px] font-black uppercase tracking-widest text-base-content/30">
+                {{ 'notificationDigests.cards.actionsDetected' | transloco }}
+              </p>
+              <p class="digest-actions-count text-2xl font-black text-base-content">{{ item.actions_count }}</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <span class="mr-1 text-[9px] font-black uppercase tracking-widest text-base-content/30">
+                {{ 'notificationDigests.cards.notified' | transloco }}
+              </span>
+
+              <div class="group/email relative">
+                <div
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border transition-colors"
+                  [ngClass]="item.email_notified_at ? 'border-success/20 bg-success/10 text-success' : 'border-base-200 bg-base-200 text-base-content/20'"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div class="pointer-events-none absolute bottom-full left-1/2 z-[200] mb-2 w-max max-w-[180px] -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-1.5 text-center text-[10px] font-semibold text-white opacity-0 shadow-xl transition-opacity group-hover/email:opacity-100">
+                  {{ channelTooltip(item.email_notified_at, 'notificationDigests.cards.pending') }}
+                </div>
+              </div>
+
+              <div class="group/wa relative">
+                <div
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border transition-colors"
+                  [ngClass]="item.whatsapp_notified_at ? 'border-success/20 bg-success/10 text-success' : 'border-base-200 bg-base-200 text-base-content/20'"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.527 5.854L0 24l6.29-1.508A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.372l-.36-.214-3.732.894.944-3.637-.234-.374A9.818 9.818 0 1112 21.818z"/>
+                  </svg>
+                </div>
+                <div class="pointer-events-none absolute bottom-full left-1/2 z-[200] mb-2 w-max max-w-[180px] -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-1.5 text-center text-[10px] font-semibold text-white opacity-0 shadow-xl transition-opacity group-hover/wa:opacity-100">
+                  {{ channelTooltip(item.whatsapp_notified_at, 'notificationDigests.cards.comingSoon') }}
+                </div>
+              </div>
+
+              <div class="group/sms relative">
+                <div
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border transition-colors"
+                  [ngClass]="item.sms_notified_at ? 'border-success/20 bg-success/10 text-success' : 'border-base-200 bg-base-200 text-base-content/20'"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <div class="pointer-events-none absolute bottom-full left-1/2 z-[200] mb-2 w-max max-w-[180px] -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-1.5 text-center text-[10px] font-semibold text-white opacity-0 shadow-xl transition-opacity group-hover/sms:opacity-100">
+                  {{ channelTooltip(item.sms_notified_at, 'notificationDigests.cards.comingSoon') }}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="digest-pdf-btn digest-pdf-btn--icon ml-auto"
+                [attr.title]="(downloadingPdfId() === item.id ? 'notificationDigests.pdf.loading' : 'notificationDigests.pdf.download') | transloco"
+                [attr.aria-label]="(downloadingPdfId() === item.id ? 'notificationDigests.pdf.loading' : 'notificationDigests.pdf.download') | transloco"
+                [disabled]="downloadingPdfId() === item.id"
+                (click)="downloadPdf(item, $event)"
+                (keydown)="$event.stopPropagation()"
+              >
+                @if (downloadingPdfId() === item.id) {
+                  <span class="loading loading-spinner loading-xs text-error"></span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-[18px] w-[18px]" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <path fill="color-mix(in srgb, var(--color-error) 35%, white)" d="M14 2v6h6l-6-6z"/>
+                    <text x="12" y="17.25" text-anchor="middle" fill="#fff" font-size="6" font-weight="800" font-family="ui-sans-serif, system-ui, sans-serif">PDF</text>
+                  </svg>
+                }
+              </button>
+            </div>
+
+            <div class="border-t border-base-200 pt-2">
+              @if (item.is_viewed) {
+                <button
+                  type="button"
+                  class="badge badge-success badge-outline notification-digests-view-trigger"
+                  [attr.aria-label]="'notificationDigests.views.open' | transloco"
+                  (click)="openViews(item, $event)"
+                  (keydown)="$event.stopPropagation()"
+                >
+                  {{ 'notificationDigests.viewedYes' | transloco }}
+                </button>
+                @if (item.viewed_at) {
+                  <button
+                    type="button"
+                    class="notification-digests-view-time"
+                    [attr.aria-label]="'notificationDigests.views.open' | transloco"
+                    (click)="openViews(item, $event)"
+                    (keydown)="$event.stopPropagation()"
+                  >
+                    {{ item.viewed_at }}
+                  </button>
+                }
+              } @else {
+                <span class="badge badge-ghost">{{ 'notificationDigests.viewedNo' | transloco }}</span>
+              }
+            </div>
+          </div>
         </div>
       }
+    </div>
+  }
 
-      @if (!loading() && loadError(); as errorMessage) {
-        <div class="flex min-h-[10rem] flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-          <p class="text-sm font-semibold text-base-content/70">{{ errorMessage }}</p>
-          <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="load(pagination()?.current_page || 1)">
+  @if (items().length > 0 || loadingMore()) {
+    <div #loadMoreSentinel class="loading-trigger">
+      @if (loadingMore()) {
+        <span class="loading loading-spinner loading-md text-primary"></span>
+      }
+      @if (loadError() && items().length > 0) {
+        <div class="flex flex-col items-center gap-2">
+          <p class="text-sm font-semibold text-base-content/70">{{ loadError() }}</p>
+          <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="retryLoad()">
             {{ 'digestPackages.retry' | transloco }}
           </button>
         </div>
       }
-
-      @if (!loading() && !loadError() && items().length === 0) {
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-          <p class="text-base-content/60">{{ 'notificationDigests.empty' | transloco }}</p>
-        </div>
-      }
-
-      @if (!loading() && !loadError() && items().length > 0) {
-        <div class="overflow-x-auto">
-          <table class="table table-zebra notification-digests-table">
-            <thead>
-              <tr>
-                <th>{{ 'notificationDigests.table.organization' | transloco }}</th>
-                <th>{{ 'notificationDigests.table.date' | transloco }}</th>
-                <th>{{ 'notificationDigests.table.time' | transloco }}</th>
-                <th>{{ 'notificationDigests.table.period' | transloco }}</th>
-                <th class="text-right">{{ 'notificationDigests.table.actions' | transloco }}</th>
-                <th>{{ 'notificationDigests.table.notified' | transloco }}</th>
-                <th>{{ 'notificationDigests.table.viewed' | transloco }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of items(); track item.id) {
-                <tr [class.notification-digests-row--live]="liveViewedIds().has(item.id)">
-                  <td class="font-semibold text-base-content">{{ item.organization_name }}</td>
-                  <td class="whitespace-nowrap">{{ item.date }}</td>
-                  <td class="whitespace-nowrap">{{ item.time }}</td>
-                  <td>{{ item.period }}</td>
-                  <td class="text-right tabular-nums">{{ item.actions_count }}</td>
-                  <td>
-                    @if (item.is_notified) {
-                      <span class="badge badge-success badge-outline">
-                        {{ 'notificationDigests.notifiedYes' | transloco }}
-                      </span>
-                    } @else {
-                      <span class="badge badge-ghost">{{ 'notificationDigests.notifiedNo' | transloco }}</span>
-                    }
-                    @for (channel of notifiedChannels(item); track channel.labelKey) {
-                      <p class="mt-1 text-xs text-base-content/60">
-                        {{ channel.labelKey | transloco }}: {{ channel.at }}
-                      </p>
-                    }
-                  </td>
-                  <td>
-                    @if (item.is_viewed) {
-                      <button
-                        type="button"
-                        class="badge badge-success badge-outline notification-digests-view-trigger"
-                        [attr.aria-label]="'notificationDigests.views.open' | transloco"
-                        (click)="openViews(item)"
-                      >
-                        {{ 'notificationDigests.viewedYes' | transloco }}
-                      </button>
-                      @if (item.viewed_at) {
-                        <button
-                          type="button"
-                          class="notification-digests-view-time"
-                          [attr.aria-label]="'notificationDigests.views.open' | transloco"
-                          (click)="openViews(item)"
-                        >
-                          {{ item.viewed_at }}
-                        </button>
-                      }
-                    } @else {
-                      <span class="badge badge-ghost">{{ 'notificationDigests.viewedNo' | transloco }}</span>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        @if (pagination(); as paginationInfo) {
-          <div class="notification-digests-pagination border-t border-base-300 bg-base-100 shrink-0">
-            <div class="notification-digests-pagination__results">
-              {{ 'table.showing' | transloco }}
-              <span class="font-semibold tabular-nums">{{ paginationInfo.from }}</span>
-              {{ 'table.to' | transloco }}
-              <span class="font-semibold tabular-nums">{{ paginationInfo.to }}</span>
-              {{ 'table.of' | transloco }}
-              <span class="font-semibold tabular-nums">{{ paginationInfo.total }}</span>
-              {{ 'table.results' | transloco }}
-            </div>
-            <div class="notification-digests-pagination__controls join">
-              <button
-                type="button"
-                class="join-item btn btn-sm"
-                [class.btn-disabled]="paginationInfo.current_page === 1"
-                [disabled]="paginationInfo.current_page === 1"
-                (click)="onPageChangeFromTable(1, paginationInfo.per_page)"
-              >
-                ««
-              </button>
-              <button
-                type="button"
-                class="join-item btn btn-sm"
-                [class.btn-disabled]="paginationInfo.current_page === 1"
-                [disabled]="paginationInfo.current_page === 1"
-                (click)="onPageChangeFromTable(paginationInfo.current_page - 1, paginationInfo.per_page)"
-              >
-                «
-              </button>
-              @for (page of getPageNumbers(); track page) {
-                <button
-                  type="button"
-                  class="join-item btn btn-sm"
-                  [class.btn-active]="page === paginationInfo.current_page"
-                  (click)="onPageChangeFromTable(page, paginationInfo.per_page)"
-                >
-                  {{ page }}
-                </button>
-              }
-              <button
-                type="button"
-                class="join-item btn btn-sm"
-                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
-                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
-                (click)="onPageChangeFromTable(paginationInfo.current_page + 1, paginationInfo.per_page)"
-              >
-                »
-              </button>
-              <button
-                type="button"
-                class="join-item btn btn-sm"
-                [class.btn-disabled]="paginationInfo.current_page === paginationInfo.last_page"
-                [disabled]="paginationInfo.current_page === paginationInfo.last_page"
-                (click)="onPageChangeFromTable(paginationInfo.last_page, paginationInfo.per_page)"
-              >
-                »»
-              </button>
-            </div>
-            <div class="notification-digests-pagination__per-page">
-              <select
-                class="select select-bordered select-sm"
-                [value]="paginationInfo.per_page"
-                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
-              >
-                @for (size of pageSizeOptions; track size) {
-                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
-                    {{ size }} {{ 'table.perPage' | transloco }}
-                  </option>
-                }
-              </select>
-            </div>
-          </div>
-        }
+      @if (!loadingMore() && !loadError() && !hasMore() && items().length > 0) {
+        <p class="text-xs font-bold uppercase tracking-widest text-base-content/30">
+          {{ 'notificationDigests.cards.end' | transloco }}
+        </p>
       }
     </div>
-  </div>
+  }
 </div>
+
+@if (pdfToast(); as message) {
+  <div class="toast toast-end toast-bottom z-[80]">
+    <div class="alert alert-error border-none rounded-2xl font-semibold shadow-lg">
+      <span>{{ message }}</span>
+    </div>
+  </div>
+}
+
+@if (detailTarget(); as target) {
+  <app-pending-digest-detail
+    [organizationId]="target.organizationId"
+    [digestId]="target.digestId"
+    [filters]="target.filters"
+    (closed)="closeDigest()"
+  />
+}
 
 @if (viewsDigest(); as digest) {
   <dialog

@@ -59,13 +59,19 @@ export interface NotificationDigestDetail {
   email_notified_at: string | null;
   whatsapp_notified_at: string | null;
   sms_notified_at: string | null;
+  /** Solo en un consolidado ya enviado. El pendiente no los trae. */
+  is_viewed?: boolean;
+  /** Fecha ya formateada, o null si nadie lo abrió. */
+  viewed_at?: string | null;
   data: NotificationDigestDetailItem[];
 }
 
-/** Filtros opcionales de GET /api/admin/notification-digests. Sin is_viewed. */
+/** Filtros opcionales de GET /api/admin/notification-digests. */
 export interface NotificationDigestListQuery {
   organization_id?: string;
   process_number?: string;
+  /** 1 = alguien de la organización lo abrió. 0 = nadie lo ha visto. */
+  is_viewed?: '0' | '1';
   registration_date_from?: string;
   registration_date_to?: string;
   action_date_from?: string;

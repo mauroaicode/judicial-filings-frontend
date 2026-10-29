@@ -2,21 +2,30 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
+  HostListener,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { NotificationDigestService } from '@app/core/services/notification-digest/notification-digest.service';
+import {
+  NotificationDigestService,
+  saveDigestPdfFile,
+} from '@app/core/services/notification-digest/notification-digest.service';
 import {
   NotificationDigestDetail,
   NotificationDigestDetailItem,
   NotificationDigestDetailResponse,
   NotificationDigestDisplayRow,
+  NotificationDigestFilter,
 } from '@app/core/models/notification-digest/notification-digest.model';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { ProcessAlertTooltipComponent } from '@app/shared/components/process-alert-tooltip/process-alert-tooltip.component';
@@ -40,9 +49,14 @@ export class PendingDigestDetailComponent {
   private _router = inject(Router);
   private _service = inject(NotificationDigestService);
   private _transloco = inject(TranslocoService);
+  private _destroyRef = inject(DestroyRef);
 
-  /** Organización cuyo consolidado pendiente se muestra. Null = modal cerrada. */
+  /** Organización cuyo consolidado se muestra. Null = modal cerrada. */
   public organizationId = input<string | null>(null);
+  /** Consolidado ya persistido. Sin este id se consulta el pendiente. */
+  public digestId = input<string | null>(null);
+  /** Filtros del detalle persistido. No aplica al pendiente. */
+  public filters = input<NotificationDigestFilter | null>(null);
   public closed = output<void>();
 
   public readonly pageSizeOptions = [10, 20, 25, 50, 100] as const;
@@ -52,6 +66,7 @@ export class PendingDigestDetailComponent {
   public rows = signal<NotificationDigestDisplayRow[]>([]);
   public loading = signal(false);
   public loadError = signal(false);
+  public loadErrorMessage = signal<string | null>(null);
 
   public currentPage = signal(1);
   public currentPerPage = signal(this.defaultPerPage);
@@ -68,9 +83,14 @@ export class PendingDigestDetailComponent {
   public showActionDetailModal = signal(false);
   public selectedActionDetail = signal<NotificationDigestDisplayRow | null>(null);
   public copiedMessage = signal<string | null>(null);
+  public downloadingPdfId = signal<string | null>(null);
+  public pdfToast = signal<string | null>(null);
   public mobileSummaryExpanded = signal(false);
   private _copiedTimer: ReturnType<typeof setTimeout> | null = null;
+  private _pdfToastTimer: ReturnType<typeof setTimeout> | null = null;
   private _loadedOrgId: string | null = null;
+  private _loadedDigestKey: string | null = null;
+  private _request = 0;
 
   public isOpen = computed(() => !!this.organizationId());
 
@@ -86,9 +106,23 @@ export class PendingDigestDetailComponent {
   constructor() {
     effect(() => {
       const orgId = this.organizationId();
+      const digestId = this.digestId()?.trim() || null;
+      const filters = this.filters();
       if (!orgId) {
         this._resetState();
         this._loadedOrgId = null;
+        this._loadedDigestKey = null;
+        return;
+      }
+
+      if (digestId) {
+        const q = this._route.snapshot.queryParamMap;
+        const page = Math.max(1, parseInt(q.get('digest_page') || '1', 10) || 1);
+        const perRaw = parseInt(q.get('digest_per_page') || String(this.defaultPerPage), 10);
+        const perPage = this.normalizePerPage(Number.isFinite(perRaw) ? perRaw : this.defaultPerPage);
+        const key = `${orgId}:${digestId}:${page}:${perPage}:${JSON.stringify(filters ?? {})}`;
+        if (this._loadedDigestKey === key && this.digest()) return;
+        this.load(orgId, page, perPage);
         return;
       }
 
@@ -124,32 +158,99 @@ export class PendingDigestDetailComponent {
       return;
     }
 
+    const digestId = this.digestId()?.trim() || '';
+    const requestId = ++this._request;
     this.loading.set(true);
     this.loadError.set(false);
+    this.loadErrorMessage.set(null);
     this.currentPage.set(page);
     this.currentPerPage.set(perPage);
-    this.syncQueryParams(orgId, page, perPage);
+    if (digestId) this.syncDigestQueryParams(orgId, digestId, page, perPage);
+    else this.syncQueryParams(orgId, page, perPage);
 
-    this._service.getPending(orgId, page, perPage).subscribe({
+    const request$ = digestId
+      ? this._service.getById(orgId, digestId, page, perPage, this.filters() ?? undefined)
+      : this._service.getPending(orgId, page, perPage);
+
+    request$.subscribe({
       next: (response) => {
+        if (requestId !== this._request) return;
         this.applyResponse(response);
         this._loadedOrgId = orgId;
+        if (digestId) {
+          this._loadedDigestKey = `${orgId}:${digestId}:${page}:${perPage}:${JSON.stringify(this.filters() ?? {})}`;
+        }
         this.loading.set(false);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        if (requestId !== this._request) return;
         this.loadError.set(true);
         this.loading.set(false);
         this.digest.set(null);
         this.rows.set([]);
         this.pagination.set(null);
         this._loadedOrgId = orgId;
+        if (digestId) {
+          this._loadedDigestKey = `${orgId}:${digestId}:${page}:${perPage}:${JSON.stringify(this.filters() ?? {})}`;
+          this.loadErrorMessage.set(
+            this._transloco.translate(
+              error.status === 404
+                ? 'notificationDigests.detail.notFound'
+                : 'notificationDigests.detail.loadFailed',
+            ),
+          );
+        }
       },
     });
+  }
+
+  downloadPdf(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const digestId = this.digestId()?.trim() || '';
+    const organizationId = this.organizationId()?.trim() || '';
+    if (!digestId || !organizationId || this.downloadingPdfId()) return;
+
+    this.downloadingPdfId.set(digestId);
+    this._service
+      .exportPdf(digestId, organizationId)
+      .pipe(
+        finalize(() => {
+          if (this.downloadingPdfId() === digestId) this.downloadingPdfId.set(null);
+        }),
+        takeUntilDestroyed(this._destroyRef),
+      )
+      .subscribe({
+        next: (response) => {
+          if (!saveDigestPdfFile(response, digestId)) this._showPdfError();
+        },
+        error: () => this._showPdfError(),
+      });
   }
 
   close(): void {
     this.closeActionDetail();
     this.closed.emit();
+  }
+
+  private _showPdfError(): void {
+    if (this._pdfToastTimer) clearTimeout(this._pdfToastTimer);
+    this.pdfToast.set(this._transloco.translate('notificationDigests.pdf.error'));
+    this._pdfToastTimer = setTimeout(() => {
+      this.pdfToast.set(null);
+      this._pdfToastTimer = null;
+    }, 4000);
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscape(event: Event): void {
+    if (!this.isOpen()) return;
+    event.preventDefault();
+    if (this.showActionDetailModal()) {
+      this.closeActionDetail();
+      return;
+    }
+    this.close();
   }
 
   onPageChange(page: number, perPage: number): void {
@@ -318,6 +419,25 @@ export class PendingDigestDetailComponent {
     });
   }
 
+  private syncDigestQueryParams(
+    orgId: string,
+    digestId: string,
+    page: number,
+    perPage: number,
+  ): void {
+    void this._router.navigate([], {
+      relativeTo: this._route,
+      queryParams: {
+        digest: digestId,
+        digest_organization: orgId,
+        digest_page: page > 1 ? String(page) : null,
+        digest_per_page: perPage !== this.defaultPerPage ? String(perPage) : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   private syncQueryParams(orgId: string, page: number, perPage: number): void {
     void this._router.navigate([], {
       relativeTo: this._route,
@@ -342,6 +462,7 @@ export class PendingDigestDetailComponent {
     this.pagination.set(null);
     this.loading.set(false);
     this.loadError.set(false);
+    this.loadErrorMessage.set(null);
     this.closeActionDetail();
     this.mobileSummaryExpanded.set(false);
     this.hoveredRowId.set(null);

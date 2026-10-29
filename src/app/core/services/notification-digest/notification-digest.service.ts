@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@app/core/config/environment.config';
 import {
@@ -22,7 +22,8 @@ export class NotificationDigestService {
 
   /**
    * GET /api/admin/notification-digests
-   * Listado de consolidados. No marca vistos y no envía is_viewed.
+   * Listado de consolidados. No marca vistos.
+   * is_viewed=1 solo los abiertos; is_viewed=0 solo los que nadie ha visto.
    */
   list(query: NotificationDigestListQuery = {}): Observable<NotificationDigestListResponse> {
     const page = query.page ?? 1;
@@ -32,6 +33,7 @@ export class NotificationDigestService {
     const filters: [keyof NotificationDigestListQuery, string | undefined][] = [
       ['organization_id', query.organization_id],
       ['process_number', query.process_number],
+      ['is_viewed', query.is_viewed],
       ['registration_date_from', query.registration_date_from],
       ['registration_date_to', query.registration_date_to],
       ['action_date_from', query.action_date_from],
@@ -97,6 +99,24 @@ export class NotificationDigestService {
     });
   }
 
+  /**
+   * PDF de un consolidado ya enviado. No aplica al pendiente.
+   * Sin organización: GET /notification-digests/{id}/export-pdf
+   * Con organización: GET /organizations/{organization}/notification-digests/{digest}/export-pdf
+   */
+  exportPdf(digestId: string, organizationId?: string | null): Observable<HttpResponse<Blob>> {
+    const id = digestId.trim();
+    const orgId = organizationId?.trim();
+    const url = orgId
+      ? `${this.orgBase(orgId)}/${id}/export-pdf`
+      : `${environment.apiBaseUrl}/notification-digests/${id}/export-pdf`;
+    return this._http.get(url, {
+      responseType: 'blob',
+      observe: 'response',
+      headers: new HttpHeaders({ Accept: 'application/pdf' }),
+    });
+  }
+
   private buildParams(
     page: number,
     perPage: number,
@@ -126,4 +146,39 @@ export class NotificationDigestService {
 
     return params;
   }
+}
+
+/** Guarda el PDF usando el nombre de Content-Disposition. */
+export function saveDigestPdfFile(response: HttpResponse<Blob>, fallbackId: string): boolean {
+  const blob = response.body;
+  if (!blob || blob.size === 0 || blob.type.includes('application/json')) return false;
+
+  const filename =
+    filenameFromContentDisposition(response.headers.get('Content-Disposition')) ??
+    `consolidado-${fallbackId}.pdf`;
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+  return true;
+}
+
+function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (utf8Match?.[1]) {
+    const raw = utf8Match[1].trim().replace(/^["']|["']$/g, '');
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }
+  const plainMatch = /filename="?([^";]+)"?/i.exec(header);
+  return plainMatch?.[1]?.trim() || null;
 }

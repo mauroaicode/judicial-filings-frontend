@@ -8,6 +8,13 @@
         </div>
       </div>
     }
+    @if (pdfToast(); as msg) {
+      <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
+        <div class="alert alert-error shadow-lg border-none rounded-2xl font-semibold pointer-events-none">
+          <span>{{ msg }}</span>
+        </div>
+      </div>
+    }
 
     <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <!-- Sticky header -->
@@ -15,7 +22,15 @@
         <div class="flex flex-wrap justify-between items-start gap-4">
           <div class="space-y-1 min-w-0">
             <h2 class="text-2xl font-bold text-base-content tracking-tight">
-              {{ 'digestPackages.detail.title' | transloco }}
+              @if (digestId()) {
+                @if (digest()?.date; as date) {
+                  {{ 'digestPackages.detail.titleWithDate' | transloco: { date: date } }}
+                } @else {
+                  {{ 'notificationDigests.detail.title' | transloco }}
+                }
+              } @else {
+                {{ 'digestPackages.detail.title' | transloco }}
+              }
             </h2>
             <p class="text-sm text-base-content/65">
               @if (digest()?.organization_name; as orgName) {
@@ -27,6 +42,27 @@
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
+            @if (digestId()) {
+              <button
+                type="button"
+                class="digest-pdf-btn digest-pdf-btn--label"
+                [attr.title]="'notificationDigests.pdf.download' | transloco"
+                [disabled]="downloadingPdfId() === digestId()"
+                (click)="downloadPdf($event)"
+              >
+                @if (downloadingPdfId() === digestId()) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  <span>{{ 'notificationDigests.pdf.loading' | transloco }}</span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <path fill="color-mix(in srgb, var(--color-error) 35%, white)" d="M14 2v6h6l-6-6z"/>
+                    <text x="12" y="17.25" text-anchor="middle" fill="#fff" font-size="6" font-weight="800" font-family="ui-sans-serif, system-ui, sans-serif">PDF</text>
+                  </svg>
+                  <span>{{ 'notificationDigests.pdf.download' | transloco }}</span>
+                }
+              </button>
+            }
             <button
               type="button"
               class="btn btn-ghost btn-sm rounded-xl border border-base-200 gap-2"
@@ -80,7 +116,11 @@
               <ng-container *ngTemplateOutlet="statsCards; context: { d }" />
             </div>
           }
-          <div class="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div
+            class="hidden sm:grid grid-cols-2 gap-3"
+            [class.lg:grid-cols-5]="digestId()"
+            [class.lg:grid-cols-4]="!digestId()"
+          >
             <ng-container *ngTemplateOutlet="statsCards; context: { d }" />
           </div>
         }
@@ -94,15 +134,21 @@
           </div>
         } @else if (loadError()) {
           <div class="flex flex-col items-center justify-center h-48 gap-3 text-center">
-            <p class="text-sm font-semibold text-base-content/70">{{ 'digestPackages.detail.errors.loadFailed' | transloco }}</p>
+            <p class="text-sm font-semibold text-base-content/70">
+              {{ loadErrorMessage() || ('digestPackages.detail.errors.loadFailed' | transloco) }}
+            </p>
             <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="load()">
               {{ 'digestPackages.retry' | transloco }}
             </button>
           </div>
         } @else if (rows().length === 0) {
           <div class="flex flex-col items-center justify-center h-48 text-center text-base-content/50">
-            <p class="text-base font-semibold text-base-content">{{ 'digestPackages.detail.emptyTitle' | transloco }}</p>
-            <p class="text-sm text-base-content/55 max-w-sm mt-1">{{ 'digestPackages.detail.emptySubtitle' | transloco }}</p>
+            <p class="text-base font-semibold text-base-content">
+              {{ (digestId() ? 'notificationDigests.detail.empty' : 'digestPackages.detail.emptyTitle') | transloco }}
+            </p>
+            @if (!digestId()) {
+              <p class="text-sm text-base-content/55 max-w-sm mt-1">{{ 'digestPackages.detail.emptySubtitle' | transloco }}</p>
+            }
           </div>
         } @else {
           <div class="hidden lg:block mb-3">
@@ -204,20 +250,20 @@
 
           <!-- Desktop table -->
           <div class="hidden lg:block h-full min-h-0">
-            <div class="overflow-x-auto overflow-y-auto w-full h-full min-h-0 border border-base-200 rounded-xl bg-base-100 digest-detail-table-scroll">
-              <table class="table table-zebra digest-detail-table" style="min-width: 1480px;">
+            <div class="digest-detail-table-scroll w-full h-full min-h-0 border border-base-200 rounded-xl bg-base-100">
+              <table class="table table-zebra digest-detail-table">
                 <thead>
                   <tr>
-                    <th class="text-center digest-th-compact" style="width: 48px;">{{ 'processDetail.actions.table.index' | transloco }}</th>
-                    <th class="text-center digest-th-compact" style="width: 80px;">{{ 'alertSemafor.alertLevel' | transloco }}</th>
-                    <th class="text-left digest-th-left">{{ 'processes.table.processNumber' | transloco }}</th>
-                    <th class="text-left digest-th-left" style="width: 320px;">{{ 'processes.table.court' | transloco }}</th>
-                    <th class="text-left digest-th-left" style="width: 180px;">{{ 'processes.table.plaintiff' | transloco }}</th>
-                    <th class="text-left digest-th-left" style="width: 180px;">{{ 'processes.table.defendant' | transloco }}</th>
-                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.registrationDate' | transloco }}</th>
-                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.termStartDate' | transloco }}</th>
-                    <th class="text-center digest-th-compact" style="width: 120px;">{{ 'processDetail.actions.table.termEndDate' | transloco }}</th>
-                    <th class="text-left digest-th-left" style="width: 280px;">{{ 'processDetail.actions.table.action' | transloco }}</th>
+                    <th class="text-center digest-th-compact digest-col-index">{{ 'processDetail.actions.table.index' | transloco }}</th>
+                    <th class="text-center digest-th-compact digest-col-status">{{ 'alertSemafor.alertLevel' | transloco }}</th>
+                    <th class="text-left digest-th-left digest-col-radicado">{{ 'processes.table.processNumber' | transloco }}</th>
+                    <th class="text-left digest-th-left digest-col-court">{{ 'processes.table.court' | transloco }}</th>
+                    <th class="text-left digest-th-left digest-col-party">{{ 'processes.table.plaintiff' | transloco }}</th>
+                    <th class="text-left digest-th-left digest-col-party">{{ 'processes.table.defendant' | transloco }}</th>
+                    <th class="text-center digest-th-compact digest-col-date">{{ 'processDetail.actions.table.registrationDate' | transloco }}</th>
+                    <th class="text-center digest-th-compact digest-col-date">{{ 'processDetail.actions.table.termStartDate' | transloco }}</th>
+                    <th class="text-center digest-th-compact digest-col-date">{{ 'processDetail.actions.table.termEndDate' | transloco }}</th>
+                    <th class="text-left digest-th-left digest-col-action">{{ 'processDetail.actions.table.action' | transloco }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -251,7 +297,7 @@
                           }
                         </div>
                       </td>
-                      <td class="align-middle">
+                      <td class="align-middle digest-col-radicado">
                         <div class="radicado-row">
                           @if (action.process_id) {
                             <button
@@ -283,10 +329,10 @@
                           </div>
                         }
                       </td>
-                      <td class="align-middle text-sm font-medium text-base-content/90 leading-snug">
+                      <td class="align-middle digest-col-court text-sm font-medium text-base-content/90 leading-snug">
                         {{ action.court || '–' }}
                       </td>
-                      <td class="align-middle text-sm text-base-content/80 max-w-[180px]">
+                      <td class="align-middle digest-col-party text-sm text-base-content/80">
                         @let plaintiffDisplay = getPartyDisplay(action.plaintiffs ?? (action.plaintiff ? [action.plaintiff] : []));
                         @if (plaintiffDisplay.mainText || plaintiffDisplay.extraCount > 0) {
                           <span>
@@ -308,7 +354,7 @@
                           <span class="opacity-50">–</span>
                         }
                       </td>
-                      <td class="align-middle text-sm text-base-content/80 max-w-[180px]">
+                      <td class="align-middle digest-col-party text-sm text-base-content/80">
                         @let defendantDisplay = getPartyDisplay(action.defendants ?? (action.defendant ? [action.defendant] : []));
                         @if (defendantDisplay.mainText || defendantDisplay.extraCount > 0) {
                           <span>
@@ -330,16 +376,16 @@
                           <span class="opacity-50">–</span>
                         }
                       </td>
-                      <td class="text-center align-middle text-sm font-semibold text-base-content/80 whitespace-nowrap">
+                      <td class="digest-col-date text-center align-middle text-sm font-semibold text-base-content/80 whitespace-nowrap">
                         {{ action.registration_date || '–' }}
                       </td>
-                      <td class="text-center align-middle text-sm font-medium whitespace-nowrap">
+                      <td class="digest-col-date text-center align-middle text-sm font-medium whitespace-nowrap">
                         {{ action.term_start_date || '–' }}
                       </td>
-                      <td class="text-center align-middle text-sm font-medium whitespace-nowrap">
+                      <td class="digest-col-date text-center align-middle text-sm font-medium whitespace-nowrap">
                         {{ action.term_end_date || '–' }}
                       </td>
-                      <td class="align-middle text-sm text-base-content leading-snug">
+                      <td class="digest-col-action align-middle text-sm text-base-content leading-snug">
                         <button
                           type="button"
                           class="w-full text-left rounded-lg p-1.5 -m-1.5 hover:bg-primary/5 transition-colors cursor-pointer"
@@ -586,4 +632,20 @@
       </div>
     </div>
   </div>
+
+  @if (digestId()) {
+    <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+      <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-2">
+        {{ 'notificationDigests.table.viewed' | transloco }}
+      </p>
+      @if (d.is_viewed) {
+        <span class="badge badge-success badge-outline">{{ 'notificationDigests.viewedYes' | transloco }}</span>
+        @if (d.viewed_at) {
+          <p class="mt-1.5 text-xs font-semibold text-base-content/70">{{ d.viewed_at }}</p>
+        }
+      } @else {
+        <span class="badge badge-ghost">{{ 'notificationDigests.viewedNo' | transloco }}</span>
+      }
+    </div>
+  }
 </ng-template>
