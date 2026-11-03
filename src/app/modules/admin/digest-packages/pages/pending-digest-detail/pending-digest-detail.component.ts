@@ -1,18 +1,22 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ViewEncapsulation,
+  ElementRef,
+  afterNextRender,
   computed,
   DestroyRef,
   effect,
-  HostListener,
   inject,
   input,
   output,
+  PLATFORM_ID,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule, isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -29,6 +33,12 @@ import {
 } from '@app/core/models/notification-digest/notification-digest.model';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { ProcessAlertTooltipComponent } from '@app/shared/components/process-alert-tooltip/process-alert-tooltip.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { FormsModule } from '@angular/forms';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
 
 @Component({
   selector: 'app-pending-digest-detail',
@@ -39,13 +49,20 @@ import { ProcessAlertTooltipComponent } from '@app/shared/components/process-ale
     TranslocoPipe,
     ProcessNumberPipe,
     ProcessAlertTooltipComponent,
+    FilterSelectComponent,
+    FormsModule,
   ],
   templateUrl: './pending-digest-detail.component.html',
   styleUrls: ['./pending-digest-detail.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class PendingDigestDetailComponent {
   private _route = inject(ActivatedRoute);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly digestDialogRef = viewChild<ElementRef<HTMLDialogElement>>('digestDetailDialog');
+  private readonly actionDetailDialogRef =
+    viewChild<ElementRef<HTMLDialogElement>>('actionDetailDialog');
   private _router = inject(Router);
   private _service = inject(NotificationDigestService);
   private _transloco = inject(TranslocoService);
@@ -60,6 +77,10 @@ export class PendingDigestDetailComponent {
   public closed = output<void>();
 
   public readonly pageSizeOptions = [10, 20, 25, 50, 100] as const;
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
   public readonly defaultPerPage = 20;
 
   public digest = signal<NotificationDigestDetail | null>(null);
@@ -104,6 +125,17 @@ export class PendingDigestDetailComponent {
   });
 
   constructor() {
+    if (this.isBrowser) {
+      afterNextRender(() => {
+        effect(() => {
+          this._syncNativeDialog(this.digestDialogRef()?.nativeElement, this.isOpen());
+        });
+        effect(() => {
+          this._syncNativeDialog(this.actionDetailDialogRef()?.nativeElement, this.showActionDetailModal());
+        });
+      });
+    }
+
     effect(() => {
       const orgId = this.organizationId();
       const digestId = this.digestId()?.trim() || null;
@@ -233,6 +265,21 @@ export class PendingDigestDetailComponent {
     this.closed.emit();
   }
 
+  private _syncNativeDialog(dialog: HTMLDialogElement | undefined, open: boolean): void {
+    if (!dialog) {
+      return;
+    }
+    if (open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      return;
+    }
+    if (dialog.open) {
+      dialog.close();
+    }
+  }
+
   private _showPdfError(): void {
     if (this._pdfToastTimer) clearTimeout(this._pdfToastTimer);
     this.pdfToast.set(this._transloco.translate('notificationDigests.pdf.error'));
@@ -240,17 +287,6 @@ export class PendingDigestDetailComponent {
       this.pdfToast.set(null);
       this._pdfToastTimer = null;
     }, 4000);
-  }
-
-  @HostListener('document:keydown.escape', ['$event'])
-  onEscape(event: Event): void {
-    if (!this.isOpen()) return;
-    event.preventDefault();
-    if (this.showActionDetailModal()) {
-      this.closeActionDetail();
-      return;
-    }
-    this.close();
   }
 
   onPageChange(page: number, perPage: number): void {
@@ -396,6 +432,21 @@ export class PendingDigestDetailComponent {
     }
     if (!processId) return;
     void this._router.navigate(['/admin', 'processes', processId]);
+  }
+
+  isRemovedFromJudicialBranch(action: NotificationDigestDetailItem): boolean {
+    return action.removed_from_judicial_branch === true;
+  }
+
+  removedFromRamaTooltip(action: NotificationDigestDetailItem): string {
+    const parts: string[] = [];
+    if (action.removed_from_judicial_branch_at?.trim()) {
+      parts.push(action.removed_from_judicial_branch_at.trim());
+    }
+    if (action.removed_from_judicial_branch_reason?.trim()) {
+      parts.push(action.removed_from_judicial_branch_reason.trim());
+    }
+    return parts.join(' · ');
   }
 
   private applyResponse(response: NotificationDigestDetailResponse): void {

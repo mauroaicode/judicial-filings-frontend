@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  OnDestroy,
   OnInit,
   signal,
   ViewEncapsulation,
@@ -23,6 +24,7 @@ import { AuthService } from '@app/core/auth/auth.service';
 import { ROLE_ROUTE_MAP, ROUTES_ADMIN } from '@app/core/constants/router.constant';
 import type { RoleName } from '@app/core/constants/router.constant';
 import { ErrorHandlerService } from '@app/core/services/error/error-handler.service';
+import { ThemeService } from '@app/core/services/theme/theme.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -33,11 +35,12 @@ import { ErrorHandlerService } from '@app/core/services/error/error-handler.serv
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignInComponent implements OnInit {
+export class SignInComponent implements OnInit, OnDestroy {
   private _router = inject(Router);
   private _formBuilder = inject(FormBuilder);
   private _authService = inject(AuthService);
   private _errorHandler = inject(ErrorHandlerService);
+  private _themeService = inject(ThemeService);
 
   public signInForm!: FormGroup;
   public isLoading = signal<boolean>(false);
@@ -48,11 +51,16 @@ export class SignInComponent implements OnInit {
   private _isDirectMessage = signal<boolean>(false);
 
   ngOnInit(): void {
+    this._themeService.lockAuthLight();
     this.signInForm = this._formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
       rememberMe: [false],
     });
+  }
+
+  ngOnDestroy(): void {
+    this._themeService.unlockAuthLight();
   }
 
   /**

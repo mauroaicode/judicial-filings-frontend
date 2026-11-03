@@ -12,7 +12,7 @@ import {
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ProcessService } from '@app/core/services/process/process.service';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
@@ -36,6 +36,17 @@ import {
 } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { TrashProcessesModalComponent } from './components/trash-processes-modal/trash-processes-modal.component';
 import { ProcessImportModalsComponent } from './components/process-import-modals/process-import-modals.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import {
+  SearchableSelectComponent,
+  SearchableSelectOption,
+} from '@app/shared/components/searchable-select/searchable-select.component';
+
+const PROCESS_ORGANIZATION_ID_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 @Component({
   selector: 'app-processes',
@@ -43,6 +54,7 @@ import { ProcessImportModalsComponent } from './components/process-import-modals
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     TranslocoPipe,
     DateRangePickerComponent,
     BottomSheetModalComponent,
@@ -50,6 +62,8 @@ import { ProcessImportModalsComponent } from './components/process-import-modals
     ConfirmationDialogComponent,
     TrashProcessesModalComponent,
     ProcessImportModalsComponent,
+    FilterSelectComponent,
+    SearchableSelectComponent,
   ],
   templateUrl: './processes.component.html',
   styleUrls: ['./processes.component.scss'],
@@ -79,6 +93,14 @@ export class ProcessesComponent {
   public pagination = signal<ProcessResponseMeta | null>(null);
   public dashboardStats = signal<ProcessDashboardStats | null>(null);
   public dashboardStatsLoading = signal<boolean>(false);
+  /** Organización aplicada en la última búsqueda (KPI + tabla). */
+  public appliedOrganizationFilterId = signal('');
+  public appliedOrganizationFilterLabel = computed(() => {
+    const id = this.appliedOrganizationFilterId().trim();
+    if (!id) return '';
+    const org = this.importOrganizations().find((item) => item.id === id);
+    return org?.name?.trim() || id;
+  });
   public showFilters = signal<boolean>(false);
   /** IDs de procesos con fila expandida (múltiples instancias) */
   public expandedProcessIds = signal<Set<string>>(new Set());
@@ -128,6 +150,40 @@ export class ProcessesComponent {
     this.importOrganizations().map((o) => ({ id: o.id, label: o.name }))
   );
 
+  public filterOrganizationOptions = computed((): SearchableSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.organizationAll') },
+    ...this.importOrganizations().map((o) => ({ id: o.id, label: o.name })),
+  ]);
+
+  public statusFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.statusPlaceholder') },
+    { id: 'active', label: this._transloco.translate('processes.filters.statusActive') },
+    { id: 'inactive', label: this._transloco.translate('processes.filters.statusInactive') },
+  ]);
+
+  public multipleInstancesFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.all') },
+    { id: 'true', label: this._transloco.translate('processes.filters.yes') },
+    { id: 'false', label: this._transloco.translate('processes.filters.no') },
+  ]);
+
+  public privacyFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.privacyPlaceholder') },
+    { id: 'private', label: this._transloco.translate('processes.filters.privacyPrivate') },
+    { id: 'public', label: this._transloco.translate('processes.filters.privacyPublic') },
+  ]);
+
+  public altaManualFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.all') },
+    { id: '1', label: this._transloco.translate('processes.filters.yes') },
+  ]);
+
+  public removedFromRamaFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processes.filters.removedFromRamaAll') },
+    { id: 'true', label: this._transloco.translate('processes.filters.removedFromRamaWith') },
+    { id: 'false', label: this._transloco.translate('processes.filters.removedFromRamaWithout') },
+  ]);
+
   // Filter form
   public filterForm: FormGroup = this._fb.group({
     process_number: [''],
@@ -135,12 +191,15 @@ export class ProcessesComponent {
     process_class: [''],
     plaintiff: [''],
     defendant: [''],
+    organization_id: [''],
     organization: [''],
     status: [''],
     /** '' | 'private' | 'public' — query `privacy` */
     privacy: [''],
     alta_manual: [''],
-    has_multiple_instances: [null as boolean | null],
+    removed_from_judicial_branch: [''],
+    /** '' | 'true' | 'false' */
+    has_multiple_instances: [''],
     process_date_range: [null as DateRange | null],
     created_at_range: [null as DateRange | null],
     last_api_update_range: [null as DateRange | null],
@@ -226,7 +285,7 @@ export class ProcessesComponent {
 
   constructor() {
     this._loadFiltersFromQueryParams();
-    this.loadDashboardStats();
+    this._loadImportOrganizationsForTrash();
     this.loadProcesses();
     this._openImportFromQueryParams();
   }
@@ -235,8 +294,9 @@ export class ProcessesComponent {
    * Load KPI dashboard stats for top cards
    */
   loadDashboardStats(): void {
+    const organizationId = this.filterForm.value.organization_id?.trim() || undefined;
     this.dashboardStatsLoading.set(true);
-    this._processService.getDashboardStats().subscribe({
+    this._processService.getDashboardStats(organizationId).subscribe({
       next: (stats) => {
         this.dashboardStats.set(stats);
         this._manualRegistrationService.setPendingCount(stats.pending_manual_registrations);
@@ -334,6 +394,9 @@ export class ProcessesComponent {
     if (isValidValue(queryParams['organization'])) {
       this.filterForm.patchValue({ organization: queryParams['organization'] });
     }
+    if (isValidValue(queryParams['organization_id'])) {
+      this.filterForm.patchValue({ organization_id: queryParams['organization_id'] });
+    }
     if (isValidValue(queryParams['status'])) {
       this.filterForm.patchValue({ status: queryParams['status'] });
     }
@@ -343,8 +406,18 @@ export class ProcessesComponent {
     if (queryParams['alta_manual'] === '1' || queryParams['alta_manual'] === 'true') {
       this.filterForm.patchValue({ alta_manual: '1' });
     }
+    if (isValidValue(queryParams['removed_from_judicial_branch'])) {
+      const raw = queryParams['removed_from_judicial_branch'];
+      this.filterForm.patchValue({
+        removed_from_judicial_branch:
+          raw === 'true' || raw === '1' ? 'true' : raw === 'false' || raw === '0' ? 'false' : '',
+      });
+    }
     if (isValidValue(queryParams['has_multiple_instances'])) {
-      this.filterForm.patchValue({ has_multiple_instances: queryParams['has_multiple_instances'] === 'true' });
+      const raw = queryParams['has_multiple_instances'];
+      this.filterForm.patchValue({
+        has_multiple_instances: raw === 'true' ? 'true' : raw === 'false' ? 'false' : '',
+      });
     }
     // Load date ranges from query params - only if they have valid values
     if (isValidValue(queryParams['process_date_from']) || isValidValue(queryParams['process_date_to'])) {
@@ -395,6 +468,9 @@ export class ProcessesComponent {
     if (filters.organization && filters.organization.trim()) {
       queryParams['organization'] = filters.organization;
     }
+    if (filters.organization_id && filters.organization_id.trim()) {
+      queryParams['organization_id'] = filters.organization_id.trim();
+    }
     if (filters.status && filters.status.trim()) {
       queryParams['status'] = filters.status;
     }
@@ -403,6 +479,11 @@ export class ProcessesComponent {
     }
     if (filters.alta_manual === true) {
       queryParams['alta_manual'] = '1';
+    }
+    if (filters.removed_from_judicial_branch === true) {
+      queryParams['removed_from_judicial_branch'] = 'true';
+    } else if (filters.removed_from_judicial_branch === false) {
+      queryParams['removed_from_judicial_branch'] = 'false';
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       queryParams['has_multiple_instances'] = filters.has_multiple_instances.toString();
@@ -457,12 +538,20 @@ export class ProcessesComponent {
     const createdAtRange: DateRange | null = formValue.created_at_range;
     const lastApiUpdateRange: DateRange | null = formValue.last_api_update_range;
 
+    const organizationId = formValue.organization_id?.trim() || '';
+    if (organizationId && !PROCESS_ORGANIZATION_ID_UUID.test(organizationId)) {
+      this.loading.set(false);
+      this._showPageToast(this._transloco.translate('processes.filters.invalidOrganization'), 'error');
+      return;
+    }
+
     const filters: ProcessFilter = {
       process_number: formValue.process_number?.trim() || undefined,
       court: formValue.court?.trim() || undefined,
       process_class: formValue.process_class?.trim() || undefined,
       plaintiff: formValue.plaintiff?.trim() || undefined,
       defendant: formValue.defendant?.trim() || undefined,
+      organization_id: organizationId || undefined,
       organization: formValue.organization?.trim() || undefined,
       status: formValue.status?.trim() || undefined,
       privacy:
@@ -470,7 +559,18 @@ export class ProcessesComponent {
           ? (formValue.privacy as 'private' | 'public')
           : undefined,
       alta_manual: formValue.alta_manual === '1' || formValue.alta_manual === true ? true : undefined,
-      has_multiple_instances: formValue.has_multiple_instances !== null && formValue.has_multiple_instances !== '' ? formValue.has_multiple_instances : undefined,
+      removed_from_judicial_branch:
+        formValue.removed_from_judicial_branch === 'true'
+          ? true
+          : formValue.removed_from_judicial_branch === 'false'
+            ? false
+            : undefined,
+      has_multiple_instances:
+        formValue.has_multiple_instances === 'true'
+          ? true
+          : formValue.has_multiple_instances === 'false'
+            ? false
+            : undefined,
       process_date_from: processDateRange?.from && processDateRange.from.trim() ? processDateRange.from : undefined,
       process_date_to: processDateRange?.to && processDateRange.to.trim() ? processDateRange.to : undefined,
       created_at_from: createdAtRange?.from && createdAtRange.from.trim() ? createdAtRange.from : undefined,
@@ -493,8 +593,11 @@ export class ProcessesComponent {
 
     this.clearSelection();
 
+    this.loadDashboardStats();
+
     this._processService.getProcesses(filters).subscribe({
       next: (response) => {
+        this.appliedOrganizationFilterId.set(organizationId || '');
         this.processes.set(response.data);
         this.pagination.set({
           current_page: response.current_page,
@@ -512,9 +615,12 @@ export class ProcessesComponent {
           );
         }
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading processes:', error);
         this.loading.set(false);
+        if (error.status === 422) {
+          this._showPageToast(this._transloco.translate('processes.filters.invalidOrganization'), 'error');
+        }
       },
     });
   }
@@ -529,11 +635,24 @@ export class ProcessesComponent {
       return;
     }
     const main =
+      (this._document.querySelector('main.authenticated-main') as HTMLElement | null) ??
       (this._document.querySelector('main.flex-1.overflow-y-auto') as HTMLElement | null) ??
       (this._document.querySelector('main') as HTMLElement | null);
     if (main) {
       main.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  onOrganizationIdFilter(value: string): void {
+    this.filterForm.patchValue({ organization_id: value?.trim() ?? '' });
+  }
+
+  clearOrganizationFilter(): void {
+    if (!this.appliedOrganizationFilterId() && !this.filterForm.value.organization_id?.trim()) {
+      return;
+    }
+    this.filterForm.patchValue({ organization_id: '' });
+    this.onSearch();
   }
 
   /**
@@ -572,11 +691,13 @@ export class ProcessesComponent {
       process_class: '',
       plaintiff: '',
       defendant: '',
+      organization_id: '',
       organization: '',
       status: '',
       privacy: '',
       alta_manual: '',
-      has_multiple_instances: null,
+      removed_from_judicial_branch: '',
+      has_multiple_instances: '',
       process_date_range: null,
       created_at_range: null,
       last_api_update_range: null,
@@ -593,6 +714,14 @@ export class ProcessesComponent {
 
   /** Opciones de tamaño de página para la paginación */
   pageSizeOptions = [10, 20, 25, 50, 100];
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    const suffix = this._transloco.translate('table.perPage');
+    return this.pageSizeOptions.map((size) => ({
+      id: String(size),
+      label: `${size} ${suffix}`,
+    }));
+  }
 
   /**
    * Handle page change
@@ -968,7 +1097,6 @@ export class ProcessesComponent {
           const page = this.pagination()?.current_page || 1;
           const perPage = this.pagination()?.per_page || 10;
           this.loadProcesses(page, perPage);
-          this.loadDashboardStats();
         },
         error: (err: HttpErrorResponse) => {
           this.trashSubmitting.set(false);
@@ -999,6 +1127,8 @@ export class ProcessesComponent {
   }
 
   private _guessOrganizationIdFromFilter(): string {
+    const fromId = String(this.filterForm.value.organization_id ?? '').trim();
+    if (fromId) return fromId;
     const query = String(this.filterForm.value.organization ?? '')
       .trim()
       .toLowerCase();

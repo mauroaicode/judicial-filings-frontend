@@ -21,8 +21,17 @@
     <p class="text-base-content/70">{{ emptyMessage() }}</p>
   </div>
 } @else {
-  <div class="overflow-x-auto w-full" style="position: relative; overflow-x: auto; overflow-y: visible;">
-    <table class="table table-zebra" style="min-width: 1000px; border-collapse: separate !important; border-spacing: 0 !important; position: relative;">
+  <div class="data-table-root overflow-x-auto w-full" (scroll)="onTableScroll()">
+    <table
+      class="table table-zebra data-table-grid"
+      [style.--data-table-width]="tableWidth()"
+      style="border-collapse: separate !important; border-spacing: 0 !important; position: relative;"
+    >
+      <colgroup>
+        @for (column of columns(); track column.key) {
+          <col [style.width]="columnColWidth(column)" />
+        }
+      </colgroup>
       <!-- Table Header -->
       <thead [attr.style]="'background-color: #4B2A7D !important; color: #ffffff !important;'">
         <tr>
@@ -32,8 +41,8 @@
               [class.text-center]="column.align === 'center'"
               [class.text-right]="column.align === 'right'"
               [class.sticky-header]="column.key === 'process_number'"
+              [class.whitespace-nowrap]="column.nowrap"
               [attr.style]="column.key === 'process_number' ? getStickyHeaderStyle() : getHeaderCellStyle()"
-              [style.width]="column.key !== 'process_number' ? column.width : null"
             >
               {{ column.label | transloco }}
             </th>
@@ -45,6 +54,7 @@
         @for (row of data(); track row.id) {
           <tr
             class="cursor-pointer group"
+            [ngClass]="rowClass()(row) || ''"
             (click)="onRowClick(row)"
           >
             @for (column of columns(); track column.key) {
@@ -53,11 +63,29 @@
                 [class.text-center]="column.align === 'center'"
                 [class.text-right]="column.align === 'right'"
                 [class.sticky-cell]="column.key === 'process_number'"
-                [class.whitespace-nowrap]="column.key === 'process_number'"
+                [class.whitespace-nowrap]="column.key === 'process_number' || !!column.nowrap"
+                [class.data-table-menu-cell]="column.action === 'menu'"
+                [class.data-table-html-cell-td]="column.html"
                 [class.group-hover:bg-[rgba(255,152,0,0.2)]]="column.key === 'process_number'"
                 [attr.style]="column.key === 'process_number' ? getStickyCellStyle() : null"
               >
-                @if (column.action === 'edit') {
+                @if (column.action === 'menu' && column.menuItems?.length) {
+                  <button
+                    type="button"
+                    class="data-table-menu-trigger btn btn-ghost btn-xs btn-circle text-base-content/55 hover:text-primary hover:bg-primary/10"
+                    [class.bg-primary/15]="isRowMenuOpen(row)"
+                    (click)="toggleRowMenu($event, row, column); $event.stopPropagation()"
+                    [attr.aria-label]="column.label | transloco"
+                    [attr.aria-expanded]="isRowMenuOpen(row)"
+                    [attr.aria-haspopup]="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="5" cy="12" r="1.75" />
+                      <circle cx="12" cy="12" r="1.75" />
+                      <circle cx="19" cy="12" r="1.75" />
+                    </svg>
+                  </button>
+                } @else if (column.action === 'edit') {
                   <button
                     type="button"
                     class="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10"
@@ -89,6 +117,20 @@
                       <span class="badge badge-primary badge-xs tabular-nums">{{ row.documents.length }}</span>
                     }
                   </button>
+                } @else if (column.action === 'mark_removed') {
+                  @if (!row.removed_from_judicial_branch) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-xs btn-circle text-warning hover:bg-warning/10"
+                      (click)="onActionClick($event, column.key, row)"
+                      [attr.aria-label]="column.label | transloco"
+                      [title]="column.label | transloco"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </button>
+                  }
                 } @else if (column.key === 'status_label') {
                   <span
                     class="badge whitespace-nowrap uppercase font-semibold tracking-normal text-[11px] leading-tight"
@@ -117,7 +159,7 @@
                     {{ getCellValue(row, column) }}
                   </span>
                 } @else if (column.html) {
-                  <span [innerHTML]="getCellValue(row, column)"></span>
+                  <span class="data-table-html-cell" [innerHTML]="getCellValue(row, column)"></span>
                 } @else {
                   {{ getCellValue(row, column) }}
                 }
@@ -129,11 +171,51 @@
     </table>
   </div>
 
+  @if (openMenuRowId() && menuAnchor(); as anchor) {
+    @if (openMenuRow(); as menuRow) {
+      <div appBodyPortal class="data-table-menu-portal">
+        <div
+          class="data-table-menu-backdrop fixed inset-0 z-[9998]"
+          aria-hidden="true"
+          (click)="closeRowMenu()"
+        ></div>
+        <ul
+          class="data-table-row-menu-panel menu menu-sm fixed z-[9999] min-w-[15rem] max-w-[20rem] rounded-xl border border-base-200 bg-base-100 p-1.5 shadow-xl"
+          role="menu"
+          [style.top.px]="anchor.top"
+          [style.left.px]="anchor.left"
+          [style.minWidth.px]="anchor.minWidth"
+          (click)="$event.stopPropagation()"
+        >
+        @for (item of openMenuItems(); track item.key) {
+          @if (isMenuItemVisible(item, menuRow)) {
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="rounded-lg font-semibold text-sm whitespace-normal text-left leading-snug py-2.5"
+                [class]="item.itemClass || ''"
+                (click)="onMenuItemClick($event, item.key, menuRow)"
+              >
+                <span class="flex items-center justify-between gap-2 w-full">
+                  <span>{{ item.label | transloco }}</span>
+                  @if (item.key === 'documents' && documentCount(menuRow) > 0) {
+                    <span class="badge badge-primary badge-xs tabular-nums shrink-0">{{ documentCount(menuRow) }}</span>
+                  }
+                </span>
+              </button>
+            </li>
+          }
+        }
+        </ul>
+      </div>
+    }
+  }
+
   <!-- Pagination -->
   @if (pagination(); as paginationInfo) {
-    <div class="pagination-container">
-      <!-- Results info -->
-      <div class="pagination-results-info">
+    <div class="admin-table-pagination admin-table-pagination--inset border-t border-base-300 bg-base-100 shrink-0">
+      <div class="admin-table-pagination__results">
         @let range = getShowingRange();
         {{ 'table.showing' | transloco }}
         <span class="font-semibold">{{ range.from }}</span>
@@ -144,8 +226,7 @@
         {{ 'table.results' | transloco }}
       </div>
 
-      <!-- Pagination controls -->
-      <div class="pagination-controls join">
+      <div class="admin-table-pagination__controls join">
         <!-- First page -->
         <button
           class="join-item btn btn-sm"
@@ -194,19 +275,15 @@
         </button>
       </div>
 
-      <!-- Page size selector -->
-      <div class="pagination-page-size">
-        <select
-          class="select select-bordered select-sm"
-          [value]="paginationInfo.per_page"
-          (change)="onPageChange(1, +$any($event.target).value)"
-        >
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
-              {{ size }} {{ 'table.perPage' | transloco }}
-            </option>
-          }
-        </select>
+      <div class="admin-table-pagination__per-page">
+        <app-filter-select
+          class="admin-page-size-select"
+          size="sm"
+          placement="up"
+          [options]="perPageSelectOptions"
+          [ngModel]="paginationInfo.per_page + ''"
+          (ngModelChange)="onPageChange(1, +$event)"
+        />
       </div>
     </div>
   }

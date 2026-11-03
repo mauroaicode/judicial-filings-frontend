@@ -8,6 +8,7 @@ import { NotificationService } from '@app/core/services/notification/notificatio
 import { ProcessExportService } from '@app/core/services/process/process-export.service';
 import {
   normalizeNotificationBusinessType,
+  isProcessExportFinishedNotification,
   resolveAdminNotificationNavigation,
 } from '@app/core/constants/notification-navigation.constant';
 import { AppNotification } from '@app/core/models/notification/notification.model';
@@ -178,7 +179,14 @@ export class NotificationsComponent implements OnInit, OnDestroy {
             String(inner.type ?? data?.notification_type ?? data?.type ?? '')
           );
 
-          if (businessType === 'process-export-finished') {
+          const wsExportId = String(inner.export_id ?? inner.id ?? '');
+          if (
+            isProcessExportFinishedNotification(String(inner.type ?? data?.notification_type ?? ''), {
+              exportId: wsExportId,
+              status: String(inner.status ?? data?.status ?? ''),
+              downloadable: typeof inner.downloadable === 'boolean' ? inner.downloadable : undefined,
+            })
+          ) {
             const synthetic: AppNotification = {
               id: String(data?.id ?? ''),
               type: typeof data?.type === 'string' ? data.type : '',

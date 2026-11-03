@@ -38,6 +38,9 @@ export interface NotificationDigestDetailItem {
   is_alert?: boolean;
   matched_keywords?: string | string[] | null;
   alert_highlights?: unknown[];
+  removed_from_judicial_branch?: boolean;
+  removed_from_judicial_branch_at?: string | null;
+  removed_from_judicial_branch_reason?: string | null;
 }
 
 /** Fila ya lista para pintar (posible related_action en el futuro). */

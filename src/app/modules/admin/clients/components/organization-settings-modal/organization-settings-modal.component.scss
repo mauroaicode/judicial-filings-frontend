@@ -12,8 +12,13 @@
 
   .tab.tab-active {
     background-color: hsl(var(--p) / 0.12);
-    color: hsl(var(--p));
+    color: hsl(var(--bc));
+    font-weight: 700;
   }
+}
+
+.org-settings-section-title {
+  color: var(--color-base-content, #1f2937);
 }
 
 @media (max-width: 639px) {

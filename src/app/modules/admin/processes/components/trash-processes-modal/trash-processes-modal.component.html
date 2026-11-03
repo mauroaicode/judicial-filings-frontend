@@ -1,4 +1,4 @@
-<dialog class="modal trash-processes-modal" [class.modal-open]="open()">
+<dialog class="modal trash-processes-modal" [class.modal-open]="open()" (cancel)="$event.preventDefault(); onCancel()">
   <div class="modal-box trash-processes-modal__box max-w-xl p-0 overflow-visible">
     <div class="p-6 pb-4 border-b border-base-200/50">
       <div class="flex items-start justify-between gap-3">

@@ -1,4 +1,4 @@
-<dialog class="modal organization-status-dialog" [class.modal-open]="open()">
+<dialog class="modal organization-status-dialog" [class.modal-open]="open()" (cancel)="$event.preventDefault(); onCancel()">
   <div class="modal-box organization-status-dialog__box max-w-lg">
     <h3 class="font-bold text-lg text-base-content pr-2">{{ titleKey | transloco }}</h3>
     <p class="mt-1 text-sm text-base-content/70">

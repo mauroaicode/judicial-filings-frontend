@@ -1,0 +1,24 @@
+@if (view(); as banner) {
+  <div
+    class="judicial-sync-live"
+    [class.judicial-sync-live--marquee]="banner.marquee"
+    [class.judicial-sync-live--single]="banner.single"
+    role="status"
+    aria-live="polite"
+    [attr.aria-label]="banner.ariaLabel"
+    [style.--sync-marquee-duration]="banner.duration"
+  >
+    <div class="judicial-sync-live__track" aria-hidden="true">
+      @for (group of banner.groups; track group.key) {
+        <div class="judicial-sync-live__group" [attr.aria-hidden]="group.hidden ? true : null">
+          @for (chip of group.chips; track chip.key) {
+            <span class="judicial-sync-live__chip" [attr.title]="chip.text">
+              <span class="judicial-sync-live__dot" aria-hidden="true"></span>
+              <span class="judicial-sync-live__text">{{ chip.text }}</span>
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -2,3 +2,27 @@
   min-height: 180px;
   user-select: none;
 }
+
+.file-drop-zone--idle {
+  border-color: color-mix(in srgb, var(--color-base-content) 32%, transparent);
+}
+
+:host-context([data-theme='dark']) {
+  .file-drop-zone--idle {
+    border-color: rgba(232, 220, 255, 0.42);
+    background: rgba(124, 82, 184, 0.12);
+  }
+
+  .file-drop-zone svg.h-14 {
+    color: #e8dcff;
+  }
+
+  .file-drop-zone p.font-medium,
+  .file-drop-zone p.text-center.font-medium {
+    color: #f3ebff;
+  }
+
+  .file-drop-zone p.text-sm {
+    color: #d8c3f7;
+  }
+}

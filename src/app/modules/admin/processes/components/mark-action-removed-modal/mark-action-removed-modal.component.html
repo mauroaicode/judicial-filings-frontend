@@ -1,0 +1,94 @@
+@if (open()) {
+  <dialog class="modal modal-open modal-bottom sm:modal-middle" open (cancel)="$event.preventDefault(); onClose()">
+    <div class="modal-box p-0 bg-base-100 overflow-hidden shadow-2xl rounded-t-3xl sm:rounded-2xl max-w-lg w-full">
+      <div class="p-6 pb-4 border-b border-base-200/50">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-4 min-w-0">
+            <div class="mark-removed-modal__icon w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-xl font-bold text-base-content">
+                {{ 'processDetail.actions.markRemovedModal.title' | transloco }}
+              </h3>
+              <p class="text-sm text-base-content/50 font-medium line-clamp-2">
+                {{ action().action }}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle text-base-content/20 hover:text-error transition-all shrink-0"
+            [disabled]="isSaving()"
+            (click)="onClose()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div class="mark-removed-modal__notice rounded-xl border p-4 text-sm text-base-content/75 leading-relaxed space-y-2">
+          <p>{{ 'processDetail.actions.markRemovedModal.helpLine1' | transloco }}</p>
+          <p>{{ 'processDetail.actions.markRemovedModal.helpLine2' | transloco }}</p>
+          <p>{{ 'processDetail.actions.markRemovedModal.helpLine3' | transloco }}</p>
+          <p class="mark-removed-modal__notice-emphasis">{{ 'processDetail.actions.markRemovedModal.helpLine4' | transloco }}</p>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert alert-error rounded-xl text-sm py-3">
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onConfirm()" class="space-y-4">
+          <div class="form-control w-full">
+            <label class="label py-0 mb-1">
+              <span class="label-text text-[10px] font-bold uppercase tracking-wider text-base-content/40">
+                {{ 'processDetail.actions.markRemovedModal.reasonLabel' | transloco }}
+              </span>
+            </label>
+            <textarea
+              formControlName="reason"
+              class="textarea textarea-bordered w-full min-h-[88px] text-sm"
+              [class.textarea-error]="!!reasonError()"
+              [placeholder]="'processDetail.actions.markRemovedModal.reasonPlaceholder' | transloco"
+              maxlength="2000"
+            ></textarea>
+            @if (reasonError()) {
+              <label class="label py-0 mt-1">
+                <span class="label-text-alt text-error text-xs">{{ reasonError() }}</span>
+              </label>
+            }
+          </div>
+
+          <label class="flex items-start gap-3 cursor-pointer rounded-xl border border-base-200 p-4 hover:bg-base-200/20 transition-colors">
+            <input type="checkbox" formControlName="notify_organizations" class="checkbox checkbox-sm checkbox-neutral mt-0.5" />
+            <span class="text-sm font-medium text-base-content/80 leading-snug">
+              {{ 'processDetail.actions.markRemovedModal.notifyOrganizations' | transloco }}
+            </span>
+          </label>
+
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <button type="button" class="btn btn-ghost font-bold" [disabled]="isSaving()" (click)="onClose()">
+              {{ 'processDetail.actions.markRemovedModal.cancel' | transloco }}
+            </button>
+            <button type="submit" class="btn mark-removed-modal__confirm font-bold border" [disabled]="isSaving()">
+              @if (isSaving()) {
+                <span class="loading loading-spinner loading-sm"></span>
+              }
+              {{ 'processDetail.actions.markRemovedModal.confirm' | transloco }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/40">
+      <button type="button" (click)="onClose()" [disabled]="isSaving()">close</button>
+    </form>
+  </dialog>
+}

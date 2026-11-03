@@ -28,22 +28,22 @@
   line-height: 1.25;
 }
 
-// Hover en filas — tono primary suave (púrpura muy claro)
+// Hover / selección — tokens de tema (light + dark en tailwind.css)
 .process-list-table tbody tr.process-row-hovered,
 .process-list-table tbody tr.process-row-hovered td {
-  background-color: #F3F0F9 !important; // primaryLight muted hover
+  background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
 }
 
 .process-list-table tbody tr.is-selected,
 .process-list-table tbody tr.is-selected td {
-  background-color: #EDE7F6 !important;
+  background-color: var(--process-table-sticky-selected, #ede7f6) !important;
 }
 
 .process-list-table tbody tr.is-selected td.sticky-col-radicado,
 .process-list-table tbody tr.is-selected td.sticky-col-radicado::before,
 .process-list-table tbody tr.is-selected td.sticky-col-radicado .sticky-cell-bg {
-  background-color: #EDE7F6 !important;
-  background: #EDE7F6 !important;
+  background-color: var(--process-table-sticky-selected, #ede7f6) !important;
+  background: var(--process-table-sticky-selected, #ede7f6) !important;
 }
 
 .processes-select-col {
@@ -67,7 +67,7 @@
   place-content: center;
   border: 2px solid #4b2a7d !important;
   border-radius: 0.3rem !important;
-  background-color: #ffffff !important;
+  background-color: var(--color-base-100, #fff) !important;
   background-image: none !important;
   box-shadow: none !important;
   opacity: 1 !important;
@@ -238,16 +238,12 @@
     transform: translateZ(0) !important;
   }
 
-  $sticky-base: #ffffff;
-  $sticky-zebra: #F4F5F9;      // Admin base-200 cool blue-gray
-  $sticky-instance: #F3F0F9;   // primaryLight — very subtle purple tint for instances
-
   tbody td.sticky-col-radicado {
     position: sticky !important;
     left: 0 !important;
     z-index: 501 !important;
-    background-color: $sticky-base !important;
-    background: $sticky-base !important;
+    background-color: var(--process-table-sticky-bg, #fff) !important;
+    background: var(--process-table-sticky-bg, #fff) !important;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
     min-width: 324px !important;
     max-width: 324px !important;
@@ -275,52 +271,52 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: $sticky-base !important;
+      background: var(--process-table-sticky-bg, #fff) !important;
       z-index: -1;
       pointer-events: none;
     }
   }
 
   tbody tr:nth-child(2n) td.sticky-col-radicado {
-    background-color: $sticky-zebra !important;
-    background: $sticky-zebra !important;
+    background-color: var(--process-table-sticky-zebra, #f4f5f9) !important;
+    background: var(--process-table-sticky-zebra, #f4f5f9) !important;
     &::before {
-      background: $sticky-zebra !important;
+      background: var(--process-table-sticky-zebra, #f4f5f9) !important;
     }
     & .sticky-cell-bg {
-      background: $sticky-zebra !important;
+      background: var(--process-table-sticky-zebra, #f4f5f9) !important;
     }
   }
   tbody tr:not(:nth-child(2n)) td.sticky-col-radicado .sticky-cell-bg {
-    background: $sticky-base !important;
+    background: var(--process-table-sticky-bg, #fff) !important;
   }
 
   tbody tr.process-table-instance-row td.sticky-col-radicado,
   tbody tr.process-table-instance-row:nth-child(2n) td.sticky-col-radicado {
-    background-color: $sticky-instance !important;
-    background: $sticky-instance !important;
+    background-color: var(--process-table-sticky-instance, #f3f0f9) !important;
+    background: var(--process-table-sticky-instance, #f3f0f9) !important;
     &::before {
-      background: $sticky-instance !important;
+      background: var(--process-table-sticky-instance, #f3f0f9) !important;
     }
     & .sticky-cell-bg {
-      background: $sticky-instance !important;
+      background: var(--process-table-sticky-instance, #f3f0f9) !important;
     }
   }
 
   tbody tr.process-row-hovered td.sticky-col-radicado,
   tbody tr.process-row-hovered td.sticky-col-radicado::before,
   tbody tr.process-row-hovered td.sticky-col-radicado .sticky-cell-bg {
-    background-color: #F3F0F9 !important;
-    background: #F3F0F9 !important;
+    background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
+    background: var(--process-table-sticky-hover, #f3f0f9) !important;
   }
 }
 
-// Filas de instancias: fondo primaryLight (púrpura muy claro, enterprise)
+// Filas de instancias — tinte sutil (respeta tema oscuro)
 .process-list-table tbody tr.process-table-instance-row {
-  background-color: #F3F0F9 !important;
+  background-color: var(--process-table-sticky-instance, #f3f0f9) !important;
 }
 .process-list-table tbody tr.process-table-instance-row td {
-  background-color: #F3F0F9 !important;
+  background-color: var(--process-table-sticky-instance, #f3f0f9) !important;
 }
 
 // Pagination: izquierda = resultados, centro = numeración, derecha = "por página"

@@ -1,9 +1,171 @@
-.modal-box {
+.subject-form-modal {
+  background: var(--color-base-100);
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+
   @media (max-width: 640px) {
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
     height: auto !important;
     max-height: 90vh !important;
+  }
+
+  &__header {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+  }
+
+  &__icon {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+
+  &__title {
+    color: var(--color-base-content);
+  }
+
+  &__subtitle {
+    color: color-mix(in srgb, var(--color-base-content) 62%, transparent);
+  }
+
+  &__close {
+    color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
+
+    &:hover {
+      color: var(--color-error);
+    }
+  }
+
+  &__info {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  &__info-icon {
+    background: var(--color-base-100);
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  }
+
+  &__info-title {
+    color: var(--color-primary);
+  }
+
+  &__info-desc {
+    color: color-mix(in srgb, var(--color-base-content) 72%, var(--color-primary));
+  }
+
+  &__label {
+    color: color-mix(in srgb, var(--color-base-content) 62%, transparent);
+  }
+
+  &__footer {
+    border-top: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+    background: color-mix(in srgb, var(--color-base-content) 4%, var(--color-base-100));
+  }
+
+  &__cancel.btn {
+    color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
+  }
+
+  &__save.btn {
+    background: var(--color-primary);
+    color: var(--color-primary-content, #fff);
+    border: 0;
+
+    &:disabled {
+      opacity: 1;
+      background: color-mix(in srgb, var(--color-primary) 42%, var(--color-base-200));
+      color: color-mix(in srgb, var(--color-primary-content, #fff) 78%, transparent);
+    }
+  }
+}
+
+:host-context([data-theme='dark']) {
+  .subject-form-modal {
+    background: #221b32;
+    border-color: rgba(232, 220, 255, 0.2);
+  }
+
+  .subject-form-modal__header,
+  .subject-form-modal__footer {
+    border-color: rgba(232, 220, 255, 0.14);
+  }
+
+  .subject-form-modal__footer {
+    background: #1a1625;
+  }
+
+  .subject-form-modal__icon {
+    background: rgba(124, 82, 184, 0.38);
+    color: #e8dcff;
+  }
+
+  .subject-form-modal__title {
+    color: #f3ebff;
+    -webkit-text-fill-color: #f3ebff;
+  }
+
+  .subject-form-modal__subtitle {
+    color: #c4a8f0;
+    -webkit-text-fill-color: #c4a8f0;
+  }
+
+  .subject-form-modal__close {
+    color: #c4a8f0;
+  }
+
+  .subject-form-modal__info {
+    background: rgba(124, 82, 184, 0.22);
+    border-color: rgba(232, 220, 255, 0.22);
+  }
+
+  .subject-form-modal__info-icon {
+    background: rgba(124, 82, 184, 0.45);
+    color: #f3ebff;
+    border-color: rgba(232, 220, 255, 0.28);
+  }
+
+  .subject-form-modal__info-title {
+    color: #e8dcff;
+    -webkit-text-fill-color: #e8dcff;
+  }
+
+  .subject-form-modal__info-desc {
+    color: #d8c3f7;
+    -webkit-text-fill-color: #d8c3f7;
+  }
+
+  .subject-form-modal__label {
+    color: #d8c3f7;
+    -webkit-text-fill-color: #d8c3f7;
+  }
+
+  .subject-form-modal__input.input {
+    background: #140f1e;
+    border-color: rgba(232, 220, 255, 0.28);
+    color: #f3ebff;
+
+    &::placeholder {
+      color: rgba(232, 220, 255, 0.48);
+    }
+  }
+
+  .subject-form-modal__cancel.btn {
+    color: #d8c3f7;
+  }
+
+  .subject-form-modal__save.btn {
+    background: #7c52b8;
+    color: #ffffff;
+
+    &:disabled {
+      background: rgba(124, 82, 184, 0.55);
+      color: rgba(243, 235, 255, 0.82);
+    }
+
+    &:not(:disabled):hover {
+      background: #8e66c9;
+      color: #ffffff;
+    }
   }
 }

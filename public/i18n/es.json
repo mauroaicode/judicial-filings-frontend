@@ -81,7 +81,8 @@
     "digestPackages": "Consolidados",
     "notificationDigests": "Historial consolidados",
     "presence": "Actividad",
-    "toggleSidebar": "Alternar menú lateral"
+    "toggleSidebar": "Alternar menú lateral",
+    "adminBadge": "Administrador"
   },
   "header": {
     "searchPlaceholder": "Buscar...",
@@ -91,7 +92,9 @@
     "userMenu": "Menú de usuario",
     "profile": "Perfil",
     "settings": "Configuración",
-    "signOut": "Cerrar Sesión"
+    "signOut": "Cerrar Sesión",
+    "switchToDark": "Cambiar a modo oscuro",
+    "switchToLight": "Cambiar a modo claro"
   },
   "dashboard": {
     "title": "Dashboard"
@@ -158,6 +161,10 @@
       "retry": "Reintentar",
       "empty": "Aún no hay ejecuciones registradas.",
       "end": "No hay más ejecuciones"
+    },
+    "liveBanner": {
+      "progress": "Sincronizando {{source}}: quedan {{pending}} de {{total}}",
+      "preparing": "Sincronizando {{source}}: preparando…"
     }
   },
   "processes": {
@@ -207,7 +214,17 @@
       "defendant": "Demandado",
       "defendantPlaceholder": "Ej: EMPRESA ABC",
       "organization": "Organización",
-      "organizationPlaceholder": "Ej: cocacola",
+      "organizationAll": "Todas las organizaciones",
+      "organizationSelectPlaceholder": "Seleccionar organización",
+      "organizationSearch": "Buscar organización…",
+      "organizationEmpty": "Sin coincidencias",
+      "organizationName": "Nombre de organización",
+      "organizationPlaceholder": "Coincidencia parcial en el nombre",
+      "organizationActiveLabel": "Filtrando por organización",
+      "organizationActiveHint": "Los indicadores y la tabla muestran procesos con vínculo activo en esta organización.",
+      "organizationActiveAria": "Vista filtrada por organización: {{name}}",
+      "clearOrganization": "Quitar filtro de organización",
+      "invalidOrganization": "Seleccione una organización válida.",
       "status": "Estado",
       "statusPlaceholder": "Seleccionar estado",
       "statusActive": "Activo",
@@ -224,6 +241,10 @@
       "privacyPrivate": "Solo privados",
       "privacyPublic": "Solo públicos",
       "altaManual": "Alta manual",
+      "removedFromRama": "Actuaciones retiradas en Rama",
+      "removedFromRamaAll": "Todos",
+      "removedFromRamaWith": "Con al menos una actuación retirada",
+      "removedFromRamaWithout": "Sin actuaciones retiradas",
       "all": "Todos",
       "yes": "Sí",
       "no": "No",
@@ -535,6 +556,7 @@
       "configureAria": "Configurar organización",
       "closeAria": "Cerrar configuración",
       "modalTitle": "Configuración de la organización",
+      "organizationLabel": "Organización",
       "modalSubtitle": "Consulte los datos y ajuste el límite de radicados activos.",
       "loading": "Cargando configuración…",
       "retry": "Reintentar",
@@ -615,6 +637,13 @@
       "viewErrors": "Ver errores"
     },
     "processesTitle": "Radicados de la importación ({{count}})",
+    "processesModal": {
+      "title": "Radicados de la importación",
+      "countBadge": "{{count}} radicados",
+      "fileLabel": "Archivo importado",
+      "importKindLabel": "Tipo de importación",
+      "close": "Cerrar"
+    },
     "status": {
       "unknown": "Sin estado"
     },
@@ -695,6 +724,7 @@
     },
     "modal": {
       "title": "Exportar procesos a Excel",
+      "organizationLabel": "Organización",
       "subtitle": "La exportación se encola en segundo plano. Te avisaremos cuando esté lista.",
       "closeAria": "Cerrar",
       "sectionProcesses": "Procesos",
@@ -880,6 +910,11 @@
   },
   "processDetail": {
     "title": "Detalle del Proceso",
+    "copyRadicadoTooltip": "Copiar radicado (solo números)",
+    "copyRadicadoSuccess": "Radicado copiado al portapapeles",
+    "headerCompact": {
+      "lastUpdate": "Última actualización"
+    },
     "activateProcess": "Activar Seguimiento",
     "deactivateProcess": "Desactivar Seguimiento",
     "back": "Volver",
@@ -908,6 +943,9 @@
     "processClass": "Clase de Proceso",
     "subclassProcess": "Subclase de Proceso",
     "processDate": "Fecha de Radicación",
+    "removedFromRamaCount": "Actuaciones retiradas en Rama",
+    "removedFromRamaViewActions": "Ver actuaciones",
+    "removedFromRamaCountShort": "retiradas en Rama",
     "lastActivityDate": "Fecha de Última Actuación",
     "location": "Ubicación",
     "status": "Estado",
@@ -927,6 +965,14 @@
       "interestDate": "Fecha de interés",
       "role": "Rol de la organización",
       "trackingStatus": "Estado de seguimiento",
+      "inactivitySemaphore": "Semáforo de inactividad",
+      "linkActions": "Acciones sobre el vínculo",
+      "semaphoreShort": {
+        "red": "Alerta crítica",
+        "yellow": "Alerta temprana",
+        "green": "Normal",
+        "waiting": "En espera"
+      },
       "assignRole": "Asignar rol",
       "changeRole": "Cambiar rol",
       "activateTracking": "Activar seguimiento",
@@ -1014,19 +1060,45 @@
         "alertKeywordPlaceholder": "Todas las etapas procesales",
         "search": "Buscar",
         "searchPlaceholder": "Buscar en acción o anotación",
+        "removedFromRama": "Retiradas en Rama",
+        "removedFromRamaAll": "Todas las actuaciones",
+        "removedFromRamaOnly": "Solo retiradas en Rama",
+        "removedFromRamaExcluded": "Sin retiro en Rama",
         "reset": "Limpiar Filtros"
       },
       "table": {
         "index": "#",
         "action": "Actuación",
         "annotation": "Anotación",
-        "termStartDate": "Fecha inicio término",
-        "termEndDate": "Fecha finaliza término",
-        "actionDate": "Fecha de actuación",
-        "registrationDate": "Fecha de registro",
+        "termStartDate": "Fecha Inicio Término",
+        "termEndDate": "Fecha Finaliza Término",
+        "actionDate": "Fecha de Actuación",
+        "registrationDate": "Fecha de Registro",
         "court": "Despacho",
         "edit": "Editar fechas",
-        "documents": "Documentos PDF"
+        "documents": "Documentos PDF",
+        "actionsColumn": "Acciones",
+        "ramaStatus": "Rama Judicial",
+        "markRemoved": "Marcar como eliminada en Rama Judicial",
+        "markRemovedShort": "Retirada en Rama"
+      },
+      "removedBadge": "Retirada en Rama Judicial",
+      "notifiedInDigest": "Ya notificada en consolidado",
+      "markRemovedModal": {
+        "title": "Marcar como eliminada en Rama Judicial",
+        "reasonLabel": "Motivo (opcional)",
+        "reasonPlaceholder": "Ej.: Error del juzgado al publicar",
+        "reasonTooLong": "El motivo no puede superar 2000 caracteres.",
+        "notifyOrganizations": "Notificar por correo a las organizaciones interesadas",
+        "helpLine1": "No borra el historial ni revierte consolidados ya enviados.",
+        "helpLine2": "La actuación dejará de salir en consolidados pendientes.",
+        "helpLine3": "Los consolidados ya enviados siguen visibles; al abrirlos verán la etiqueta de retirada.",
+        "helpLine4": "No existe opción de deshacer esta acción.",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "notFound": "No se encontró el proceso o la actuación.",
+        "errorGeneric": "No se pudo marcar la actuación. Intenta de nuevo.",
+        "organizationsNotified": "Se notificó a {{count}} organización(es)."
       },
       "datesModal": {
         "title": "Editar fechas de la actuación",

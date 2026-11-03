@@ -1,0 +1,149 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+:host(.header-sync-live-banner) {
+  max-width: min(9.5rem, 30vw);
+
+  @media (min-width: 480px) {
+    max-width: min(16rem, 36vw);
+  }
+
+  @media (min-width: 768px) {
+    max-width: min(22rem, 38vw);
+  }
+
+  @media (min-width: 1024px) {
+    max-width: min(28rem, 42vw);
+  }
+}
+
+:host(.header-sync-live-banner:empty) {
+  display: none !important;
+}
+
+:host(.header-sync-live-banner) .judicial-sync-live {
+  min-height: 0;
+  padding: 0;
+  border-top: none;
+  background: transparent;
+}
+
+.judicial-sync-live {
+  display: flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 1rem;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-base-100));
+  color: var(--color-base-content);
+}
+
+.judicial-sync-live__track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-height: 1.65rem;
+}
+
+.judicial-sync-live__group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.judicial-sync-live__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-base-content) 6%, transparent);
+}
+
+.judicial-sync-live__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-success, #16a34a);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success, #16a34a) 55%, transparent);
+  animation: judicial-sync-pulse 1.8s ease-out infinite;
+}
+
+.judicial-sync-live--single {
+  .judicial-sync-live__track,
+  .judicial-sync-live__group,
+  .judicial-sync-live__chip {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .judicial-sync-live__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.judicial-sync-live:not(.judicial-sync-live--marquee):not(.judicial-sync-live--single) {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.judicial-sync-live--marquee {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+
+  .judicial-sync-live__group {
+    padding-right: 0.75rem;
+  }
+
+  .judicial-sync-live__track {
+    animation: judicial-sync-marquee var(--sync-marquee-duration, 40s) linear infinite;
+    will-change: transform;
+  }
+
+  &:hover .judicial-sync-live__track,
+  &:focus-within .judicial-sync-live__track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes judicial-sync-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes judicial-sync-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success, #16a34a) 55%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0.45rem transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .judicial-sync-live__dot,
+  .judicial-sync-live--marquee .judicial-sync-live__track {
+    animation: none;
+  }
+}

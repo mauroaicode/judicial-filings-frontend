@@ -1,4 +1,4 @@
-<dialog class="modal modal-open">
+<dialog class="modal modal-open" (cancel)="$event.preventDefault(); onClose()">
   <div
     class="modal-box relative flex max-h-[min(90vh,56rem)] w-[min(100vw-1.5rem,38rem)] max-w-none flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-2xl sm:max-w-xl"
   >
@@ -33,9 +33,21 @@
             {{ 'historialExportaciones.modal.title' | transloco }}
           </h3>
           @if (organizationName()) {
-            <p class="mt-1 truncate text-sm font-medium text-primary">{{ organizationName() }}</p>
+            <div class="process-export-modal-org mt-3 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/45">
+                {{ 'historialExportaciones.modal.organizationLabel' | transloco }}
+              </p>
+              <p class="process-export-modal-org-name text-base font-bold leading-snug text-base-content break-words sm:text-lg">
+                {{ organizationName() }}
+              </p>
+              @if (organizationTypeLabel()) {
+                <span class="process-export-modal-org-type badge badge-outline badge-sm mt-0.5 font-semibold normal-case">
+                  {{ organizationTypeLabel() }}
+                </span>
+              }
+            </div>
           }
-          <p class="mt-1 text-sm leading-relaxed text-base-content/65">
+          <p class="mt-3 text-sm leading-relaxed text-base-content/65">
             {{ 'historialExportaciones.modal.subtitle' | transloco }}
           </p>
         </div>
@@ -66,12 +78,11 @@
           <label class="label py-1">
             <span class="label-text text-sm font-medium">{{ 'historialExportaciones.modal.status' | transloco }}</span>
           </label>
-          <select class="select select-bordered select-sm w-full" formControlName="status">
-            <option value="">{{ 'historialExportaciones.modal.statusAll' | transloco }}</option>
-            <option value="active">{{ 'historialExportaciones.modal.statusActive' | transloco }}</option>
-            <option value="inactive">{{ 'historialExportaciones.modal.statusInactive' | transloco }}</option>
-            <option value="suspended">{{ 'historialExportaciones.modal.statusSuspended' | transloco }}</option>
-          </select>
+          <app-filter-select
+            formControlName="status"
+            size="sm"
+            [options]="statusFilterOptions()"
+          />
         </div>
 
         <div class="form-control">
@@ -169,7 +180,7 @@
       </button>
       <button
         type="button"
-        class="btn btn-primary w-full sm:min-w-[10rem] sm:w-auto"
+        class="btn btn-primary w-full sm:min-w-[10rem] sm:w-auto rounded-xl font-bold normal-case shadow-lg shadow-primary/20"
         (click)="onSubmit()"
         [disabled]="submitting()"
       >

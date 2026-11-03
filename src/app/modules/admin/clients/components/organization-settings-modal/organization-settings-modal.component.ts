@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   input,
   OnInit,
@@ -9,7 +10,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { finalize } from 'rxjs/operators';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
@@ -38,13 +38,22 @@ export class OrganizationSettingsModalComponent implements OnInit {
   private _organizationService = inject(OrganizationService);
   private _fb = inject(FormBuilder);
   private _transloco = inject(TranslocoService);
-  private _router = inject(Router);
 
   public organizationId = input.required<string>();
 
   public closed = output<void>();
   public saved = output<UpdateOrganizationSettingsResponse>();
-  public exportRequested = output<{ id: string; name: string }>();
+
+  readonly organizationTypeLabel = computed(() => {
+    const org = this.detail();
+    if (!org) return '';
+    const fromApi = org.type_label?.trim();
+    if (fromApi) return fromApi;
+    const normalized = (org.type ?? '').trim().toLowerCase();
+    if (normalized === 'natural') return this._transloco.translate('clients.kpi.natural');
+    if (normalized === 'juridical') return this._transloco.translate('clients.kpi.juridical');
+    return org.type?.trim() ?? '';
+  });
 
   public activeTab = signal<OrganizationSettingsTab>('info');
   public loading = signal(true);
@@ -109,18 +118,6 @@ export class OrganizationSettingsModalComponent implements OnInit {
   onClose(): void {
     if (this.saving() || this.confirmSaveOpen()) return;
     this.closed.emit();
-  }
-
-  onExportRequested(): void {
-    const detail = this.detail();
-    if (!detail) return;
-    this.exportRequested.emit({ id: detail.id, name: detail.name });
-  }
-
-  onViewExportHistory(): void {
-    const id = this.organizationId();
-    this.closed.emit();
-    void this._router.navigate(['/admin/organizations', id, 'exports']);
   }
 
   onSave(): void {

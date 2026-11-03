@@ -8,6 +8,7 @@ import {
   OnInit,
   inject,
   signal,
+  computed,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -20,8 +21,14 @@ import {
   ProcessExportItem,
 } from '@app/core/models/process/process-export.model';
 import { ProcessExportService } from '@app/core/services/process/process-export.service';
+import { OrganizationService } from '@app/core/services/organization/organization.service';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { ProcessExportModalComponent } from '../clients/components/process-export-modal/process-export-modal.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
 
 @Component({
   selector: 'app-export-history',
@@ -34,6 +41,7 @@ import { ProcessExportModalComponent } from '../clients/components/process-expor
     RouterLink,
     DateRangePickerComponent,
     ProcessExportModalComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './export-history.component.html',
   styleUrl: './export-history.component.scss',
@@ -45,6 +53,7 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
   private static readonly _EXPORT_ROW_HIGHLIGHT_MS = 24_000;
 
   private _service = inject(ProcessExportService);
+  private _organizationService = inject(OrganizationService);
   private _activatedRoute = inject(ActivatedRoute);
   private _router = inject(Router);
   private _transloco = inject(TranslocoService);
@@ -57,6 +66,7 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
   /** Organización fija cuando la ruta es `/admin/organizations/:id/exports` */
   public organizationId = signal<string | null>(null);
   public organizationName = signal<string | null>(null);
+  public organizationType = signal<string>('');
 
   public showFilters = signal(false);
   public loading = signal(false);
@@ -73,6 +83,18 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
 
   public readonly pageSizeOptions = [10, 15, 20, 25, 50, 100] as const;
 
+  readonly statusFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('historialExportaciones.filters.statusAll') },
+    { id: 'pending', label: this._transloco.translate('historialExportaciones.status.pending') },
+    { id: 'processing', label: this._transloco.translate('historialExportaciones.status.processing') },
+    { id: 'completed', label: this._transloco.translate('historialExportaciones.status.completed') },
+    { id: 'failed', label: this._transloco.translate('historialExportaciones.status.failed') },
+  ]);
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
+
   public readonly filterForm = new FormGroup({
     organization: new FormControl('', { nonNullable: true }),
     status: new FormControl('', { nonNullable: true }),
@@ -86,6 +108,17 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
   constructor() {
     const orgId = this._activatedRoute.snapshot.paramMap.get('organizationId');
     this.organizationId.set(orgId);
+    if (orgId) {
+      this._organizationService.getOrganization(orgId).subscribe({
+        next: (detail) => {
+          this.organizationName.set(detail.name);
+          this.organizationType.set(detail.type ?? '');
+        },
+        error: () => {
+          /* nombre puede llegar del historial */
+        },
+      });
+    }
     this.loadHistory(1);
 
     let seenRevision = this._service.historyRevision();
@@ -95,7 +128,9 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
         return;
       }
       seenRevision = rev;
-      this.loadHistory(1);
+      const finishedId = this._service.lastFinishedExportId();
+      const page = finishedId ? 1 : (this.pagination()?.current_page ?? 1);
+      this.loadHistory(page, { silent: true, highlightExportId: finishedId });
     });
   }
 
@@ -111,8 +146,13 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
     if (this._toastTimeoutId != null) clearTimeout(this._toastTimeoutId);
   }
 
-  loadHistory(page: number = 1): void {
-    this.loading.set(true);
+  loadHistory(
+    page: number = 1,
+    options?: { silent?: boolean; highlightExportId?: string | null }
+  ): void {
+    if (!options?.silent) {
+      this.loading.set(true);
+    }
     const query = this._buildQuery(page);
     const orgId = this.organizationId();
 
@@ -137,7 +177,12 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
           if (name) this.organizationName.set(name);
         }
         this.loading.set(false);
-        this._reconcileExportQueryParam();
+        const highlightId = options?.highlightExportId?.trim();
+        if (highlightId && response.data?.some((item) => item.id === highlightId)) {
+          this._highlightExportRow(highlightId);
+        } else {
+          this._reconcileExportQueryParam();
+        }
       },
       error: (error) => {
         console.error('Error cargando historial de exportaciones:', error);

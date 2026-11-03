@@ -1,5 +1,135 @@
 // Header specific styles
-header {
-  border-bottom: 1px solid hsl(var(--bc) / 0.1); // Using base-content with opacity for subtle border
+:host {
+  display: block;
+  width: 100%;
 }
 
+header {
+  border-bottom: 1px solid hsl(var(--bc) / 0.1);
+  overflow: visible;
+}
+
+.header-page-title {
+  max-width: 100%;
+
+  &--compact-mode {
+    opacity: 0;
+    transform: translateY(-110%);
+    pointer-events: none;
+  }
+}
+
+.header-compact-process {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+  overflow: visible;
+  opacity: 0;
+  transform: translateY(110%);
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+
+  &--visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  &__separator {
+    width: 1px;
+    align-self: center;
+    height: 2rem;
+    background-color: hsl(var(--bc) / 0.16);
+    flex-shrink: 0;
+  }
+
+  &__number {
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  &__radicado {
+    max-width: none;
+    align-items: center;
+  }
+
+  &__activity {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-self: center;
+    gap: 0.125rem;
+    line-height: 1.1;
+  }
+}
+
+.header-semaphore-tooltip .process-alert-tooltip.tooltip-bottom {
+  .tooltip-content {
+    top: calc(100% + 0.5rem) !important;
+    bottom: auto !important;
+    z-index: 20010 !important;
+  }
+
+  &.tooltip-left-aligned .tooltip-content {
+    transform: translateY(0) !important;
+  }
+
+  &.tooltip-left-aligned:hover .tooltip-content {
+    transform: translateY(0) !important;
+  }
+
+  &:hover .tooltip-content {
+    transform: translateX(0) translateY(0) !important;
+  }
+}
+
+.header-copy-toast {
+  position: fixed;
+  top: 4.25rem;
+  right: 1rem;
+  z-index: 20001;
+  animation: header-toast-in 0.22s ease-out;
+}
+
+@keyframes header-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-user-menu {
+  overflow: hidden;
+}
+
+.header-user-menu__identity {
+  max-width: 100%;
+  padding-inline: 0.5rem;
+  padding-block: 0.35rem 0.5rem;
+  white-space: normal;
+}
+
+.header-user-menu__identity > div {
+  max-width: 100%;
+}
+
+.header-user-menu__email {
+  hyphens: auto;
+}
+
+:host-context([data-theme='dark']) {
+  .header-compact-process__number {
+    color: #f8f5ff !important;
+    -webkit-text-fill-color: #f8f5ff;
+  }
+}

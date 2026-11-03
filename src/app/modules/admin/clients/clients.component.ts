@@ -5,11 +5,12 @@ import {
   inject,
   Injector,
   signal,
+  computed,
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
@@ -32,6 +33,14 @@ import {
   OrganizationStatusDialogVariant,
 } from './components/organization-status-dialog/organization-status-dialog.component';
 import { ProcessExportItem } from '@app/core/models/process/process-export.model';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import {
+  buildPerPageSelectOptions,
+  mapValueLabelToFilterOptions,
+} from '@app/shared/utils/filter-select-options.util';
 
 @Component({
   selector: 'app-clients',
@@ -45,6 +54,8 @@ import { ProcessExportItem } from '@app/core/models/process/process-export.model
     OrganizationSettingsModalComponent,
     ProcessExportModalComponent,
     OrganizationStatusDialogComponent,
+    FilterSelectComponent,
+    FormsModule,
   ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
@@ -110,6 +121,7 @@ export class ClientsComponent {
   public exportModalOpen = signal<boolean>(false);
   public exportOrganizationId = signal<string | null>(null);
   public exportOrganizationName = signal<string>('');
+  public exportOrganizationType = signal<string>('');
   private _toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public filterForm: FormGroup = this._fb.group({
@@ -134,6 +146,24 @@ export class ClientsComponent {
   });
 
   pageSizeOptions = [10, 20, 25, 50, 100];
+
+  readonly typeFilterOptions = computed((): FilterSelectOption[] =>
+    mapValueLabelToFilterOptions(this.typeOptions(), {
+      id: '',
+      label: this._transloco.translate('clients.filters.typePlaceholder'),
+    })
+  );
+
+  readonly activeStatusFilterOptions = computed((): FilterSelectOption[] =>
+    mapValueLabelToFilterOptions(this.statusOptions(), {
+      id: '',
+      label: this._transloco.translate('clients.filters.statusPlaceholder'),
+    })
+  );
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
 
   constructor() {
     this._loadSelectOptions();
@@ -393,13 +423,7 @@ export class ClientsComponent {
   openExportModal(org: Organization): void {
     this.exportOrganizationId.set(org.id);
     this.exportOrganizationName.set(org.name);
-    this.exportModalOpen.set(true);
-  }
-
-  onSettingsExportRequested(event: { id: string; name: string }): void {
-    this.closeSettingsModal();
-    this.exportOrganizationId.set(event.id);
-    this.exportOrganizationName.set(event.name);
+    this.exportOrganizationType.set(org.type ?? '');
     this.exportModalOpen.set(true);
   }
 
@@ -407,6 +431,7 @@ export class ClientsComponent {
     this.exportModalOpen.set(false);
     this.exportOrganizationId.set(null);
     this.exportOrganizationName.set('');
+    this.exportOrganizationType.set('');
   }
 
   onExportQueued(event: { item: ProcessExportItem; message: string }): void {

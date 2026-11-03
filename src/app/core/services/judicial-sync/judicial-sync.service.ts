@@ -5,6 +5,7 @@ import { environment } from '@app/core/config/environment.config';
 import {
   JudicialSyncDispatchRequest,
   JudicialSyncDispatchResponse,
+  JudicialSyncLiveStatusResponse,
   JudicialSyncRunsQuery,
   JudicialSyncRunsResponse,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
@@ -25,6 +26,14 @@ export class JudicialSyncService {
       data_source: payload.data_source ?? 'judicial_branch',
     };
     return this._http.post<JudicialSyncDispatchResponse>(this._baseUrl(), body);
+  }
+
+  /**
+   * Snapshot de sincronizaciones en curso. El progreso posterior llega por Echo,
+   * no por polling.
+   */
+  getJudicialSyncLiveStatus(): Observable<JudicialSyncLiveStatusResponse> {
+    return this._http.get<JudicialSyncLiveStatusResponse>(`${this._baseUrl()}/status`);
   }
 
   getRuns(query: JudicialSyncRunsQuery = {}): Observable<JudicialSyncRunsResponse> {

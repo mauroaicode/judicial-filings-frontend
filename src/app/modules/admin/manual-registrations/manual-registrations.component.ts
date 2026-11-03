@@ -8,10 +8,11 @@ import {
   inject,
   OnInit,
   signal,
+  computed,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
@@ -32,6 +33,11 @@ import {
 import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { ROUTES_ADMIN } from '@app/core/constants/router.constant';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
 
 type SubjectFormRow = { name: string; identification: string };
 type PartyGroup = 'plaintiffs' | 'defendants' | 'otherSubjects';
@@ -42,10 +48,12 @@ type PartyGroup = 'plaintiffs' | 'defendants' | 'otherSubjects';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     TranslocoPipe,
     ProcessNumberPipe,
     ConfirmationDialogComponent,
     BottomSheetModalComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './manual-registrations.component.html',
   styleUrl: './manual-registrations.component.scss',
@@ -99,6 +107,42 @@ export class ManualRegistrationsComponent implements OnInit {
   public pendingReject = signal<ManualRegistrationRequest | null>(null);
 
   public readonly pageSizeOptions = [10, 20, 25, 50, 100] as const;
+
+  readonly statusFilterOptions = computed((): FilterSelectOption[] => [
+    { id: 'pending', label: this._transloco.translate('manualRegistrations.status.pending') },
+    { id: 'registered', label: this._transloco.translate('manualRegistrations.status.registered') },
+    { id: 'rejected', label: this._transloco.translate('manualRegistrations.status.rejected') },
+  ]);
+
+  readonly reasonFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('manualRegistrations.filters.reasonAll') },
+    { id: 'not_found', label: this._transloco.translate('manualRegistrations.reason.notFound') },
+    { id: 'private', label: this._transloco.translate('manualRegistrations.reason.private') },
+    { id: 'all_private', label: this._transloco.translate('manualRegistrations.reason.allPrivate') },
+  ]);
+
+  readonly lawyerRoleSelectOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('manualRegistrations.form.lawyerRolePlaceholder') },
+    { id: 'plaintiff', label: this._transloco.translate('manualRegistrations.lawyerRole.plaintiff') },
+    { id: 'defendant', label: this._transloco.translate('manualRegistrations.lawyerRole.defendant') },
+    { id: 'other', label: this._transloco.translate('manualRegistrations.lawyerRole.other') },
+  ]);
+
+  readonly dataSourceSelectOptions = computed((): FilterSelectOption[] => [
+    {
+      id: 'publicaciones_procesales',
+      label: this._transloco.translate('manualRegistrations.dataSource.publicacionesProcesales'),
+    },
+    {
+      id: 'judicial_branch',
+      label: this._transloco.translate('manualRegistrations.dataSource.judicialBranch'),
+    },
+  ]);
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
+
   public readonly partySections: { group: PartyGroup; titleKey: string; required: boolean }[] = [
     { group: 'plaintiffs', titleKey: 'manualRegistrations.detail.plaintiffs', required: true },
     { group: 'defendants', titleKey: 'manualRegistrations.detail.defendants', required: true },
@@ -328,13 +372,11 @@ export class ManualRegistrationsComponent implements OnInit {
     this.registerProcessClass.set((event.target as HTMLInputElement).value);
   }
 
-  onLawyerRoleChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+  onLawyerRoleSelect(value: string): void {
     this.registerLawyerRole.set(this._asLawyerRole(value) ?? '');
   }
 
-  onDataSourceChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+  onDataSourceSelect(value: string): void {
     this.registerDataSourceSlug.set(
       this._asDataSourceSlug(value) ?? ManualRegistrationsComponent._DEFAULT_DATA_SOURCE
     );

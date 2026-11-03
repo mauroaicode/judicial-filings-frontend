@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: light;
+  themes: light, dark;
 }
 
 /* Clases usadas con data-tip dinámico en el sidebar colapsado */
 @source inline("tooltip tooltip-right tooltip-left tooltip-top tooltip-bottom");
 
 @theme {
-  /* Misma pila sans que `body` en styles.scss y que judicial-filings-frontend (evita discrepancia ui-sans vs -apple-system) */
+  /* Misma pila sans que `body` en styles.scss y que judicial-filings-frontend */
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
     'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -23,23 +23,22 @@
   --color-brand-accent: #FBB03B;
   --color-brand-accent-content: #1F2937;
 
-  /* Admin uses Emerald green (same as client) */
   --color-brand-success: #059669;
   --color-brand-success-content: #ffffff;
 
-  /* Admin dark neutral — slightly different hue from client (#24163E) for differentiation */
+  /* Admin dark neutral — slightly different hue from client (#24163E) */
   --color-brand-neutral: #1E1B3A;
   --color-brand-neutral-content: #ffffff;
 
-  /* Admin base: subtle cool blue-gray (differentiates from client's pure white) */
+  /* Admin light bases: cool blue-gray tint */
   --color-brand-base-100: #ffffff;
   --color-brand-base-200: #F4F5F9;
   --color-brand-base-300: #E8EAF2;
 }
 
-/* Override DaisyUI CSS variables to enforce brand consistently */
+/* ─── LIGHT THEME ─── */
 :root,
-[data-theme] {
+[data-theme="light"] {
   --color-primary: var(--color-brand-primary) !important;
   --color-primary-content: #ffffff !important;
 
@@ -49,19 +48,63 @@
   --color-accent: var(--color-brand-accent) !important;
   --color-accent-content: var(--color-brand-accent-content) !important;
 
-  /* Admin uses its own dark navy for the sidebar/neutral elements */
   --color-neutral: var(--color-brand-neutral) !important;
   --color-neutral-content: var(--color-brand-neutral-content) !important;
 
-  /* Admin base backgrounds get the cool blue-gray tint */
+  --color-base-100: var(--color-brand-base-100) !important;
   --color-base-200: var(--color-brand-base-200) !important;
   --color-base-300: var(--color-brand-base-300) !important;
+  --color-base-content: #1f2937 !important;
 
   --color-success: var(--color-brand-success) !important;
   --color-success-content: var(--color-brand-success-content) !important;
 
-  /* Info uses secondary purple to stay brand-consistent */
   --color-info: var(--color-brand-secondary) !important;
   --color-info-content: #ffffff !important;
+
+  --process-table-sticky-bg: #ffffff;
+  --process-table-sticky-zebra: #f4f5f9;
+  --process-table-sticky-instance: #f3f0f9;
+  --process-table-sticky-hover: #f3f0f9;
+  --process-table-sticky-selected: #ede7f6;
+  --admin-table-row-hover: var(--process-table-sticky-hover);
 }
 
+/* ─── DARK THEME (same palette as judicial-filings-frontend) ─── */
+[data-theme="dark"] {
+  --color-base-100: #1a1625 !important;
+  --color-base-200: #140f1e !important;
+  --color-base-300: #0e0a16 !important;
+  --color-base-content: #e2d9f3 !important;
+
+  --color-primary: #7c52b8 !important;
+  --color-primary-content: #ffffff !important;
+
+  --color-secondary: #9b7ed0 !important;
+  --color-secondary-content: #ffffff !important;
+
+  --color-accent: var(--color-brand-accent) !important;
+  --color-accent-content: #1f2937 !important;
+
+  --color-neutral: #e2d9f3 !important;
+  --color-neutral-content: #1a1625 !important;
+
+  --color-success: #34d399 !important;
+  --color-success-content: #064e3b !important;
+
+  --color-info: #818cf8 !important;
+  --color-info-content: #ffffff !important;
+
+  --color-error: #f87171 !important;
+  --color-error-content: #450a0a !important;
+
+  --color-warning: #fbbf24 !important;
+  --color-warning-content: #451a03 !important;
+
+  --process-table-sticky-bg: #1a1625;
+  --process-table-sticky-zebra: #140f1e;
+  --process-table-sticky-instance: color-mix(in srgb, #7c52b8 12%, #1a1625);
+  --process-table-sticky-hover: #2a1f40;
+  --process-table-sticky-selected: color-mix(in srgb, #7c52b8 42%, #1a1625);
+  --admin-table-row-hover: var(--process-table-sticky-hover);
+}

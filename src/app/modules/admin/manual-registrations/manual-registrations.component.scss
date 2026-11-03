@@ -3,48 +3,113 @@
 }
 
 .manual-registrations-pagination {
-  margin-top: 0;
-  padding: 1rem;
-  width: 100%;
-  box-sizing: border-box;
+  /* Layout y botones: `.admin-table-pagination` en styles.scss */
+}
 
-  @media (min-width: 640px) {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 1rem;
+.manual-registrations-table-grid {
+  position: relative;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  transform: translateZ(0);
+  min-width: 72rem;
+}
+
+$manual-sticky-radicado-width: 19rem;
+$manual-sticky-actions-width: 9.5rem;
+
+.manual-registrations-table thead th.manual-registrations-sticky-radicado {
+  position: sticky !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 632 !important;
+  background-color: #24163e !important;
+  background: #24163e !important;
+  min-width: $manual-sticky-radicado-width !important;
+  max-width: $manual-sticky-radicado-width !important;
+  width: $manual-sticky-radicado-width !important;
+  box-shadow:
+    2px 0 4px rgba(0, 0, 0, 0.1),
+    0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+}
+
+.manual-registrations-table thead th.manual-registrations-sticky-actions {
+  position: sticky !important;
+  right: 0 !important;
+  top: 0 !important;
+  z-index: 633 !important;
+  background-color: #24163e !important;
+  background: #24163e !important;
+  min-width: $manual-sticky-actions-width !important;
+  max-width: $manual-sticky-actions-width !important;
+  width: $manual-sticky-actions-width !important;
+  box-shadow:
+    -2px 0 4px rgba(0, 0, 0, 0.1),
+    0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+}
+
+.manual-registrations-table tbody td.manual-registrations-sticky-radicado,
+.manual-registrations-table tbody td.manual-registrations-sticky-actions {
+  position: sticky !important;
+  isolation: isolate !important;
+  backface-visibility: hidden !important;
+  transform: translateZ(0) !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  background-color: var(--process-table-sticky-bg, #fff) !important;
+  background: var(--process-table-sticky-bg, #fff) !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--process-table-sticky-bg, #fff) !important;
   }
 
-  @media (max-width: 639px) {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+  > * {
+    position: relative;
+    z-index: 1;
   }
+}
 
-  &__results {
-    font-size: 0.875rem;
-    color: hsl(var(--bc) / 0.7);
-    white-space: nowrap;
-    @media (min-width: 640px) {
-      justify-self: start;
-    }
+.manual-registrations-table tbody td.manual-registrations-sticky-radicado {
+  left: 0 !important;
+  z-index: 520 !important;
+  min-width: $manual-sticky-radicado-width !important;
+  max-width: $manual-sticky-radicado-width !important;
+  width: $manual-sticky-radicado-width !important;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.manual-registrations-table tbody td.manual-registrations-sticky-actions {
+  right: 0 !important;
+  z-index: 521 !important;
+  min-width: $manual-sticky-actions-width !important;
+  max-width: $manual-sticky-actions-width !important;
+  width: $manual-sticky-actions-width !important;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.manual-registrations-table.table-zebra tbody tr:nth-child(2n) td.manual-registrations-sticky-radicado,
+.manual-registrations-table.table-zebra tbody tr:nth-child(2n) td.manual-registrations-sticky-actions {
+  background-color: var(--process-table-sticky-zebra, #f4f5f9) !important;
+  background: var(--process-table-sticky-zebra, #f4f5f9) !important;
+
+  &::before {
+    background: var(--process-table-sticky-zebra, #f4f5f9) !important;
   }
+}
 
-  &__controls {
-    display: flex;
-    justify-content: center;
-    @media (min-width: 640px) {
-      justify-self: center;
-    }
-  }
+.manual-registrations-table tbody tr.manual-registrations-row-hover td.manual-registrations-sticky-radicado,
+.manual-registrations-table tbody tr.manual-registrations-row-hover td.manual-registrations-sticky-actions,
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight):hover td.manual-registrations-sticky-radicado,
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight):hover td.manual-registrations-sticky-actions {
+  background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
+  background: var(--process-table-sticky-hover, #f3f0f9) !important;
 
-  &__per-page {
-    display: flex;
-    justify-content: flex-start;
-    @media (min-width: 640px) {
-      justify-self: end;
-    }
+  &::before {
+    background: var(--process-table-sticky-hover, #f3f0f9) !important;
   }
 }
 
@@ -53,25 +118,33 @@
 }
 
 .manual-registrations-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 600 !important;
+  background-color: #24163e !important;
+  background: #24163e !important;
   color: #fff;
   font-weight: 700;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
 }
 
 .manual-registrations-row {
   transition: background-color 0.2s ease;
 }
 
-.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight):hover > td,
-.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight).manual-registrations-row-hover > td {
-  background-color: #f3f0f9 !important;
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight):hover,
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight).manual-registrations-row-hover,
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight):hover > td:not(.manual-registrations-sticky-radicado):not(.manual-registrations-sticky-actions),
+.manual-registrations-table tbody tr.manual-registrations-row:not(.manual-registrations-row-highlight).manual-registrations-row-hover > td:not(.manual-registrations-sticky-radicado):not(.manual-registrations-sticky-actions) {
+  background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
 }
 
-.manual-registrations-table.table-zebra tbody tr.manual-registrations-row.manual-registrations-row-highlight > td:not(:first-child) {
+.manual-registrations-table.table-zebra tbody tr.manual-registrations-row.manual-registrations-row-highlight > td:not(.manual-registrations-sticky-radicado):not(.manual-registrations-sticky-actions) {
   animation: manual-row-fade-highlight-bg 16s ease-out forwards;
 }
 
-.manual-registrations-table.table-zebra tbody tr.manual-registrations-row.manual-registrations-row-highlight > td:first-child {
-  animation: manual-row-fade-highlight-bg 16s ease-out forwards, manual-row-fade-highlight-bar 16s ease-out forwards;
+.manual-registrations-table.table-zebra tbody tr.manual-registrations-row.manual-registrations-row-highlight > td.manual-registrations-sticky-radicado {
+  animation: manual-row-fade-highlight-bar 16s ease-out forwards;
 }
 
 @keyframes manual-row-fade-highlight-bg {
@@ -100,4 +173,21 @@
   100% {
     box-shadow: none;
   }
+}
+
+.manual-registrations-detail-btn {
+  min-height: 2rem !important;
+  height: auto !important;
+  padding: 0.35rem 0.75rem !important;
+  border-width: 1px !important;
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent) !important;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-base-100)) !important;
+  color: var(--color-primary, #4b2a7d) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.manual-registrations-detail-btn:hover:not(:disabled) {
+  border-color: var(--color-primary, #4b2a7d) !important;
+  background-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-base-100)) !important;
+  color: var(--color-primary, #4b2a7d) !important;
 }

@@ -1,4 +1,13 @@
-<header class="sticky top-0 z-30 flex h-16 items-center justify-between bg-base-100 shadow-md">
+<header class="sticky top-0 z-[20000] isolate flex flex-col bg-base-100 shadow-md">
+  @if (copiedMessage()) {
+    <div class="header-copy-toast pointer-events-none" role="status" aria-live="polite">
+      <div class="alert alert-success py-2 px-3 shadow-lg border-none rounded-xl text-sm font-semibold">
+        {{ copiedMessage()! | transloco }}
+      </div>
+    </div>
+  }
+
+  <div class="relative z-20 flex h-16 shrink-0 items-center justify-between">
   <div class="flex flex-1 items-center gap-4 px-4 md:px-6">
     <!-- Menu Toggle Button (Mobile) -->
     <button type="button" class="btn btn-ghost btn-sm md:hidden" (click)="onToggleSidebar()"
@@ -10,14 +19,90 @@
 
     <!-- Page Title -->
     @if (translatedTitle()) {
-    <h1 class="text-lg font-semibold text-base-content md:text-xl">
+    <h1 class="md:hidden text-lg font-semibold text-base-content truncate max-w-[200px] sm:max-w-[300px]">
       {{ translatedTitle() }}
     </h1>
+
+    <div class="hidden md:flex relative flex-1 min-w-0 min-h-10 items-center overflow-visible">
+      <h1
+        class="header-page-title text-lg font-semibold text-base-content md:text-xl truncate transition-all duration-300 ease-out"
+        [class.header-page-title--compact-mode]="showCompactProcess()"
+      >
+        {{ translatedTitle() }}
+      </h1>
+
+      @if (processDetailHeader(); as ctx) {
+      <div
+        class="header-compact-process"
+        [class.header-compact-process--visible]="showCompactProcess()"
+        role="region"
+        [attr.aria-label]="'processDetail.title' | transloco"
+      >
+        <div class="header-compact-process__radicado flex items-center gap-0.5 shrink-0">
+          <span class="header-compact-process__number font-bold text-base-content tabular-nums tracking-tight">
+            {{ ctx.processNumber | processNumber }}
+          </span>
+          <button
+            type="button"
+            class="btn btn-ghost btn-circle btn-xs text-base-content/40 hover:text-base-content hover:bg-base-200 shrink-0"
+            (click)="copyProcessNumber(ctx.processNumber, $event)"
+            [attr.title]="'processDetail.copyRadicadoTooltip' | transloco"
+            [attr.aria-label]="'processDetail.copyRadicadoTooltip' | transloco"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+            </svg>
+          </button>
+        </div>
+        <span [class]="ctx.statusBadgeClass + ' badge badge-sm font-bold shrink-0'">
+          {{ ctx.statusLabel | badgeLabel }}
+        </span>
+        @if (ctx.isManualSync) {
+        <span class="header-compact-process__separator" aria-hidden="true"></span>
+        <span class="badge badge-outline badge-warning badge-sm font-bold text-[0.65rem] leading-tight shrink-0">
+          {{ 'processes.table.originManual' | transloco | badgeLabel }}
+        </span>
+        }
+        @if (ctx.lastActivityDate && ctx.lastActivityDate !== '–') {
+        <span class="header-compact-process__separator" aria-hidden="true"></span>
+        <div class="header-compact-process__activity shrink-0 min-w-0">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-base-content/40 leading-none mb-0.5">
+            {{ 'processDetail.headerCompact.lastUpdate' | transloco }}
+          </p>
+          <p class="text-xs font-semibold text-base-content/70 leading-tight truncate max-w-[14rem]">
+            {{ ctx.lastActivityDate }}
+          </p>
+        </div>
+        }
+      </div>
+      }
+    </div>
     }
   </div>
 
   <!-- Right Side Actions -->
-  <div class="flex items-center gap-2 px-4 md:px-6">
+  <div class="flex min-w-0 items-center gap-2 px-4 md:gap-3 md:px-6">
+    <app-judicial-sync-live-banner class="header-sync-live-banner shrink min-w-0" />
+
+    <!-- Dark / Light Mode Toggle -->
+    <button
+      type="button"
+      class="btn btn-ghost btn-circle btn-sm border-0 shadow-none"
+      (click)="themeService.toggle()"
+      [attr.aria-label]="(themeService.isDark() ? 'header.switchToLight' : 'header.switchToDark') | transloco"
+      [attr.title]="(themeService.isDark() ? 'header.switchToLight' : 'header.switchToDark') | transloco">
+      @if (themeService.isDark()) {
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      }
+    </button>
 
     <!-- Messages -->
     <button type="button" class="btn btn-ghost btn-circle btn-sm border-0 shadow-none" [attr.aria-label]="'header.messages' | transloco">
@@ -45,11 +130,23 @@
           }
         </div>
       </label>
-      <ul tabindex="0" class="dropdown-content menu rounded-box z-[1] mt-3 w-52 bg-base-100 p-2 shadow-lg">
-        <li class="menu-title">
+      <ul
+        tabindex="0"
+        class="dropdown-content menu header-user-menu rounded-box z-[1] mt-3 min-w-[13rem] max-w-[min(18rem,calc(100vw-2rem))] bg-base-100 p-2 shadow-lg"
+      >
+        <li class="menu-title pointer-events-none header-user-menu__identity">
           @if (currentUser(); as user) {
-          <span>{{ user.name }} {{ user.last_name }}</span>
-          <span class="text-xs text-base-content/70">{{ user.email }}</span>
+            <div class="min-w-0 w-full space-y-0.5">
+              <span class="header-user-menu__name block truncate font-semibold leading-snug">
+                {{ user.name }} {{ user.last_name }}
+              </span>
+              <span
+                class="header-user-menu__email block text-xs leading-snug text-base-content/70 break-all [overflow-wrap:anywhere]"
+                [attr.title]="user.email"
+              >
+                {{ user.email }}
+              </span>
+            </div>
           }
         </li>
         <li>
@@ -86,5 +183,6 @@
         </li>
       </ul>
     </div>
+  </div>
   </div>
 </header>

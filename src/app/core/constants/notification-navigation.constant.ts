@@ -77,12 +77,47 @@ export const NOTIFICATION_BUSINESS_TYPE_ALIASES: Record<string, string> = {
   'impor-report': 'import-report',
   manual_registration_requested: 'manual-registration-requested',
   process_export_finished: 'process-export-finished',
+  process_export_completed: 'process-export-finished',
+  'process-export-completed': 'process-export-finished',
+  processexportfinished: 'process-export-finished',
+  processexportcompleted: 'process-export-finished',
 };
 
 export function normalizeNotificationBusinessType(raw: string | null | undefined): string {
   const t = (raw || '').trim().toLowerCase();
   if (!t) return '';
-  return NOTIFICATION_BUSINESS_TYPE_ALIASES[t] ?? t;
+  const compact = t.replace(/[\s_]+/g, '-').replace(/\\/g, '');
+  if (NOTIFICATION_BUSINESS_TYPE_ALIASES[compact]) {
+    return NOTIFICATION_BUSINESS_TYPE_ALIASES[compact];
+  }
+  if (NOTIFICATION_BUSINESS_TYPE_ALIASES[t.replace(/-/g, '_')]) {
+    return NOTIFICATION_BUSINESS_TYPE_ALIASES[t.replace(/-/g, '_')];
+  }
+  const noSeparators = compact.replace(/-/g, '');
+  if (NOTIFICATION_BUSINESS_TYPE_ALIASES[noSeparators]) {
+    return NOTIFICATION_BUSINESS_TYPE_ALIASES[noSeparators];
+  }
+  return NOTIFICATION_BUSINESS_TYPE_ALIASES[t] ?? compact;
+}
+
+/** Export Excel terminado (WS / campana). */
+export function isProcessExportFinishedNotification(
+  rawType: string | null | undefined,
+  extras?: { exportId?: string; status?: string; downloadable?: boolean }
+): boolean {
+  const normalized = normalizeNotificationBusinessType(rawType);
+  if (normalized === 'process-export-finished') {
+    return true;
+  }
+  const t = (rawType || '').toLowerCase();
+  if (t.includes('export') && (t.includes('finish') || t.includes('complete'))) {
+    return true;
+  }
+  if (!extras?.exportId) {
+    return false;
+  }
+  const status = (extras.status || '').toLowerCase();
+  return extras.downloadable === true || status === 'completed' || status === 'complete';
 }
 
 export function resolveAdminNotificationNavigation(

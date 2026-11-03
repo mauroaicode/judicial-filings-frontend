@@ -7,16 +7,19 @@ import {
   inject,
   Injector,
   signal,
+  untracked,
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { JudicialSyncLiveService } from '@app/core/services/judicial-sync/judicial-sync-live.service';
 import { JudicialSyncService } from '@app/core/services/judicial-sync/judicial-sync.service';
 import {
   JudicialSyncDataSource,
   JudicialSyncDispatchableSource,
+  JudicialSyncLiveSource,
   JudicialSyncRun,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
 import { ConfirmationDialogComponent, ConfirmationDialogDetailRow } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
@@ -44,6 +47,7 @@ function radicadoOptional(control: AbstractControl): ValidationErrors | null {
 export class JudicialSyncComponent {
   private _fb = inject(FormBuilder);
   private _judicialSync = inject(JudicialSyncService);
+  private _liveSync = inject(JudicialSyncLiveService);
   private _transloco = inject(TranslocoService);
   private _destroyRef = inject(DestroyRef);
   private _injector = inject(Injector);
@@ -76,9 +80,21 @@ export class JudicialSyncComponent {
 
   private _toastTimer: ReturnType<typeof setTimeout> | null = null;
   private _intersectionObserver: IntersectionObserver | null = null;
+  /** Runs currently pintados con el snapshot/WS, para no revertir el countdown al HTTP viejo. */
+  private _liveMatchedKeys = new Set<string>();
 
   constructor() {
     this.reloadRuns(true);
+
+    effect(
+      () => {
+        const live = this._liveSync.activeSources();
+        untracked(() => {
+          this.runs.update((runs) => this._applyLiveProgress(runs, live));
+        });
+      },
+      { injector: this._injector },
+    );
 
     effect(
       () => {
@@ -181,6 +197,7 @@ export class JudicialSyncComponent {
         });
         this.showToast(msg);
         this.reloadRuns(true);
+        this._liveSync.scheduleRefresh();
       },
       error: () => {
         this._setSubmitting(source, false);
@@ -210,10 +227,11 @@ export class JudicialSyncComponent {
       })
       .subscribe({
         next: (response) => {
+          const live = this._liveSync.activeSources();
           if (reset) {
-            this.runs.set(response.data);
+            this.runs.set(this._applyLiveProgress(response.data, live));
           } else {
-            this.runs.update((prev) => [...prev, ...response.data]);
+            this.runs.update((prev) => this._applyLiveProgress([...prev, ...response.data], live));
           }
           this.currentPage.set(response.current_page);
           this.lastPage.set(response.last_page);
@@ -245,7 +263,9 @@ export class JudicialSyncComponent {
       })
       .subscribe({
         next: (response) => {
-          this.runs.update((prev) => [...prev, ...response.data]);
+          this.runs.update((prev) =>
+            this._applyLiveProgress([...prev, ...response.data], this._liveSync.activeSources()),
+          );
           this.currentPage.set(response.current_page);
           this.lastPage.set(response.last_page);
           this.loadingMore.set(false);
@@ -331,6 +351,108 @@ export class JudicialSyncComponent {
     if (m === 'noche') return 'judicialSync.moment.night';
     if (m.includes('madrug')) return 'judicialSync.moment.dawn';
     return 'judicialSync.moment.other';
+  }
+
+  /**
+   * El historial sale de GET /runs (estático). El countdown usa el mismo snapshot/WS del banner.
+   */
+  private _applyLiveProgress(runs: JudicialSyncRun[], live: JudicialSyncLiveSource[]): JudicialSyncRun[] {
+    if (runs.length === 0) {
+      this._liveMatchedKeys = new Set();
+      return runs;
+    }
+
+    const claimed = new Set<string>();
+    const nowKeys = new Set<string>();
+    let changed = false;
+
+    const next = runs.map((run) => {
+      const src = this._liveSourceForRun(run, live, claimed);
+      if (!src) return run;
+
+      claimed.add(src.data_source);
+      if (run.id) nowKeys.add(run.id);
+      if (run.laravel_batch_id) nowKeys.add(run.laravel_batch_id);
+
+      const queuePending =
+        typeof src.queue_pending_jobs === 'number' ? src.queue_pending_jobs : run.queue_pending_jobs;
+      const failedJobs =
+        typeof src.failed_jobs_count === 'number' ? src.failed_jobs_count : run.failed_jobs_count;
+      const queued = src.processes_queued > 0 ? src.processes_queued : run.processes_queued;
+      const status = src.status || run.status;
+      const statusLabel = src.status_label ?? run.status_label;
+      const batchId = src.laravel_batch_id || run.laravel_batch_id;
+
+      if (
+        queuePending === run.queue_pending_jobs &&
+        failedJobs === run.failed_jobs_count &&
+        queued === run.processes_queued &&
+        status === run.status &&
+        statusLabel === run.status_label &&
+        batchId === run.laravel_batch_id
+      ) {
+        return run;
+      }
+
+      changed = true;
+      return {
+        ...run,
+        queue_pending_jobs: queuePending,
+        failed_jobs_count: failedJobs,
+        processes_queued: queued,
+        status,
+        status_label: statusLabel,
+        laravel_batch_id: batchId,
+      };
+    });
+
+    const finishedKeys = [...this._liveMatchedKeys].filter((key) => !nowKeys.has(key));
+    this._liveMatchedKeys = nowKeys;
+
+    let result = changed ? next : runs;
+    if (finishedKeys.length > 0) {
+      result = result.map((run) => {
+        const finished =
+          (!!run.id && finishedKeys.includes(run.id)) ||
+          (!!run.laravel_batch_id && finishedKeys.includes(run.laravel_batch_id));
+        if (!finished || run.queue_pending_jobs === 0) return run;
+        changed = true;
+        return { ...run, queue_pending_jobs: 0 };
+      });
+    }
+
+    return changed ? result : runs;
+  }
+
+  private _liveSourceForRun(
+    run: JudicialSyncRun,
+    live: JudicialSyncLiveSource[],
+    claimed: Set<string>,
+  ): JudicialSyncLiveSource | undefined {
+    const exact = live.find(
+      (src) =>
+        (src.run_id != null && src.run_id === run.id) ||
+        (!!src.laravel_batch_id && src.laravel_batch_id === run.laravel_batch_id),
+    );
+    if (exact) return exact;
+    if (!this._runLooksActive(run)) return undefined;
+    return live.find((src) => src.data_source === run.data_source && !claimed.has(src.data_source));
+  }
+
+  private _runLooksActive(run: JudicialSyncRun): boolean {
+    if (run.queue_pending_jobs > 0) return true;
+    const status = String(run.status ?? '')
+      .toLowerCase()
+      .replace(/_/g, '');
+    return (
+      status.includes('pending') ||
+      status.includes('running') ||
+      status.includes('encol') ||
+      status.includes('curso') ||
+      status.includes('batchpending') ||
+      status.includes('dispatched') ||
+      status.includes('procesando')
+    );
   }
 
   private _setSubmitting(source: JudicialSyncDispatchableSource, value: boolean): void {

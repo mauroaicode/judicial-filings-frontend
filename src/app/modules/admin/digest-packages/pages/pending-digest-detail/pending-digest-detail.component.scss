@@ -28,17 +28,83 @@
 }
 
 .digest-detail-dialog {
-  z-index: 60;
+  &.modal:is(.modal-open, [open]) {
+    position: fixed !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    z-index: 11000 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  &.modal:is(.modal-open, [open]) .modal-box {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.digest-action-detail-dialog {
+  &.modal:is(.modal-open, [open]) {
+    z-index: 11001 !important;
+  }
+}
+
+.digest-detail-dialog::backdrop,
+.digest-action-detail-dialog::backdrop {
+  background: rgba(26, 22, 37, 0.58);
+}
+
+.digest-detail-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  background-color: rgba(26, 22, 37, 0.58) !important;
+  cursor: pointer;
+  z-index: 1;
 }
 
 .digest-detail-modal {
   display: flex;
   flex-direction: column;
+  background-color: var(--color-base-100, #fff);
+  color: var(--color-base-content, #1a1625);
+}
+
+.digest-detail-header {
+  background-color: var(--color-base-100, #fff);
+}
+
+.digest-detail-body {
+  background-color: color-mix(in srgb, var(--color-base-200, #e5e7eb) 28%, var(--color-base-100, #fff));
+}
+
+.digest-detail-org-name {
+  color: color-mix(in srgb, var(--color-base-content) 94%, transparent);
+  -webkit-text-fill-color: color-mix(in srgb, var(--color-base-content) 94%, transparent);
+}
+
+.digest-detail-stat-value {
+  color: color-mix(in srgb, var(--color-base-content) 96%, transparent);
+  -webkit-text-fill-color: color-mix(in srgb, var(--color-base-content) 96%, transparent);
+}
+
+.digest-detail-footer {
+  background-color: var(--color-base-100, #fff);
 }
 
 .digest-detail-table-scroll {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  background-color: var(--color-base-100, #fff);
 }
 
 .digest-detail-table {
@@ -56,7 +122,7 @@
 .digest-detail-table thead th {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 600;
   background-color: #24163e !important;
   color: #ffffff !important;
   font-weight: 700;
@@ -100,22 +166,49 @@
 }
 
 .digest-detail-table thead th.digest-col-radicado {
-  z-index: 5 !important;
+  z-index: 631 !important;
   box-shadow: 6px 0 10px -6px rgba(0, 0, 0, 0.45);
 }
 
 .digest-detail-table tbody td.digest-col-radicado {
+  position: relative;
+  isolation: isolate;
   z-index: 2 !important;
-  background-color: #ffffff !important;
+  background-color: var(--process-table-sticky-bg, #fff) !important;
+  background: var(--process-table-sticky-bg, #fff) !important;
   box-shadow: 6px 0 10px -6px rgba(36, 22, 62, 0.35);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--process-table-sticky-bg, #fff) !important;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 }
 
-.digest-detail-table tbody tr:nth-child(even) td.digest-col-radicado {
-  background-color: #f6f4fa !important;
+.digest-detail-table.table-zebra tbody tr:nth-child(even) td.digest-col-radicado {
+  background-color: var(--process-table-sticky-zebra, #f4f5f9) !important;
+  background: var(--process-table-sticky-zebra, #f4f5f9) !important;
+
+  &::before {
+    background: var(--process-table-sticky-zebra, #f4f5f9) !important;
+  }
 }
 
 .digest-detail-table tbody tr.process-row-hovered td.digest-col-radicado {
-  background-color: #f3f0f9 !important;
+  background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
+  background: var(--process-table-sticky-hover, #f3f0f9) !important;
+
+  &::before {
+    background: var(--process-table-sticky-hover, #f3f0f9) !important;
+  }
 }
 
 .digest-th-compact {
@@ -128,9 +221,8 @@
   padding-right: 0.75rem;
 }
 
-.digest-detail-table tbody tr.process-row-hovered,
-.digest-detail-table tbody tr.process-row-hovered td {
-  background-color: #f3f0f9 !important;
+.digest-detail-table tbody tr.process-row-hovered > td:not(.digest-col-radicado) {
+  background-color: var(--process-table-sticky-hover, #f3f0f9) !important;
 }
 
 .radicado-row {
@@ -214,38 +306,54 @@
 }
 
 .digest-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 0.75rem 1rem;
+  /* Layout y botones: `.admin-table-pagination` en styles.scss */
+}
 
-  &__results {
-    font-size: 0.8125rem;
-    color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
+tr.digest-row--removed-from-rama {
+  $removed-bg: color-mix(in srgb, var(--color-base-200) 62%, var(--color-base-100));
+  $removed-hover: color-mix(in srgb, var(--color-base-200) 78%, var(--color-base-100));
+
+  background-color: $removed-bg !important;
+
+  td {
+    background-color: $removed-bg !important;
+    color: color-mix(in srgb, var(--color-base-content) 46%, transparent);
   }
 
-  &__controls {
-    margin-inline: auto;
+  td.digest-col-radicado::before {
+    background: $removed-bg !important;
   }
 
-  &__page-size {
-    margin-left: auto;
+  &:hover,
+  &.process-row-hovered {
+    background-color: $removed-hover !important;
+
+    td {
+      background-color: $removed-hover !important;
+    }
+
+    td.digest-col-radicado::before {
+      background: $removed-hover !important;
+    }
   }
 }
 
-@media (max-width: 1023px) {
-  .digest-pagination {
-    flex-direction: column;
-    align-items: stretch;
-
-    &__controls,
-    &__page-size {
-      margin: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-  }
+.rama-removed-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 1.35rem;
+  height: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 16%, transparent);
+  background-color: color-mix(in srgb, var(--color-base-200) 40%, var(--color-base-100));
+  color: color-mix(in srgb, var(--color-base-content) 74%, #57534e 26%);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  white-space: normal;
+  text-align: left;
 }

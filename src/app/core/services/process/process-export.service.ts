@@ -18,10 +18,13 @@ import {
 export class ProcessExportService {
   private _http = inject(HttpClient);
 
-  /** Sube cuando llega ProcessExportFinished por WS; el historial se recarga. */
+  /** Sube cuando llega export terminado por WS; el historial se recarga. */
   public readonly historyRevision = signal(0);
+  /** Último export completado (para resaltar fila tras refresh). */
+  public readonly lastFinishedExportId = signal<string | null>(null);
 
-  notifyHistoryUpdated(): void {
+  notifyHistoryUpdated(exportId?: string | null): void {
+    this.lastFinishedExportId.set(exportId?.trim() || null);
     this.historyRevision.update((n) => n + 1);
   }
 

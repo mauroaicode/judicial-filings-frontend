@@ -1,5 +1,10 @@
-<dialog class="modal digest-detail-dialog" [class.modal-open]="isOpen()">
-  <div class="modal-box digest-detail-modal w-[98vw] max-w-[98vw] h-[98vh] max-h-[98vh] p-0 flex flex-col bg-base-100 rounded-2xl overflow-hidden shadow-2xl relative">
+<dialog
+  #digestDetailDialog
+  class="modal digest-detail-dialog"
+  [class.modal-open]="isOpen()"
+  (cancel)="$event.preventDefault(); close()"
+>
+  <div class="modal-box digest-detail-modal w-[98vw] max-w-[98vw] h-[98vh] max-h-[98vh] p-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl relative">
 
     @if (copiedMessage(); as msg) {
       <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
@@ -18,7 +23,7 @@
 
     <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <!-- Sticky header -->
-      <div class="sticky top-0 z-50 shrink-0 bg-base-100 border-b border-base-200 px-6 py-4 space-y-4">
+      <div class="digest-detail-header sticky top-0 z-50 shrink-0 border-b border-base-200 px-6 py-4 space-y-4">
         <div class="flex flex-wrap justify-between items-start gap-4">
           <div class="space-y-1 min-w-0">
             <h2 class="text-2xl font-bold text-base-content tracking-tight">
@@ -34,7 +39,7 @@
             </h2>
             <p class="text-sm text-base-content/65">
               @if (digest()?.organization_name; as orgName) {
-                <span class="font-semibold text-primary">{{ orgName }}</span>
+                <span class="digest-detail-org-name font-semibold">{{ orgName }}</span>
               } @else {
                 {{ 'digestPackages.detail.subtitle' | transloco }}
               }
@@ -127,7 +132,7 @@
       </div>
 
       <!-- Body -->
-      <div class="flex-1 min-h-0 overflow-y-auto lg:overflow-y-hidden p-4 sm:p-6 bg-base-100/50">
+      <div class="digest-detail-body flex-1 min-h-0 overflow-y-auto lg:overflow-y-hidden p-4 sm:p-6">
         @if (loading()) {
           <div class="flex justify-center items-center h-48">
             <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -203,6 +208,14 @@
                   </div>
                 </div>
                 <div class="p-3 space-y-2 text-sm">
+                  @if (isRemovedFromJudicialBranch(action)) {
+                    <span
+                      class="rama-removed-badge"
+                      [title]="removedFromRamaTooltip(action)"
+                    >
+                      {{ 'processDetail.actions.removedBadge' | transloco }}
+                    </span>
+                  }
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <p class="text-[10px] uppercase font-black text-base-content/35">{{ 'processes.table.plaintiff' | transloco }}</p>
@@ -250,7 +263,7 @@
 
           <!-- Desktop table -->
           <div class="hidden lg:block h-full min-h-0">
-            <div class="digest-detail-table-scroll w-full h-full min-h-0 border border-base-200 rounded-xl bg-base-100">
+            <div class="digest-detail-table-scroll w-full h-full min-h-0 border border-base-200 rounded-xl">
               <table class="table table-zebra digest-detail-table">
                 <thead>
                   <tr>
@@ -272,6 +285,7 @@
                     <tr
                       class="transition-colors border-b border-base-200/60"
                       [class.process-row-hovered]="hoveredRowId() === trackId"
+                      [class.digest-row--removed-from-rama]="isRemovedFromJudicialBranch(action)"
                       (mouseenter)="hoveredRowId.set(trackId)"
                       (mouseleave)="hoveredRowId.set(null)"
                     >
@@ -392,6 +406,14 @@
                           (click)="openActionDetail(action, $event)"
                         >
                           <div class="flex flex-col gap-2">
+                            @if (isRemovedFromJudicialBranch(action)) {
+                              <span
+                                class="rama-removed-badge self-start"
+                                [title]="removedFromRamaTooltip(action)"
+                              >
+                                {{ 'processDetail.actions.removedBadge' | transloco }}
+                              </span>
+                            }
                             <div class="min-w-0 flex-1 flex flex-col gap-1.5">
                               @if (action.is_merged) {
                                 <div class="flex flex-col gap-1.5">
@@ -432,8 +454,8 @@
 
       <!-- Pagination -->
       @if (!loading() && !loadError() && pagination(); as paginationInfo) {
-        <div class="digest-pagination border-t border-base-300 bg-base-100 shrink-0">
-          <div class="digest-pagination__results">
+        <div class="digest-pagination digest-detail-footer admin-table-pagination admin-table-pagination--inset border-t border-base-300 shrink-0">
+          <div class="digest-pagination__results admin-table-pagination__results">
             {{ 'table.showing' | transloco }}
             <span class="font-semibold">{{ paginationInfo.from }}</span>
             {{ 'table.to' | transloco }}
@@ -442,7 +464,7 @@
             <span class="font-semibold">{{ paginationInfo.total }}</span>
             {{ 'table.results' | transloco }}
           </div>
-          <div class="digest-pagination__controls join">
+          <div class="digest-pagination__controls admin-table-pagination__controls join">
             <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === 1" (click)="onPageChange(1, paginationInfo.per_page)">««</button>
             <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === 1" (click)="onPageChange(paginationInfo.current_page - 1, paginationInfo.per_page)">«</button>
             @for (page of getPageNumbers(); track page) {
@@ -451,27 +473,33 @@
             <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === paginationInfo.last_page" (click)="onPageChange(paginationInfo.current_page + 1, paginationInfo.per_page)">»</button>
             <button type="button" class="join-item btn btn-sm" [disabled]="paginationInfo.current_page === paginationInfo.last_page" (click)="onPageChange(paginationInfo.last_page, paginationInfo.per_page)">»»</button>
           </div>
-          <div class="digest-pagination__page-size">
-            <select class="select select-bordered select-sm" [value]="paginationInfo.per_page" (change)="onPageChange(1, +$any($event.target).value)">
-              @for (size of pageSizeOptions; track size) {
-                <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
-                  {{ size }} {{ 'table.perPage' | transloco }}
-                </option>
-              }
-            </select>
+          <div class="digest-pagination__page-size admin-table-pagination__per-page">
+            <app-filter-select
+              class="admin-page-size-select"
+              size="sm"
+              placement="up"
+              [options]="perPageSelectOptions"
+              [ngModel]="paginationInfo.per_page + ''"
+              (ngModelChange)="onPageChange(1, +$event)"
+            />
           </div>
         </div>
       }
     </div>
   </div>
 
-  <form method="dialog" class="modal-backdrop bg-base-content/45" (click)="close()">
+  <form method="dialog" class="modal-backdrop digest-detail-backdrop" (click)="close()">
     <button type="button">close</button>
   </form>
 </dialog>
 
 <!-- Action detail nested modal -->
-<dialog class="modal" [class.modal-open]="showActionDetailModal()">
+<dialog
+  #actionDetailDialog
+  class="modal digest-action-detail-dialog"
+  [class.modal-open]="showActionDetailModal()"
+  (cancel)="$event.preventDefault(); closeActionDetail()"
+>
   @if (selectedActionDetail(); as detail) {
     <div class="modal-box w-11/12 max-w-4xl bg-base-100 rounded-3xl p-0 overflow-hidden shadow-2xl">
       <div class="p-5 md:p-6">
@@ -498,6 +526,20 @@
             </svg>
           </button>
         </div>
+
+        @if (isRemovedFromJudicialBranch(detail)) {
+          <div class="mb-4 flex flex-wrap items-center gap-2">
+            <span class="rama-removed-badge">
+              {{ 'processDetail.actions.removedBadge' | transloco }}
+            </span>
+            @if (detail.removed_from_judicial_branch_at) {
+              <span class="text-xs font-semibold text-base-content/60">{{ detail.removed_from_judicial_branch_at }}</span>
+            }
+            @if (detail.removed_from_judicial_branch_reason) {
+              <span class="text-xs text-base-content/50 italic">{{ detail.removed_from_judicial_branch_reason }}</span>
+            }
+          </div>
+        }
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
           <div>
@@ -556,14 +598,14 @@
         </button>
       </div>
     </div>
-    <form method="dialog" class="modal-backdrop bg-base-content/45" (click)="closeActionDetail()">
+    <form method="dialog" class="modal-backdrop digest-detail-backdrop" (click)="closeActionDetail()">
       <button type="button">close</button>
     </form>
   }
 </dialog>
 
 <ng-template #statsCards let-d="d">
-  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+  <div class="digest-detail-stat-card rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
     <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
       {{ 'digestPackages.detail.publicationLabel' | transloco }}
     </p>
@@ -579,23 +621,23 @@
     </div>
   </div>
 
-  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+  <div class="digest-detail-stat-card rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
     <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
       {{ 'digestPackages.detail.movementsLabel' | transloco }}
     </p>
-    <div class="text-2xl font-black text-base-content leading-none">{{ d.actions_count }}</div>
+    <div class="digest-detail-stat-value text-2xl font-black leading-none">{{ d.actions_count }}</div>
     <p class="text-xs text-base-content/55 mt-1">{{ 'table.results' | transloco }}</p>
   </div>
 
-  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+  <div class="digest-detail-stat-card rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
     <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-1">
       {{ 'digestPackages.detail.processesLabel' | transloco }}
     </p>
-    <div class="text-2xl font-black text-base-content leading-none">{{ uniqueProcessesCount() }}</div>
+    <div class="digest-detail-stat-value text-2xl font-black leading-none">{{ uniqueProcessesCount() }}</div>
     <p class="text-xs text-base-content/55 mt-1">{{ 'digestPackages.detail.processesHint' | transloco }}</p>
   </div>
 
-  <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+  <div class="digest-detail-stat-card rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
     <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-2">
       {{ 'digestPackages.detail.notifiedLabel' | transloco }}
     </p>
@@ -634,7 +676,7 @@
   </div>
 
   @if (digestId()) {
-    <div class="rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
+    <div class="digest-detail-stat-card rounded-xl border border-base-200 bg-base-100 px-3 py-2.5">
       <p class="text-[10px] font-black uppercase tracking-widest text-base-content/35 mb-2">
         {{ 'notificationDigests.table.viewed' | transloco }}
       </p>

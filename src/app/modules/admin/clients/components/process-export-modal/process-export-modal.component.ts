@@ -15,11 +15,15 @@ import { finalize } from 'rxjs/operators';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { ProcessExportService } from '@app/core/services/process/process-export.service';
 import { ProcessExportFilters, ProcessExportItem } from '@app/core/models/process/process-export.model';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
 
 @Component({
   selector: 'app-process-export-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DateRangePickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DateRangePickerComponent, FilterSelectComponent],
   templateUrl: './process-export-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -30,6 +34,8 @@ export class ProcessExportModalComponent implements OnInit {
 
   public organizationId = input.required<string>();
   public organizationName = input<string>('');
+  /** `natural` | `juridical` u otro slug del API */
+  public organizationType = input<string>('');
 
   public closed = output<void>();
   public queued = output<{ item: ProcessExportItem; message: string }>();
@@ -41,6 +47,26 @@ export class ProcessExportModalComponent implements OnInit {
 
   /** Aviso si incluyen actuaciones sin rango de fechas */
   public showActionsNoRangeWarning = computed(() => this.includeActions() && this.actionsRangeEmpty());
+
+  readonly organizationTypeLabel = computed(() => {
+    const raw = this.organizationType()?.trim();
+    if (!raw) return '';
+    const normalized = raw.toLowerCase();
+    if (normalized === 'natural') {
+      return this._transloco.translate('clients.kpi.natural');
+    }
+    if (normalized === 'juridical') {
+      return this._transloco.translate('clients.kpi.juridical');
+    }
+    return raw;
+  });
+
+  readonly statusFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('historialExportaciones.modal.statusAll') },
+    { id: 'active', label: this._transloco.translate('historialExportaciones.modal.statusActive') },
+    { id: 'inactive', label: this._transloco.translate('historialExportaciones.modal.statusInactive') },
+    { id: 'suspended', label: this._transloco.translate('historialExportaciones.modal.statusSuspended') },
+  ]);
 
   public form: FormGroup = this._fb.group({
     status: [''],

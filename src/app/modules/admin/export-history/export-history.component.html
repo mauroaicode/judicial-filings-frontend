@@ -42,12 +42,9 @@
       }
       <button
         type="button"
-        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
-        [ngClass]="
-          showFilters()
-            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
-        "
+        class="admin-filters-toggle hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"
+        [class.admin-filters-toggle--active]="showFilters()"
+        [class.admin-filters-toggle--idle]="!showFilters()"
         (click)="toggleFilters()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,13 +120,11 @@
             <label class="label">
               <span class="label-text">{{ 'historialExportaciones.filters.status' | transloco }}</span>
             </label>
-            <select class="select select-bordered select-sm w-full" formControlName="status">
-              <option value="">{{ 'historialExportaciones.filters.statusAll' | transloco }}</option>
-              <option value="pending">{{ 'historialExportaciones.status.pending' | transloco }}</option>
-              <option value="processing">{{ 'historialExportaciones.status.processing' | transloco }}</option>
-              <option value="completed">{{ 'historialExportaciones.status.completed' | transloco }}</option>
-              <option value="failed">{{ 'historialExportaciones.status.failed' | transloco }}</option>
-            </select>
+            <app-filter-select
+              formControlName="status"
+              size="sm"
+              [options]="statusFilterOptions()"
+            />
           </div>
           <div class="form-control">
             <app-date-range-picker
@@ -179,21 +174,24 @@
       }
 
       @if (!loading() && exportItems().length > 0) {
-        <div class="overflow-x-auto">
-          <table class="table table-zebra export-history-table">
+        <div class="overflow-x-auto export-history-table-scroll">
+          <table
+            class="table table-zebra export-history-table export-history-table-grid"
+            [class.export-history-table--org-scoped]="isOrgScoped"
+          >
             <thead>
               <tr>
                 @if (!isOrgScoped) {
-                  <th>{{ 'historialExportaciones.table.organization' | transloco }}</th>
+                  <th class="export-history-sticky-org">{{ 'historialExportaciones.table.organization' | transloco }}</th>
                 }
-                <th>{{ 'historialExportaciones.table.file' | transloco }}</th>
-                <th>{{ 'historialExportaciones.table.createdAt' | transloco }}</th>
-                <th>{{ 'historialExportaciones.table.status' | transloco }}</th>
-                <th class="text-center">{{ 'historialExportaciones.table.rows' | transloco }}</th>
-                <th class="text-center">{{ 'historialExportaciones.table.actionRows' | transloco }}</th>
-                <th>{{ 'historialExportaciones.table.filters' | transloco }}</th>
-                <th>{{ 'historialExportaciones.table.requestedBy' | transloco }}</th>
-                <th class="text-center">{{ 'common.actions' | transloco }}</th>
+                <th class="export-history-col-file">{{ 'historialExportaciones.table.file' | transloco }}</th>
+                <th class="export-history-col-date">{{ 'historialExportaciones.table.createdAt' | transloco }}</th>
+                <th class="export-history-col-status">{{ 'historialExportaciones.table.status' | transloco }}</th>
+                <th class="export-history-col-num text-center">{{ 'historialExportaciones.table.rows' | transloco }}</th>
+                <th class="export-history-col-num text-center">{{ 'historialExportaciones.table.actionRows' | transloco }}</th>
+                <th class="export-history-col-filters">{{ 'historialExportaciones.table.filters' | transloco }}</th>
+                <th class="export-history-col-user">{{ 'historialExportaciones.table.requestedBy' | transloco }}</th>
+                <th class="export-history-sticky-actions text-center">{{ 'common.actions' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -204,37 +202,38 @@
                   [class.export-history-row-highlight]="highlightedExportId() === item.id"
                 >
                   @if (!isOrgScoped) {
-                    <td class="align-middle">
+                    <td class="export-history-sticky-org align-middle">
                       <a
-                        class="link link-hover font-medium text-primary"
+                        class="export-history-org-link link link-hover block text-sm font-semibold leading-snug"
                         [routerLink]="['/admin/organizations', item.organization_id, 'exports']"
+                        [title]="item.organization_name || ''"
                       >
                         {{ item.organization_name || '–' }}
                       </a>
                     </td>
                   }
-                  <td class="align-middle max-w-[12rem]">
-                    <span class="block truncate text-sm" [title]="item.file_name || ''">
+                  <td class="export-history-col-file align-middle">
+                    <span class="block text-sm whitespace-nowrap" [title]="item.file_name || ''">
                       {{ item.file_name || '–' }}
                     </span>
                   </td>
-                  <td class="align-middle whitespace-nowrap text-sm">{{ formatDate(item.created_at) }}</td>
-                  <td class="align-middle">
+                  <td class="export-history-col-date align-middle text-sm">{{ formatDate(item.created_at) }}</td>
+                  <td class="export-history-col-status align-middle">
                     <span class="badge badge-sm whitespace-nowrap" [ngClass]="getStatusClass(item.status)">
                       {{ statusLabel(item) }}
                     </span>
                   </td>
-                  <td class="align-middle text-center tabular-nums font-medium">
+                  <td class="export-history-col-num align-middle text-center tabular-nums font-medium">
                     {{ item.row_count ?? 0 }}
                   </td>
-                  <td class="align-middle text-center tabular-nums font-medium">
+                  <td class="export-history-col-num align-middle text-center tabular-nums font-medium">
                     @if (item.filters?.include_actions || (item.action_row_count ?? 0) > 0) {
                       {{ item.action_row_count ?? 0 }}
                     } @else {
                       <span class="text-base-content/40">–</span>
                     }
                   </td>
-                  <td class="align-middle max-w-[16rem]">
+                  <td class="export-history-col-filters align-middle">
                     <div class="flex flex-wrap gap-1">
                       @for (chip of filterChips(item.filters); track chip) {
                         <span class="badge badge-ghost badge-sm font-normal">{{ chip }}</span>
@@ -243,11 +242,11 @@
                       }
                     </div>
                   </td>
-                  <td class="align-middle text-sm text-base-content/80">
+                  <td class="export-history-col-user align-middle text-sm text-base-content/80">
                     {{ item.requested_by_name || '–' }}
                   </td>
-                  <td class="align-middle">
-                    <div class="flex flex-wrap items-center justify-center gap-1">
+                  <td class="export-history-sticky-actions align-middle" (click)="$event.stopPropagation()">
+                    <div class="flex flex-col items-center justify-center gap-1.5 py-1">
                       @if (item.downloadable) {
                         <button
                           type="button"
@@ -274,7 +273,7 @@
                       @if (item.can_rerun) {
                         <button
                           type="button"
-                          class="btn btn-ghost btn-xs text-primary"
+                          class="export-history-rerun-btn btn btn-sm btn-outline font-bold normal-case whitespace-nowrap"
                           (click)="rerun(item, $event)"
                           [disabled]="isRerunning(item.id)"
                           [title]="'historialExportaciones.actions.rerun' | transloco"
@@ -305,8 +304,8 @@
         </div>
 
         @if (pagination(); as paginationInfo) {
-          <div class="export-history-pagination border-t border-base-300 bg-base-100">
-            <div class="export-history-pagination__results">
+          <div class="export-history-pagination admin-table-pagination admin-table-pagination--inset border-t border-base-300 bg-base-100">
+            <div class="export-history-pagination__results admin-table-pagination__results">
               {{ 'table.showing' | transloco }}
               <span class="font-semibold">{{ paginationInfo.from }}</span>
               {{ 'table.to' | transloco }}
@@ -315,7 +314,7 @@
               <span class="font-semibold">{{ paginationInfo.total }}</span>
               {{ 'table.results' | transloco }}
             </div>
-            <div class="export-history-pagination__controls join">
+            <div class="export-history-pagination__controls admin-table-pagination__controls join">
               <button
                 class="join-item btn btn-sm"
                 [class.btn-disabled]="paginationInfo.current_page === 1"
@@ -358,18 +357,16 @@
                 »»
               </button>
             </div>
-            <div class="export-history-pagination__per-page flex items-center gap-2">
-              <span class="text-sm text-base-content/60">{{ 'table.perPage' | transloco }}</span>
-              <select
-                class="select select-bordered select-sm w-20"
-                [ngModel]="currentPerPage()"
-                (ngModelChange)="onPageChangeFromTable(1, $event)"
+            <div class="export-history-pagination__per-page admin-table-pagination__per-page flex items-center gap-2">
+              <app-filter-select
+                class="admin-page-size-select"
+                size="sm"
+                placement="up"
+                [options]="perPageSelectOptions"
+                [ngModel]="currentPerPage() + ''"
+                (ngModelChange)="onPageChangeFromTable(1, +$event)"
                 [ngModelOptions]="{ standalone: true }"
-              >
-                @for (size of pageSizeOptions; track size) {
-                  <option [ngValue]="size">{{ size }}</option>
-                }
-              </select>
+              />
             </div>
           </div>
         }
@@ -379,7 +376,7 @@
 </div>
 
 @if (errorModalItem(); as errItem) {
-  <dialog class="modal modal-open">
+  <dialog class="modal modal-open" (cancel)="$event.preventDefault(); closeErrorModal()">
     <div class="modal-box max-w-lg">
       <h3 class="font-bold text-lg">{{ 'historialExportaciones.errorModal.title' | transloco }}</h3>
       <p class="py-2 text-sm text-base-content/70">
@@ -403,6 +400,7 @@
   <app-process-export-modal
     [organizationId]="orgId"
     [organizationName]="organizationName() || ''"
+    [organizationType]="organizationType()"
     (closed)="closeExportModal()"
     (queued)="onExportQueued($event)"
   ></app-process-export-modal>

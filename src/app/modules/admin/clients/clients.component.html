@@ -12,12 +12,9 @@
     <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
       <button
         type="button"
-        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
-        [ngClass]="
-          showFilters()
-            ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-            : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'
-        "
+        class="admin-filters-toggle hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"
+        [class.admin-filters-toggle--active]="showFilters()"
+        [class.admin-filters-toggle--idle]="!showFilters()"
         (click)="toggleFilters()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -60,10 +57,10 @@
         <div class="card-body gap-3 p-4 sm:gap-4 sm:p-6">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-primary/80">
+              <p class="clients-kpi-label clients-kpi-label--primary text-xs font-semibold uppercase tracking-wide">
                 {{ 'clients.kpi.totalTitle' | transloco }}
               </p>
-              <h2 class="mt-2 text-3xl font-bold text-primary sm:text-4xl tabular-nums">{{ st.total }}</h2>
+              <h2 class="clients-kpi-stat-number mt-2 text-3xl font-bold sm:text-4xl tabular-nums">{{ st.total }}</h2>
               <p class="mt-1 text-sm text-base-content/70">{{ 'clients.kpi.totalSubtitle' | transloco }}</p>
             </div>
             <div
@@ -100,7 +97,7 @@
             </div>
             <div class="rounded-xl bg-base-200/80 p-3">
               <p class="text-xs font-medium text-base-content/60">{{ 'clients.kpi.inactive' | transloco }}</p>
-              <p class="mt-1 text-2xl font-bold tabular-nums text-base-content/80">{{ st.inactive }}</p>
+              <p class="clients-kpi-stat-number clients-kpi-stat-number--neutral mt-1 text-2xl font-bold tabular-nums">{{ st.inactive }}</p>
             </div>
           </div>
         </div>
@@ -136,17 +133,17 @@
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div class="rounded-xl border border-primary/20 bg-primary/10 p-4">
               <div class="flex items-start justify-between gap-2">
-                <p class="text-xs font-medium text-primary/90">{{ 'clients.kpi.natural' | transloco }}</p>
-                <span class="text-sm font-semibold tabular-nums text-primary/80">{{ getNaturalSharePercent(st) }}%</span>
+                <p class="clients-kpi-label clients-kpi-label--primary text-xs font-medium">{{ 'clients.kpi.natural' | transloco }}</p>
+                <span class="clients-kpi-stat-pct clients-kpi-stat-pct--primary text-sm font-semibold tabular-nums">{{ getNaturalSharePercent(st) }}%</span>
               </div>
-              <p class="mt-2 text-3xl font-bold tabular-nums text-primary">{{ st.natural }}</p>
+              <p class="clients-kpi-stat-number mt-2 text-3xl font-bold tabular-nums">{{ st.natural }}</p>
             </div>
             <div class="rounded-xl border border-secondary/25 bg-secondary/10 p-4">
               <div class="flex items-start justify-between gap-2">
-                <p class="text-xs font-medium text-secondary">{{ 'clients.kpi.juridical' | transloco }}</p>
-                <span class="text-sm font-semibold tabular-nums text-secondary/85">{{ getJuridicalSharePercent(st) }}%</span>
+                <p class="clients-kpi-label clients-kpi-label--secondary text-xs font-medium">{{ 'clients.kpi.juridical' | transloco }}</p>
+                <span class="clients-kpi-stat-pct clients-kpi-stat-pct--secondary text-sm font-semibold tabular-nums">{{ getJuridicalSharePercent(st) }}%</span>
               </div>
-              <p class="mt-2 text-3xl font-bold tabular-nums text-secondary">{{ st.juridical }}</p>
+              <p class="clients-kpi-stat-number clients-kpi-stat-number--secondary mt-2 text-3xl font-bold tabular-nums">{{ st.juridical }}</p>
             </div>
           </div>
         </div>
@@ -213,24 +210,22 @@
           <label class="label">
             <span class="label-text">{{ 'clients.filters.type' | transloco }}</span>
           </label>
-          <select formControlName="type" class="select select-bordered select-sm w-full min-w-0">
-            <option value="">{{ 'clients.filters.typePlaceholder' | transloco }}</option>
-            @for (opt of typeOptions(); track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
+          <app-filter-select
+            formControlName="type"
+            size="sm"
+            [options]="typeFilterOptions()"
+          />
         </div>
 
         <div class="form-control min-w-0">
           <label class="label">
             <span class="label-text">{{ 'clients.filters.status' | transloco }}</span>
           </label>
-          <select formControlName="is_active" class="select select-bordered select-sm w-full min-w-0">
-            <option value="">{{ 'clients.filters.statusPlaceholder' | transloco }}</option>
-            @for (opt of statusOptions(); track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
+          <app-filter-select
+            formControlName="is_active"
+            size="sm"
+            [options]="activeStatusFilterOptions()"
+          />
         </div>
 
         <div class="form-control min-w-0">
@@ -256,14 +251,18 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-end gap-2">
-        <button type="button" class="btn btn-ghost btn-sm" (click)="onResetFilters()">
+      <div class="card-actions mt-4 justify-end gap-4">
+        <button
+          type="button"
+          class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+          (click)="onResetFilters()"
+        >
           {{ 'clients.filters.reset' | transloco }}
         </button>
-        <button type="submit" class="btn btn-primary btn-sm">
+        <button type="submit" class="btn-standard-search">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
+            class="h-4 w-4 shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -271,7 +270,7 @@
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
+              stroke-width="2.5"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
@@ -683,8 +682,8 @@
         </div>
 
         @if (pagination(); as paginationInfo) {
-          <div class="clients-pagination border-t border-base-300 bg-base-100">
-            <div class="clients-pagination__results">
+          <div class="clients-pagination admin-table-pagination admin-table-pagination--inset border-t border-base-300 bg-base-100">
+            <div class="clients-pagination__results admin-table-pagination__results">
               {{ 'table.showing' | transloco }}
               <span class="font-semibold">{{ getShowingRange().from }}</span>
               {{ 'table.to' | transloco }}
@@ -693,7 +692,7 @@
               <span class="font-semibold">{{ paginationInfo.total }}</span>
               {{ 'table.results' | transloco }}
             </div>
-            <div class="clients-pagination__controls join">
+            <div class="clients-pagination__controls admin-table-pagination__controls join">
               <button
                 class="join-item btn btn-sm"
                 [class.btn-disabled]="paginationInfo.current_page === 1"
@@ -728,18 +727,16 @@
                 [disabled]="paginationInfo.current_page === paginationInfo.last_page"
               >»»</button>
             </div>
-            <div class="clients-pagination__per-page">
-              <select
-                class="select select-bordered select-sm"
-                [value]="paginationInfo.per_page"
-                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
-              >
-                @for (size of pageSizeOptions; track size) {
-                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
-                    {{ size }} {{ 'table.perPage' | transloco }}
-                  </option>
-                }
-              </select>
+            <div class="clients-pagination__per-page admin-table-pagination__per-page">
+              <app-filter-select
+                class="admin-page-size-select"
+                size="sm"
+                placement="up"
+                [options]="perPageSelectOptions"
+                [ngModel]="paginationInfo.per_page + ''"
+                (ngModelChange)="onPageChangeFromTable(1, +$event)"
+                [ngModelOptions]="{ standalone: true }"
+              />
             </div>
           </div>
         }
@@ -748,7 +745,7 @@
   </div>
 
   <!-- Modal crear organización -->
-  <dialog class="modal" [class.modal-open]="createModalOpen()">
+  <dialog class="modal" [class.modal-open]="createModalOpen()" (cancel)="$event.preventDefault(); closeCreateModal()">
     <div
       class="modal-box relative max-h-[min(90vh,52rem)] w-[min(100vw-1.5rem,42rem)] max-w-none sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-2xl"
     >
@@ -1073,7 +1070,7 @@
   />
 
   <!-- Modal Éxito / Credenciales -->
-  <dialog class="modal" [class.modal-open]="successCredentialsOpen()">
+  <dialog class="modal" [class.modal-open]="successCredentialsOpen()" (cancel)="$event.preventDefault(); closeSuccessCredentials()">
     <div class="modal-box max-w-md border-t-4 border-secondary shadow-2xl">
       <div class="flex flex-col items-center text-center mb-6">
         <div class="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mb-4">
@@ -1156,7 +1153,6 @@
       [organizationId]="settingsOrgId"
       (closed)="closeSettingsModal()"
       (saved)="onSettingsSaved($event)"
-      (exportRequested)="onSettingsExportRequested($event)"
     />
   }
 
@@ -1164,6 +1160,7 @@
     <app-process-export-modal
       [organizationId]="exportOrgId"
       [organizationName]="exportOrganizationName()"
+      [organizationType]="exportOrganizationType()"
       (closed)="closeExportModal()"
       (queued)="onExportQueued($event)"
     />

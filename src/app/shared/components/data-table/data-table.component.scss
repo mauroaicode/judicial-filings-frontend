@@ -1,6 +1,12 @@
+app-data-table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 // Data table specific styles
 .table {
-  width: 100%;
   min-width: 100%;
   border-collapse: separate !important;
   border-spacing: 0 !important;
@@ -16,15 +22,23 @@
     th {
       font-weight: 600;
       font-size: 0.875rem;
-      text-transform: uppercase;
+      text-transform: none;
       background-color: #4B2A7D !important;
       color: #ffffff !important;
-      position: relative;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 600 !important;
+      box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.12) !important;
+      white-space: normal !important;
+      overflow-wrap: break-word;
+      line-height: 1.25;
+      height: auto;
 
       &.sticky-header {
         position: sticky !important;
         left: 0 !important;
-        z-index: 1000 !important;
+        top: 0 !important;
+        z-index: 610 !important;
         background: #4B2A7D !important;
         color: #ffffff !important;
         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
@@ -46,6 +60,34 @@
   }
 
   tbody {
+    tr.process-action-row--removed {
+      background-color: var(--process-table-sticky-zebra, #eceff3) !important;
+      cursor: default;
+
+      td {
+        background-color: var(--process-table-sticky-zebra, #eceff3) !important;
+        color: color-mix(in srgb, var(--color-base-content) 46%, transparent);
+      }
+
+      &:hover,
+      &.group:hover {
+        background-color: var(--process-table-sticky-hover, #e3e7ec) !important;
+
+        td {
+          background-color: var(--process-table-sticky-hover, #e3e7ec) !important;
+        }
+
+        td.sticky-cell {
+          background-color: var(--process-table-sticky-hover, #e3e7ec) !important;
+          background: var(--process-table-sticky-hover, #e3e7ec) !important;
+
+          &::before {
+            background-color: var(--process-table-sticky-hover, #e3e7ec) !important;
+          }
+        }
+      }
+    }
+
     tr {
       transition: background-color 0.2s ease;
 
@@ -59,8 +101,8 @@
           position: sticky !important;
           left: 0 !important;
           z-index: 500 !important;
-          background-color: #ffffff !important; // Default white background
-          background: #ffffff !important; // Ensure background is solid
+          background-color: var(--process-table-sticky-bg, #ffffff) !important;
+          background: var(--process-table-sticky-bg, #ffffff) !important;
           box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1) !important;
           min-width: 240px !important;
           max-width: 240px !important;
@@ -84,7 +126,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ffffff;
+            background-color: var(--process-table-sticky-bg, #ffffff);
             z-index: -1;
             transition: background-color 0.2s ease;
           }
@@ -100,65 +142,111 @@
           background-color: rgba(75, 42, 125, 0.07) !important;
         }
 
-        // Solid equivalent of rgba(75, 42, 125, 0.07) on white ≈ #EDE9F5
         td.sticky-cell {
-          background-color: #EDE9F5 !important;
-          background: #EDE9F5 !important;
+          background-color: var(--process-table-sticky-hover, #ede9f5) !important;
+          background: var(--process-table-sticky-hover, #ede9f5) !important;
           backface-visibility: hidden !important;
           -webkit-backface-visibility: hidden !important;
           transform: translateZ(0) !important;
           -webkit-transform: translateZ(0) !important;
 
           &::before {
-            background-color: #EDE9F5 !important;
+            background-color: var(--process-table-sticky-hover, #ede9f5) !important;
           }
         }
       }
     }
 
     tr:hover td.sticky-cell {
-      background-color: #EDE9F5 !important;
-      background: #EDE9F5 !important;
+      background-color: var(--process-table-sticky-hover, #ede9f5) !important;
+      background: var(--process-table-sticky-hover, #ede9f5) !important;
       backface-visibility: hidden !important;
       -webkit-backface-visibility: hidden !important;
       transform: translateZ(0) !important;
       -webkit-transform: translateZ(0) !important;
 
       &::before {
-        background-color: #EDE9F5 !important;
+        background-color: var(--process-table-sticky-hover, #ede9f5) !important;
       }
     }
   }
 
   tbody tr:hover > td.sticky-cell {
-    background-color: #EDE9F5 !important;
-    background: #EDE9F5 !important;
+    background-color: var(--process-table-sticky-hover, #ede9f5) !important;
+    background: var(--process-table-sticky-hover, #ede9f5) !important;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
 
     &::before {
-      background-color: #EDE9F5 !important;
+      background-color: var(--process-table-sticky-hover, #ede9f5) !important;
     }
   }
 
   tbody tr.group:hover td.sticky-cell {
-    background-color: #EDE9F5 !important;
-    background: #EDE9F5 !important;
+    background-color: var(--process-table-sticky-hover, #ede9f5) !important;
+    background: var(--process-table-sticky-hover, #ede9f5) !important;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
 
     &::before {
-      background-color: #EDE9F5 !important;
+      background-color: var(--process-table-sticky-hover, #ede9f5) !important;
     }
   }
 }
 
-// Ensure horizontal scroll works properly
-.overflow-x-auto {
+.data-table-root {
+  max-width: 100%;
+  width: 100%;
+
+  &.overflow-x-auto {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    isolation: isolate;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+
+    & > table {
+      position: relative;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      isolation: isolate;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+  }
+}
+
+.data-table-root > table.data-table-grid {
+  table-layout: fixed !important;
+  width: var(--data-table-width) !important;
+  min-width: var(--data-table-width) !important;
+  max-width: none !important;
+}
+
+.data-table-html-cell {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+td.data-table-html-cell-td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: top;
+  max-width: 0;
+}
+
+// Ensure horizontal scroll works properly (otras tablas del admin)
+.overflow-x-auto:not(.data-table-root) {
   overflow-x: auto !important;
   overflow-y: visible !important;
   -webkit-overflow-scrolling: touch;
@@ -178,43 +266,86 @@
   }
 }
 
-// Pagination layout - ensure proper distribution
-.pagination-container {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 1rem !important;
-  margin-top: 1.5rem !important;
-  padding: 1rem !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  max-width: 100% !important;
+// Pagination layout: ver `.admin-table-pagination` en styles.scss
 
-  @media (min-width: 640px) {
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
+.data-table-menu-cell {
+  white-space: nowrap;
+}
+
+.data-table-menu-backdrop {
+  background: transparent;
+}
+
+.data-table-row-menu-panel {
+  max-height: min(16rem, 70vh);
+  overflow-y: auto;
+  margin: 0;
+  list-style: none;
+}
+
+[data-theme='dark'] .data-table-row-menu-panel {
+  background-color: var(--process-table-sticky-bg, #1a1625);
+  border-color: hsl(var(--bc) / 0.14);
+  color: #e2d9f3;
+}
+
+[data-theme='dark'] .data-table-root {
+  --admin-table-hover: var(--process-table-sticky-hover, #2a1f40);
+
+  .table tbody tr {
+    td {
+      color: #e2d9f3;
+      background-color: var(--process-table-sticky-bg, #1a1625) !important;
+    }
+
+    &:nth-child(even) td {
+      background-color: var(--process-table-sticky-zebra, #140f1e) !important;
+    }
+
+    td.sticky-cell {
+      background-color: var(--process-table-sticky-bg, #1a1625) !important;
+      background: var(--process-table-sticky-bg, #1a1625) !important;
+
+      &::before {
+        background-color: var(--process-table-sticky-bg, #1a1625) !important;
+      }
+    }
+
+    &:nth-child(even) td.sticky-cell,
+    &:nth-child(even) td.sticky-cell::before {
+      background-color: var(--process-table-sticky-zebra, #140f1e) !important;
+      background: var(--process-table-sticky-zebra, #140f1e) !important;
+    }
+
+    &.process-action-row--removed td {
+      background-color: color-mix(in srgb, #7c52b8 10%, #140f1e) !important;
+      color: color-mix(in srgb, #e2d9f3 68%, transparent);
+    }
+
+    &:hover,
+    &.group:hover {
+      td {
+        background-color: var(--admin-table-hover) !important;
+      }
+
+      td.sticky-cell {
+        background-color: var(--admin-table-hover) !important;
+        background: var(--admin-table-hover) !important;
+
+        &::before {
+          background-color: var(--admin-table-hover) !important;
+        }
+      }
+    }
   }
 
-  .pagination-results-info {
-    text-align: left !important;
-    font-size: 0.875rem !important;
-    color: hsl(var(--bc) / 0.7) !important;
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-  }
+  tbody tr:hover > td.sticky-cell,
+  tbody tr.group:hover td.sticky-cell {
+    background-color: var(--admin-table-hover) !important;
+    background: var(--admin-table-hover) !important;
 
-  .pagination-controls {
-    display: flex !important;
-    flex-shrink: 0 !important;
-  }
-
-  .pagination-page-size {
-    flex-shrink: 0 !important;
-    
-    .form-control {
-      display: block !important;
+    &::before {
+      background-color: var(--admin-table-hover) !important;
     }
   }
 }

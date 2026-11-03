@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  OnDestroy,
   OnInit,
   signal,
   ViewEncapsulation,
@@ -20,6 +21,7 @@ import { SecurityTipsPanelComponent } from '@app/shared/components/security-tips
 import {TitleSystemAuth} from '@app/shared/components/title-system-auth/title-system-auth';
 import { AlertComponent } from '@app/shared/components/alert/alert.component';
 import { ErrorHandlerService } from '@app/core/services/error/error-handler.service';
+import { ThemeService } from '@app/core/services/theme/theme.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -30,10 +32,11 @@ import { ErrorHandlerService } from '@app/core/services/error/error-handler.serv
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ForgotPasswordComponent implements OnInit {
+export class ForgotPasswordComponent implements OnInit, OnDestroy {
   private _router = inject(Router);
   private _formBuilder = inject(FormBuilder);
   private _errorHandler = inject(ErrorHandlerService);
+  private _themeService = inject(ThemeService);
 
   public forgotPasswordForm!: FormGroup;
   public isLoading = signal<boolean>(false);
@@ -45,9 +48,14 @@ export class ForgotPasswordComponent implements OnInit {
   private _isDirectMessage = signal<boolean>(false);
 
   ngOnInit(): void {
+    this._themeService.lockAuthLight();
     this.forgotPasswordForm = this._formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
     });
+  }
+
+  ngOnDestroy(): void {
+    this._themeService.unlockAuthLight();
   }
 
   /**

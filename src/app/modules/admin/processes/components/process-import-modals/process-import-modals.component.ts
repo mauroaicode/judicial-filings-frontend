@@ -13,6 +13,8 @@ import { Organization } from '@app/core/models/organization/organization.model';
 import { FileDropZoneComponent } from '@app/shared/components/file-drop-zone/file-drop-zone.component';
 import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
 import { SearchableSelectComponent } from '@app/shared/components/searchable-select/searchable-select.component';
+import { FilterSelectComponent } from '@app/shared/components/filter-select/filter-select.component';
+import { FormsModule } from '@angular/forms';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import {
   ConfirmationDialogComponent,
@@ -30,6 +32,8 @@ import {
     SearchableSelectComponent,
     ProcessNumberPipe,
     ConfirmationDialogComponent,
+    FilterSelectComponent,
+    FormsModule,
   ],
   templateUrl: './process-import-modals.component.html',
   styleUrls: ['./process-import-modals.component.scss'],

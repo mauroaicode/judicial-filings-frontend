@@ -10,9 +10,9 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import {
   ProcessImportHistoryItem,
@@ -22,11 +22,26 @@ import {
 import { ProcessImportHistoryService } from '@app/core/services/process/process-import-history.service';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { BottomSheetModalComponent } from '@app/shared/components/bottom-sheet-modal/bottom-sheet-modal.component';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
 
 @Component({
   selector: 'app-import-history',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, ProcessNumberPipe, DateRangePickerComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    TranslocoPipe,
+    ProcessNumberPipe,
+    DateRangePickerComponent,
+    FilterSelectComponent,
+    BottomSheetModalComponent,
+  ],
   templateUrl: './import-history.component.html',
   styleUrl: './import-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +53,7 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
   private static readonly _IMPORT_ROW_HIGHLIGHT_MS = 24_000;
 
   private _service = inject(ProcessImportHistoryService);
+  private _transloco = inject(TranslocoService);
   private _activatedRoute = inject(ActivatedRoute);
   private _document = inject(DOCUMENT);
   private _injector = inject(Injector);
@@ -50,10 +66,11 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
   public loading = signal<boolean>(false);
   public importItems = signal<ProcessImportHistoryItem[]>([]);
   public pagination = signal<ProcessImportHistoryMeta | null>(null);
-  public expandedIds = signal<Set<string>>(new Set());
-  public copiedMessage = signal<string | null>(null);
   public hoveredRowId = signal<string | null>(null);
   public highlightedImportId = signal<string | null>(null);
+  /** Modal: radicados encolados de una importación */
+  public processesModalItem = signal<ProcessImportHistoryItem | null>(null);
+  public copiedMessage = signal<string | null>(null);
   /** Tamaño de página (pie de tabla, mismo patrón que gestión de procesos) */
   public currentPerPage = signal<number>(10);
   /** Modal: ítem cuyos errores se muestran */
@@ -61,6 +78,23 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
 
   /** Opciones de «por página» alineadas con `ProcessesComponent.pageSizeOptions` */
   public readonly pageSizeOptions = [10, 20, 25, 50, 100] as const;
+
+  readonly statusFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('historialImportaciones.filters.statusAll') },
+    { id: 'processing', label: this._transloco.translate('historialImportaciones.filters.statusProcessing') },
+    { id: 'completed', label: this._transloco.translate('historialImportaciones.filters.statusCompleted') },
+    { id: 'failed', label: this._transloco.translate('historialImportaciones.filters.statusFailed') },
+  ]);
+
+  readonly hasErrorsFilterOptions = computed((): FilterSelectOption[] => [
+    { id: 'all', label: this._transloco.translate('historialImportaciones.filters.hasErrorsAll') },
+    { id: 'yes', label: this._transloco.translate('historialImportaciones.filters.hasErrorsYes') },
+    { id: 'no', label: this._transloco.translate('historialImportaciones.filters.hasErrorsNo') },
+  ]);
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
 
   public readonly filterForm = new FormGroup({
     organization: new FormControl('', { nonNullable: true }),
@@ -114,6 +148,21 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
 
   closeErrorsModal(): void {
     this.errorsModalItem.set(null);
+  }
+
+  openProcessesModal(item: ProcessImportHistoryItem, event?: Event): void {
+    event?.stopPropagation();
+    const count = item.enqueued_process_numbers?.length ?? 0;
+    if (count === 0) return;
+    this.processesModalItem.set(item);
+  }
+
+  closeProcessesModal(): void {
+    this.processesModalItem.set(null);
+  }
+
+  processesModalCount(item: ProcessImportHistoryItem): number {
+    return item.enqueued_process_numbers?.length ?? 0;
   }
 
   /**
@@ -196,20 +245,6 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
     this.loadHistory(page);
   }
 
-  toggleExpand(itemId: string): void {
-    const next = new Set(this.expandedIds());
-    if (next.has(itemId)) {
-      next.delete(itemId);
-    } else {
-      next.add(itemId);
-    }
-    this.expandedIds.set(next);
-  }
-
-  isExpanded(itemId: string): boolean {
-    return this.expandedIds().has(itemId);
-  }
-
   getStatusClass(status: string | null | undefined): string {
     if (status === 'completed') return 'badge-success';
     if (status === 'processing') return 'badge-warning';
@@ -235,13 +270,18 @@ export class ImportHistoryComponent implements OnInit, OnDestroy {
 
   getDisplayName(item: ProcessImportHistoryItem): string {
     const fileName = item.file_name?.trim();
-    if (fileName) return fileName;
+    if (fileName) return this.formatImportFileName(fileName);
 
     const date = item.date?.trim();
     const time = item.time?.trim();
     if (date && time) return `${date} ${time}`;
     if (date) return date;
     return item.id;
+  }
+
+  /** Muestra el nombre tal cual viene del API, sin relleno de guiones antes de la extensión. */
+  private formatImportFileName(raw: string): string {
+    return raw.replace(/-{2,}(?=\.[^.]+$)/, '');
   }
 
   getPageNumbers(): number[] {

@@ -2,6 +2,17 @@
 <html lang="en" data-theme="light" id="html-theme">
 <head>
   <meta charset="utf-8">
+  <!-- Theme detection runs BEFORE styles to eliminate flash of wrong theme -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('notijudicial-theme');
+        var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = saved !== null ? saved === 'dark' : sysDark;
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      } catch (e) { /* noop – storage may be unavailable */ }
+    })();
+  </script>
   <title>Procesos Judiciales Admin</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -44,6 +44,10 @@ import {
   SearchableSelectComponent,
   SearchableSelectOption,
 } from '@app/shared/components/searchable-select/searchable-select.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
 
 const ADMIN_PRESENCE = 'admin.presence';
 const VIEWED_EVENT = '.NotificationDigestViewed';
@@ -110,6 +114,7 @@ function queryValue(params: ParamMap, key: string): string {
     DateRangePickerComponent,
     SearchableSelectComponent,
     PendingDigestDetailComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './notification-digests.component.html',
   styleUrl: './notification-digests.component.scss',
@@ -187,6 +192,15 @@ export class NotificationDigestsComponent {
         label: this._transloco.translate('notificationDigests.filters.organizationAll'),
       },
       ...this._organizationRows().map((org) => ({ id: org.id, label: org.name })),
+    ];
+  });
+
+  readonly viewedFilterOptions = computed((): FilterSelectOption[] => {
+    this._lang();
+    return [
+      { id: '', label: this._transloco.translate('notificationDigests.filters.viewedAll') },
+      { id: '1', label: this._transloco.translate('notificationDigests.filters.viewedYes') },
+      { id: '0', label: this._transloco.translate('notificationDigests.filters.viewedNo') },
     ];
   });
 

@@ -4,11 +4,35 @@
 
 .action-documents-modal {
   max-height: min(calc(100dvh - 3.5rem), 56rem);
+  background: var(--color-base-100);
 }
 
 .action-documents-modal__footer {
-  // Evita que Cancelar / Guardar queden pegados al borde inferior (móvil + notch).
   padding-bottom: max(1.75rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
+}
+
+.action-documents-modal__close {
+  color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
+
+  &:hover {
+    color: var(--color-error);
+  }
+}
+
+.action-documents-modal__cancel.btn {
+  color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
+}
+
+.action-documents-modal__save.btn {
+  background: var(--color-primary);
+  color: var(--color-primary-content, #fff);
+  border: 0;
+
+  &:disabled {
+    opacity: 1;
+    background: color-mix(in srgb, var(--color-primary) 42%, var(--color-base-200));
+    color: color-mix(in srgb, var(--color-primary-content, #fff) 78%, transparent);
+  }
 }
 
 .action-documents-viewer {
@@ -17,5 +41,105 @@
 
   iframe {
     min-height: 0;
+  }
+}
+
+:host-context([data-theme='dark']) {
+  .action-documents-modal,
+  .action-documents-viewer {
+    background: #221b32 !important;
+    border-color: rgba(232, 220, 255, 0.22) !important;
+  }
+
+  .action-documents-modal h3,
+  .action-documents-modal h4,
+  .action-documents-viewer h3 {
+    color: #f3ebff !important;
+    -webkit-text-fill-color: #f3ebff;
+  }
+
+  .action-documents-modal__close {
+    color: #c4a8f0;
+  }
+
+  .action-documents-modal p.text-sm,
+  .action-documents-modal p.text-xs,
+  .action-documents-modal .text-base-content\/40,
+  .action-documents-modal .text-base-content\/50,
+  .action-documents-modal .text-base-content\/55,
+  .action-documents-modal .text-base-content\/60 {
+    color: #d8c3f7 !important;
+    -webkit-text-fill-color: #d8c3f7;
+  }
+
+  .action-documents-modal .text-base-content,
+  .action-documents-modal .font-semibold.text-base-content,
+  .action-documents-modal .text-sm.font-semibold {
+    color: #f3ebff !important;
+  }
+
+  .action-documents-modal .bg-primary\/10 {
+    background: rgba(124, 82, 184, 0.38) !important;
+    color: #e8dcff !important;
+  }
+
+  .action-documents-modal .bg-base-200\/40,
+  .action-documents-modal .bg-base-200\/20 {
+    background: rgba(232, 220, 255, 0.08) !important;
+  }
+
+  .action-documents-modal .border-base-200,
+  .action-documents-modal .border-base-200\/50,
+  .action-documents-modal .border-base-200\/80,
+  .action-documents-modal .border-base-300 {
+    border-color: rgba(232, 220, 255, 0.2) !important;
+  }
+
+  .action-documents-modal .badge-ghost {
+    background: rgba(232, 220, 255, 0.16) !important;
+    color: #f3ebff !important;
+    border-color: transparent !important;
+  }
+
+  .action-documents-modal .btn-ghost.btn-xs {
+    color: #e8dcff !important;
+  }
+
+  .action-documents-modal button.border-base-300 {
+    background: #1a1625 !important;
+    border-color: rgba(232, 220, 255, 0.22) !important;
+  }
+
+  .action-documents-modal button.bg-primary\/10 {
+    background: rgba(124, 82, 184, 0.28) !important;
+  }
+
+  .action-documents-modal .border-base-content\/50,
+  .action-documents-modal .border-base-content\/40 {
+    border-color: rgba(232, 220, 255, 0.55) !important;
+  }
+
+  .action-documents-modal__footer {
+    background: #1a1625 !important;
+    border-color: rgba(232, 220, 255, 0.16) !important;
+  }
+
+  .action-documents-modal__cancel.btn {
+    color: #d8c3f7 !important;
+  }
+
+  .action-documents-modal__save.btn {
+    background: #7c52b8 !important;
+    color: #ffffff !important;
+
+    &:disabled {
+      background: rgba(124, 82, 184, 0.55) !important;
+      color: rgba(243, 235, 255, 0.82) !important;
+    }
+
+    &:not(:disabled):hover {
+      background: #8e66c9 !important;
+      color: #ffffff !important;
+    }
   }
 }

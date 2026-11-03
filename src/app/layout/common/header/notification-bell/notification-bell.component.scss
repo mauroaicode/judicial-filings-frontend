@@ -13,20 +13,36 @@
   background-color: transparent;
 }
 
+.notification-bell-panel {
+  color: var(--color-base-content);
+}
+
 .notification-row {
   background-color: var(--color-base-100);
 }
 
 .notification-row:hover {
-  background-color: color-mix(in srgb, var(--color-base-200) 75%, white);
+  background-color: var(--admin-table-row-hover, color-mix(in srgb, var(--color-base-200) 88%, var(--color-base-100)));
 }
 
 .notification-row.is-unread {
-  background-color: color-mix(in srgb, var(--color-primary) 7%, white);
+  background-color: color-mix(in srgb, var(--color-primary) 9%, var(--color-base-100));
 }
 
 .notification-row.is-unread:hover {
-  background-color: color-mix(in srgb, var(--color-primary) 12%, white);
+  background-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-base-100));
+}
+
+.notification-bell-item-title {
+  color: color-mix(in srgb, var(--color-base-content) 94%, transparent);
+}
+
+.notification-bell-item-body {
+  color: color-mix(in srgb, var(--color-base-content) 68%, transparent);
+}
+
+.notification-bell-item-time {
+  color: color-mix(in srgb, var(--color-base-content) 48%, transparent);
 }
 
 .unread-dot {
@@ -34,5 +50,5 @@
   height: 9px;
   border-radius: 9999px;
   background-color: var(--color-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, white);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 22%, var(--color-base-100));
 }

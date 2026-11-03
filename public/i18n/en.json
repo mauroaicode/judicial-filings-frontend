@@ -82,7 +82,8 @@
         "digestPackages": "Digest packages",
         "notificationDigests": "Digest history",
         "presence": "Activity",
-        "toggleSidebar": "Toggle sidebar"
+        "toggleSidebar": "Toggle sidebar",
+        "adminBadge": "Administrator"
     },
     "header": {
         "searchPlaceholder": "Search...",
@@ -90,9 +91,11 @@
         "messages": "Messages",
         "notifications": "Notifications",
         "userMenu": "User menu",
-        "profile": "Profile",
-        "settings": "Settings",
-        "signOut": "Sign Out"
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
     },
     "dashboard": {
         "title": "Dashboard"
@@ -159,6 +162,10 @@
             "retry": "Retry",
             "empty": "No runs recorded yet.",
             "end": "No more runs"
+        },
+        "liveBanner": {
+            "progress": "Syncing {{source}}: {{pending}} of {{total}} left",
+            "preparing": "Syncing {{source}}: preparing…"
         }
     },
     "historialImportaciones": {
@@ -209,6 +216,13 @@
             "viewErrors": "View errors"
         },
         "processesTitle": "Filings in this import ({{count}})",
+        "processesModal": {
+            "title": "Filings in this import",
+            "countBadge": "{{count}} filings",
+            "fileLabel": "Imported file",
+            "importKindLabel": "Import type",
+            "close": "Close"
+        },
         "status": {
             "unknown": "Unknown"
         },
@@ -289,6 +303,7 @@
         },
         "modal": {
             "title": "Export processes to Excel",
+            "organizationLabel": "Organization",
             "subtitle": "The export is queued in the background. We will notify you when it is ready.",
             "closeAria": "Close",
             "sectionProcesses": "Processes",
@@ -583,6 +598,7 @@
             "configureAria": "Configure organization",
             "closeAria": "Close configuration",
             "modalTitle": "Organization settings",
+            "organizationLabel": "Organization",
             "modalSubtitle": "Review the organization details and adjust the active filings limit.",
             "loading": "Loading settings…",
             "retry": "Retry",
@@ -658,15 +674,54 @@
         },
         "filters": {
             "fabAria": "Open or close search filters",
+            "title": "Search filters",
+            "processNumber": "Filing number",
+            "processNumberPlaceholder": "e.g. 76001333301320170009301",
+            "court": "Court / chamber",
+            "courtPlaceholder": "e.g. 006",
+            "processClass": "Case type",
+            "processClassPlaceholder": "e.g. Executory",
+            "plaintiff": "Plaintiff",
+            "plaintiffPlaceholder": "e.g. JOHN DOE",
+            "defendant": "Defendant",
+            "defendantPlaceholder": "e.g. ABC CORP",
+            "organization": "Organization",
+            "organizationAll": "All organizations",
+            "organizationSelectPlaceholder": "Select organization",
+            "organizationSearch": "Search organization…",
+            "organizationEmpty": "No matches",
+            "organizationName": "Organization name",
+            "organizationPlaceholder": "Partial match on name",
+            "organizationActiveLabel": "Filtered by organization",
+            "organizationActiveHint": "Metrics and the table show processes with an active link to this organization.",
+            "organizationActiveAria": "View filtered by organization: {{name}}",
+            "clearOrganization": "Clear organization filter",
+            "invalidOrganization": "Select a valid organization.",
+            "status": "Status",
+            "statusPlaceholder": "Select status",
+            "statusActive": "Active",
+            "statusInactive": "Inactive",
+            "hasMultipleInstances": "Multiple instances",
+            "processDateRange": "Filing date range",
+            "processDateRangePlaceholder": "Select date range",
+            "createdAtRange": "Created date range",
+            "createdAtRangePlaceholder": "Select date range",
             "privacy": "Privacy",
             "privacyPlaceholder": "All",
             "privacyPrivate": "Private only",
             "privacyPublic": "Public only",
             "altaManual": "Manual registration",
+            "removedFromRama": "Actions removed on Judicial Branch",
+            "removedFromRamaAll": "All",
+            "removedFromRamaWith": "With at least one removed action",
+            "removedFromRamaWithout": "Without removed actions",
             "all": "All",
             "yes": "Yes",
+            "no": "No",
             "lastApiUpdateRange": "Last sync",
-            "lastApiUpdateRangePlaceholder": "Date range"
+            "lastApiUpdateRangePlaceholder": "Date range",
+            "reset": "Clear filters",
+            "search": "Search"
         },
         "copy": {
             "tooltip": "Copy",
@@ -862,6 +917,11 @@
     },
     "processDetail": {
         "title": "Process Detail",
+        "copyRadicadoTooltip": "Copy filing number (digits only)",
+        "copyRadicadoSuccess": "Filing number copied to clipboard",
+        "headerCompact": {
+            "lastUpdate": "Last update"
+        },
         "activateProcess": "Activate Tracking",
         "deactivateProcess": "Deactivate Tracking",
         "back": "Back",
@@ -890,6 +950,9 @@
         "processClass": "Process Class",
         "subclassProcess": "Subclass Process",
         "processDate": "Filing Date",
+        "removedFromRamaCount": "Actions removed on Judicial Branch portal",
+        "removedFromRamaViewActions": "View actions",
+        "removedFromRamaCountShort": "removed on Branch",
         "lastActivityDate": "Last Activity Date",
         "location": "Location",
         "status": "Status",
@@ -908,6 +971,14 @@
             "interestDate": "Interest date",
             "role": "Organization role",
             "trackingStatus": "Tracking status",
+            "inactivitySemaphore": "Inactivity alert",
+            "linkActions": "Link actions",
+            "semaphoreShort": {
+                "red": "Critical alert",
+                "yellow": "Early alert",
+                "green": "Normal",
+                "waiting": "Waiting"
+            },
             "assignRole": "Assign role",
             "changeRole": "Change role",
             "activateTracking": "Activate tracking",
@@ -995,19 +1066,45 @@
                 "alertKeywordPlaceholder": "All procedural stages",
                 "search": "Search",
                 "searchPlaceholder": "Search in action or annotation",
+                "removedFromRama": "Removed in judiciary",
+                "removedFromRamaAll": "All actions",
+                "removedFromRamaOnly": "Removed in judiciary only",
+                "removedFromRamaExcluded": "Not removed in judiciary",
                 "reset": "Clear Filters"
             },
             "table": {
                 "index": "#",
                 "action": "Action",
                 "annotation": "Annotation",
-                "termStartDate": "Term start date",
-                "termEndDate": "Term end date",
-                "actionDate": "Action date",
-                "registrationDate": "Registration date",
+                "termStartDate": "Term Start Date",
+                "termEndDate": "Term End Date",
+                "actionDate": "Action Date",
+                "registrationDate": "Registration Date",
                 "court": "Court",
                 "edit": "Edit dates",
-                "documents": "PDF documents"
+                "documents": "PDF documents",
+                "actionsColumn": "Actions",
+                "ramaStatus": "Judicial Branch",
+                "markRemoved": "Mark as removed on Judicial Branch portal",
+                "markRemovedShort": "Removed on Branch"
+            },
+            "removedBadge": "Removed on Judicial Branch",
+            "notifiedInDigest": "Already notified in digest",
+            "markRemovedModal": {
+                "title": "Mark as removed on Judicial Branch portal",
+                "reasonLabel": "Reason (optional)",
+                "reasonPlaceholder": "E.g. Court published by mistake",
+                "reasonTooLong": "Reason cannot exceed 2000 characters.",
+                "notifyOrganizations": "Email active interested organizations",
+                "helpLine1": "This does not delete history or undo digests already sent.",
+                "helpLine2": "The action will no longer appear in pending digests.",
+                "helpLine3": "Sent digests remain visible; opening them shows the removed label.",
+                "helpLine4": "There is no undo for this action.",
+                "confirm": "Confirm",
+                "cancel": "Cancel",
+                "notFound": "Process or action not found.",
+                "errorGeneric": "Could not mark the action. Please try again.",
+                "organizationsNotified": "Notified {{count}} organization(s)."
             },
             "datesModal": {
                 "title": "Edit action dates",

@@ -1,26 +1,29 @@
 /**
- * Theme Configuration
- * Controls the application theme (light mode only)
+ * @deprecated Prefer ThemeService for runtime theme switching.
+ * Legacy helper kept for scripts or one-off use.
  */
-export const THEME_CONFIG = {
-  // Set theme to light
-  defaultTheme: 'light' as const,
+export type AppTheme = 'light' | 'dark';
 
-  // Get current theme
-  getCurrentTheme(): 'light' {
+export const THEME_CONFIG = {
+  defaultTheme: 'light' as AppTheme,
+
+  getCurrentTheme(): AppTheme {
     if (typeof document !== 'undefined') {
-      const htmlElement = document.documentElement;
-      const currentTheme = htmlElement.getAttribute('data-theme');
-      return (currentTheme === 'light' ? 'light' : 'light');
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      return currentTheme === 'dark' ? 'dark' : 'light';
     }
     return this.defaultTheme;
   },
 
-  // Set theme
-  setTheme(theme: 'light' = 'light'): void {
+  setTheme(theme: AppTheme = 'light'): void {
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', theme);
     }
   },
-};
 
+  toggleTheme(): AppTheme {
+    const next = this.getCurrentTheme() === 'dark' ? 'light' : 'dark';
+    this.setTheme(next);
+    return next;
+  },
+};

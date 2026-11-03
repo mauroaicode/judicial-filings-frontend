@@ -1,4 +1,7 @@
-<dialog class="modal modal-open modal-bottom sm:modal-middle org-settings-modal">
+<dialog
+  class="modal modal-open modal-bottom sm:modal-middle org-settings-modal"
+  (cancel)="$event.preventDefault(); onClose()"
+>
   <div
     class="modal-box relative flex max-h-[min(92dvh,56rem)] w-[min(100vw-1rem,56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-t-2xl border border-base-300/80 bg-base-100 p-0 shadow-2xl sm:rounded-2xl"
   >
@@ -32,10 +35,24 @@
           <h3 class="text-lg font-bold tracking-tight text-base-content sm:text-xl">
             {{ 'clients.settings.modalTitle' | transloco }}
           </h3>
-          <p class="mt-1 truncate text-sm font-medium text-primary">
-            {{ detail()?.name || ('clients.settings.loading' | transloco) }}
-          </p>
-          <p class="mt-1 text-sm leading-relaxed text-base-content/65">
+          @if (detail(); as orgHeader) {
+            <div class="org-settings-modal-org mt-3 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/45">
+                {{ 'clients.settings.organizationLabel' | transloco }}
+              </p>
+              <p class="org-settings-modal-org-name text-base font-bold leading-snug text-base-content break-words sm:text-lg">
+                {{ orgHeader.name }}
+              </p>
+              @if (organizationTypeLabel()) {
+                <span class="org-settings-modal-org-type badge badge-outline badge-sm mt-0.5 font-semibold normal-case">
+                  {{ organizationTypeLabel() }}
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="mt-2 text-sm text-base-content/60">{{ 'clients.settings.loading' | transloco }}</p>
+          }
+          <p class="mt-3 text-sm leading-relaxed text-base-content/65">
             {{ 'clients.settings.modalSubtitle' | transloco }}
           </p>
         </div>
@@ -173,29 +190,16 @@
                 {{ formatLimit(org.settings.max_active_processes) }}
               </dd>
             </div>
-            <div class="sm:col-span-2 flex flex-wrap gap-2 pt-2">
-              <button type="button" class="btn btn-outline btn-sm gap-1" (click)="onExportRequested()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                {{ 'historialExportaciones.actions.export' | transloco }}
-              </button>
-              <button type="button" class="btn btn-ghost btn-sm" (click)="onViewExportHistory()">
-                {{ 'historialExportaciones.actions.history' | transloco }}
-              </button>
-            </div>
           </dl>
         }
 
         @if (activeTab() === 'settings') {
           <form [formGroup]="settingsForm" class="space-y-5" (ngSubmit)="onSave()">
-            <div class="rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
-              <h4 class="text-sm font-bold text-primary">{{ 'clients.settings.limitTitle' | transloco }}</h4>
-              <p class="mt-1 text-xs leading-relaxed text-base-content/70">
+            <div class="org-settings-section rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
+              <h4 class="org-settings-section-title text-sm font-bold text-base-content">
+                {{ 'clients.settings.limitTitle' | transloco }}
+              </h4>
+              <p class="mt-1 text-xs leading-relaxed text-base-content/75">
                 {{ 'clients.settings.limitDescription' | transloco }}
               </p>
             </div>
@@ -258,11 +262,11 @@
               }}
             </p>
 
-            <div class="rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
-              <h4 class="text-sm font-bold text-primary">
+            <div class="org-settings-section rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
+              <h4 class="org-settings-section-title text-sm font-bold text-base-content">
                 {{ 'clients.settings.documentsTitle' | transloco }}
               </h4>
-              <p class="mt-1 text-xs leading-relaxed text-base-content/70">
+              <p class="mt-1 text-xs leading-relaxed text-base-content/75">
                 {{ 'clients.settings.documentsDescription' | transloco }}
               </p>
             </div>
@@ -300,7 +304,7 @@
         </button>
         <button
           type="button"
-          class="btn btn-primary w-full sm:min-w-[10rem] sm:w-auto"
+          class="btn btn-primary w-full sm:min-w-[10rem] sm:w-auto rounded-xl font-bold normal-case shadow-lg shadow-primary/20"
           (click)="onSave()"
           [disabled]="saving() || loading()"
         >

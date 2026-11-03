@@ -171,9 +171,13 @@
               </div>
 
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-xl bg-base-200/60 px-3 py-2">
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">{{ 'judicialSync.run.processesQueued' | transloco }}</p>
-                  <p class="mt-1 text-xl font-bold tabular-nums text-primary">{{ run.processes_queued }}</p>
+                <div class="judicial-sync-run-stat judicial-sync-run-stat--queued rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/45">
+                    {{ 'judicialSync.run.processesQueued' | transloco }}
+                  </p>
+                  <p class="judicial-sync-processes-queued-number mt-1 text-2xl font-bold tabular-nums leading-none sm:text-3xl">
+                    {{ run.processes_queued }}
+                  </p>
                 </div>
                 <div class="rounded-xl bg-base-200/60 px-3 py-2">
                   <p class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">{{ 'judicialSync.run.radicadoFilter' | transloco }}</p>
@@ -203,7 +207,9 @@
                   <span class="text-error font-semibold"> {{ 'judicialSync.run.failedJobs' | transloco }}: {{ run.failed_jobs_count }} </span>
                 }
                 @if (run.queue_pending_jobs > 0) {
-                  <span class="text-warning font-semibold"> {{ 'judicialSync.run.pendingJobs' | transloco }}: {{ run.queue_pending_jobs }} </span>
+                  <span class="text-warning font-semibold tabular-nums">
+                    {{ 'judicialSync.run.pendingJobs' | transloco }}: {{ run.queue_pending_jobs }}
+                  </span>
                 }
               </div>
 

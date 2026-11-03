@@ -9,7 +9,7 @@
 
 <!-- Sidebar -->
 <aside
-  class="fixed left-0 top-0 z-40 h-screen max-h-screen bg-neutral text-neutral-content transition-all duration-300 ease-in-out shadow-lg overflow-hidden"
+  class="admin-sidebar fixed left-0 top-0 z-40 h-screen max-h-screen bg-brand-neutral text-brand-neutral-content transition-all duration-300 ease-in-out shadow-lg overflow-hidden"
   [class.-translate-x-full]="!isOpen() && isMobile()"
   [class.translate-x-0]="isOpen() || !isMobile()"
   [class.pointer-events-none]="isMobile() && !isOpen()"
@@ -19,24 +19,26 @@
   <div class="flex h-full max-h-screen flex-col overflow-hidden">
     <!-- Sidebar Header -->
     <div
-      class="flex h-16 items-center text-center border-b transition-all"
+      class="flex h-16 items-center text-center border-b border-brand-neutral-content/10 transition-all"
       [class.bg-white]="isOpen()"
-      [class.border-neutral/10]="isOpen()"
-      [class.border-neutral/20]="!isOpen()"
       [class.justify-between]="isOpen()"
       [class.justify-center]="!isOpen()"
       [class.px-4]="isOpen()"
       [class.px-0]="!isOpen()"
     >
       @if (isOpen()) {
-        <img src="images/ui/logo-notijudicial.png" alt="NotiJudicial" class="h-10 object-contain mx-auto" />
+        <img
+          src="images/ui/logo-notijudicial.png"
+          alt="NotiJudicial"
+          class="sidebar-logo h-10 w-auto max-w-[11rem] object-contain object-left mx-auto"
+        />
       }
       <button
         type="button"
-        class="btn btn-ghost btn-sm flex items-center justify-center p-0 w-10 h-10"
-        [class.text-neutral]="isOpen()"
-        [class.hover:bg-neutral/10]="isOpen()"
-        [class.text-neutral-content]="!isOpen()"
+        class="sidebar-toggle-btn btn btn-ghost btn-sm flex items-center justify-center p-0 w-10 h-10"
+        [class.text-brand-neutral]="isOpen()"
+        [class.hover:bg-brand-neutral/10]="isOpen()"
+        [class.text-white]="!isOpen()"
         [class.hover:bg-white/10]="!isOpen()"
         (click)="toggleSidebar()"
         (mouseenter)="onNavItemHover($event, 'navigation.toggleSidebar')"
@@ -71,6 +73,19 @@
       </button>
     </div>
 
+    <div
+      class="admin-sidebar-role"
+      [class.admin-sidebar-role--collapsed]="!isOpen() && !isMobile()"
+      [attr.title]="'navigation.adminBadge' | transloco"
+    >
+      <span class="admin-sidebar-role__dot" aria-hidden="true"></span>
+      @if (isOpen() || isMobile()) {
+        <span class="admin-sidebar-role__label">{{ 'navigation.adminBadge' | transloco }}</span>
+      } @else {
+        <span class="admin-sidebar-role__short">A</span>
+      }
+    </div>
+
     <!-- Navigation Items -->
     <nav
       class="flex-1 overflow-y-auto overflow-x-hidden transition-all"
@@ -103,7 +118,7 @@
                 (blur)="hideNavTooltip()"
               >
                 <div
-                  class="flex items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
+                  class="sidebar-nav-link flex items-center rounded-lg py-2 text-left transition-colors"
                   [class.gap-3]="isOpen()"
                   [class.px-3]="isOpen()"
                   [class.justify-center]="!isOpen()"
@@ -145,7 +160,7 @@
                         [routerLink]="child.link"
                         [class.bg-secondary]="isLinkActive(child.link)"
                         [class.text-secondary-content]="isLinkActive(child.link)"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-neutral-focus font-medium"
+                        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors font-medium"
                         (click)="closeSidebar()"
                       >
                         @if (child.icon) {
@@ -167,7 +182,7 @@
                 [class.bg-secondary]="isItemSelected(item.id)"
                 [class.text-secondary-content]="isItemSelected(item.id)"
                 [class.disabled]="item.disabled"
-                class="flex w-full items-center rounded-lg py-2 text-left transition-colors hover:bg-neutral-focus"
+                class="sidebar-nav-link flex w-full items-center rounded-lg py-2 text-left transition-colors"
                 [class.gap-3]="isOpen()"
                 [class.px-3]="isOpen()"
                 [class.justify-center]="!isOpen()"

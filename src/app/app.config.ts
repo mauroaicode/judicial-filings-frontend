@@ -7,7 +7,8 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AVAILABLE_LANGUAGES } from './core/transloco/languages.constants';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
-import { THEME_CONFIG } from './core/config/theme.config';
+import { ThemeService } from './core/services/theme/theme.service';
+import { ModalEscapeService } from './core/services/modal/modal-escape.service';
 import { authInterceptor } from './core/interceptors/auth/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -36,9 +37,10 @@ export const appConfig: ApplicationConfig = {
       const defaultLang = translocoService.getDefaultLang();
       translocoService.setActiveLang(defaultLang);
       
-      // Initialize theme
-      THEME_CONFIG.setTheme(THEME_CONFIG.defaultTheme);
-      
+      // Eagerly initialize theme so DaisyUI data-theme is set before first render.
+      inject(ThemeService);
+      inject(ModalEscapeService).init();
+
       return firstValueFrom(translocoService.load(defaultLang));
     }),
   ]

@@ -3,19 +3,21 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthenticatedLayoutComponent } from '@app/layout/layouts/authenticated/authenticated.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
+import { BadgeLabelPipe } from '@app/shared/pipes/badge-label.pipe';
 import { DateRangePickerComponent, DateRange } from '@app/shared/components/date-range-picker/date-range-picker.component';
 import { DataTableComponent, DataTableColumn } from '@app/shared/components/data-table/data-table.component';
 import { ProcessAlertTooltipComponent } from '@app/shared/components/process-alert-tooltip/process-alert-tooltip.component';
@@ -25,6 +27,7 @@ import { ProcessService } from '@app/core/services/process/process.service';
 import {
   Action,
   ActionFilter,
+  ActionNotifiedConsolidado,
   ActionResponseMeta,
   AlertKeyword,
   AlertKeywordStat,
@@ -37,6 +40,7 @@ import {
   ProcessOrganizationsMutationResponse,
   UpdateProcessActionResponse,
   UpdateProcessGeneralInfoResponse,
+  MarkActionRemovedFromJudicialBranchResponse,
 } from '@app/core/models/process/process.model';
 import { buildTextWithHighlights } from '@app/core/utils/alert-highlight.utils';
 
@@ -50,6 +54,15 @@ import {
 } from '../../components/action-documents-modal/action-documents-modal.component';
 import { AddProcessOrganizationsModalComponent } from '../../components/add-process-organizations-modal/add-process-organizations-modal.component';
 import { TrashProcessesModalComponent } from '../../components/trash-processes-modal/trash-processes-modal.component';
+import { MarkActionRemovedModalComponent } from '../../components/mark-action-removed-modal/mark-action-removed-modal.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
+import { PageHeaderContextService } from '@app/core/services/layout/page-header-context.service';
+
+const DETAIL_HEADER_SCROLL_THRESHOLD = 80;
 
 @Component({
   selector: 'app-process-detail',
@@ -61,6 +74,7 @@ import { TrashProcessesModalComponent } from '../../components/trash-processes-m
     DateRangePickerComponent,
     DataTableComponent,
     ProcessNumberPipe,
+    BadgeLabelPipe,
     ProcessAlertTooltipComponent,
     RoleSelectionModalComponent,
     SubjectFormModalComponent,
@@ -70,6 +84,10 @@ import { TrashProcessesModalComponent } from '../../components/trash-processes-m
     AddProcessOrganizationsModalComponent,
     ConfirmationDialogComponent,
     TrashProcessesModalComponent,
+    MarkActionRemovedModalComponent,
+    RouterLink,
+    FilterSelectComponent,
+    FormsModule,
   ],
   templateUrl: './process-detail.component.html',
   styleUrls: ['./process-detail.component.scss'],
@@ -84,6 +102,7 @@ export class ProcessDetailComponent {
   private _destroyRef = inject(DestroyRef);
   private _transloco = inject(TranslocoService);
   private _layout = inject(AuthenticatedLayoutComponent, { optional: true });
+  private _headerContext = inject(PageHeaderContextService);
 
   // State
   public process = signal<ProcessDetail | null>(null);
@@ -122,6 +141,22 @@ export class ProcessDetailComponent {
 
   /** Palabras clave de alerta para filtrar actuaciones (desde processes/:id/alert-keywords) */
   public alertKeywords = signal<AlertKeyword[]>([]);
+
+  readonly alertSlugFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processDetail.actions.filters.alertKeywordPlaceholder') },
+    ...this.alertKeywords().map((keyword) => ({ id: keyword.slug, label: keyword.name })),
+  ]);
+
+  readonly removedFromRamaFilterOptions = computed((): FilterSelectOption[] => [
+    { id: '', label: this._transloco.translate('processDetail.actions.filters.removedFromRamaAll') },
+    { id: 'true', label: this._transloco.translate('processDetail.actions.filters.removedFromRamaOnly') },
+    { id: 'false', label: this._transloco.translate('processDetail.actions.filters.removedFromRamaExcluded') },
+  ]);
+
+  readonly actionsPerPageOptions = computed((): FilterSelectOption[] =>
+    buildPerPageSelectOptions([10, 20, 50], this._transloco.translate('table.perPage'))
+  );
+
   /** Conteo por palabra clave (desde processes/:id/alert-keyword-stats) */
   public alertKeywordStats = signal<AlertKeywordStat[]>([]);
   /** Estado inicial del proceso (para mantener el status_label original) */
@@ -185,6 +220,21 @@ export class ProcessDetailComponent {
     this.organizations().map((org) => ({ id: org.id, label: org.name }))
   );
 
+  /** Modal marcar actuación retirada en Rama Judicial */
+  public showMarkRemovedModal = signal<boolean>(false);
+  public selectedActionForMarkRemoved = signal<Action | null>(null);
+  public markingRemovedActionId = signal<string | null>(null);
+
+  /** Clases extra en filas de actuaciones retiradas en Rama */
+  public actionRowClass = (row: Record<string, unknown>): string | null =>
+    row['removed_from_judicial_branch'] ? 'process-action-row--removed' : null;
+
+  public removedFromRamaCount = computed(
+    () => this.process()?.removed_from_judicial_branch_count ?? 0
+  );
+
+  public showRemovedFromRamaStat = computed(() => this.removedFromRamaCount() > 0);
+
   /** Selector de instancia en móvil */
   public showInstanceSelector = signal<boolean>(false);
 
@@ -206,6 +256,7 @@ export class ProcessDetailComponent {
     action_date_range: [null as DateRange | null],
     registration_date_range: [null as DateRange | null],
     alert_slug: [null as string | null],
+    removed_from_judicial_branch: [''],
     search: [''],
   });
 
@@ -228,16 +279,22 @@ export class ProcessDetailComponent {
         label: 'processDetail.actions.table.index',
         width: '56px',
         align: 'center',
+        nowrap: true,
         render: (value: number | undefined) => (value != null ? String(value) : '–'),
       },
       {
         key: 'action',
         label: 'processDetail.actions.table.action',
+        width: '200px',
         sortable: true,
         html: true,
         render: (value: string | null, row: Action) => {
           const mainAction = row.action ?? value;
           const related = row.related_action;
+          const wrapMuted = (html: string): string =>
+            row.removed_from_judicial_branch
+              ? `<div class="process-action-muted-cell">${html}</div>`
+              : html;
 
           const actionHtml = buildTextWithHighlights(mainAction, row.alert_highlights as any, 'action');
 
@@ -247,25 +304,33 @@ export class ProcessDetailComponent {
             const badgeLabel =
               lowerAction.includes('notificacion') || lowerAction.includes('notificación') ? 'Notificación' : 'Fijación';
 
-            return `
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-1.5">
+            return wrapMuted(`
+              <div class="process-action-title-stack">
+                <div class="process-action-title-line">
                    <span class="badge badge-sm bg-primary/10 text-primary border-none font-bold text-[9px] px-1.5 h-4 uppercase tracking-tighter">${badgeLabel}</span>
-                   <div class="font-bold text-base-content/90 leading-tight">${actionHtml}</div>
+                   <div class="process-action-title-text font-bold text-base-content/90 leading-tight">${actionHtml}</div>
                 </div>
-                <div class="flex items-center gap-1.5">
+                <div class="process-action-title-line">
                    <span class="badge badge-sm bg-accent/10 text-accent border-none font-bold text-[9px] px-1.5 h-4 uppercase tracking-tighter">Auto</span>
-                   <div class="font-bold text-base-content leading-tight">${relatedActionHtml}</div>
+                   <div class="process-action-title-text font-bold text-base-content leading-tight">${relatedActionHtml}</div>
                 </div>
               </div>
-            `;
+            `);
           }
-          return actionHtml;
+          return wrapMuted(`<div class="process-action-title-text">${actionHtml}</div>`);
         },
+      },
+      {
+        key: 'rama_status',
+        label: 'processDetail.actions.table.ramaStatus',
+        width: '210px',
+        html: true,
+        render: (_value: unknown, row: Action) => this.buildRamaStatusCell(row),
       },
       {
         key: 'annotation',
         label: 'processDetail.actions.table.annotation',
+        width: '520px',
         html: true,
         render: (value: string | null, row: Action) => {
           const related = row.related_action;
@@ -278,50 +343,57 @@ export class ProcessDetailComponent {
           }
 
           if (!annotationToUse || annotationToUse === '---' || annotationToUse === '–') return '–';
-          return buildTextWithHighlights(annotationToUse, highlightsToUse as any, 'annotation');
+          const annotationHtml = buildTextWithHighlights(annotationToUse, highlightsToUse as any, 'annotation');
+          return row.removed_from_judicial_branch
+            ? `<div class="process-action-muted-cell">${annotationHtml}</div>`
+            : annotationHtml;
         },
       },
       {
         key: 'term_start_date',
         label: 'processDetail.actions.table.termStartDate',
-        width: '140px',
+        width: '168px',
         align: 'center',
         render: formatTermDate,
       },
       {
         key: 'term_end_date',
         label: 'processDetail.actions.table.termEndDate',
-        width: '140px',
+        width: '168px',
         align: 'center',
         render: formatTermDate,
       },
       {
         key: 'action_date',
         label: 'processDetail.actions.table.actionDate',
-        width: '150px',
+        width: '168px',
         align: 'center',
         render: formatDateFn,
       },
       {
         key: 'registration_date',
         label: 'processDetail.actions.table.registrationDate',
-        width: '150px',
+        width: '168px',
         align: 'center',
         render: formatDateFn,
       },
       {
-        key: 'documents',
-        label: 'processDetail.actions.table.documents',
-        width: '72px',
+        key: 'row_actions',
+        label: 'processDetail.actions.table.actionsColumn',
+        width: '96px',
         align: 'center',
-        action: 'documents',
-      },
-      {
-        key: 'edit_dates',
-        label: 'processDetail.actions.table.edit',
-        width: '56px',
-        align: 'center',
-        action: 'edit',
+        nowrap: true,
+        action: 'menu',
+        menuItems: [
+          { key: 'documents', label: 'processDetail.actions.table.documents' },
+          { key: 'edit_dates', label: 'processDetail.actions.table.edit' },
+          {
+            key: 'mark_removed',
+            label: 'processDetail.actions.table.markRemoved',
+            itemClass: 'process-action-menu-item--mark-removed',
+            visible: (row) => !row['removed_from_judicial_branch'],
+          },
+        ],
       },
     ];
 
@@ -329,6 +401,40 @@ export class ProcessDetailComponent {
       const id = params.get('id');
       this.loadProcessDetail(id);
     });
+
+    effect(() => {
+      const process = this.process();
+
+      if (!process) {
+        this._headerContext.setProcessDetailContext(null);
+        return;
+      }
+
+      const statusLabel = this.initialStatusLabel() || process.status_label;
+
+      this._headerContext.setProcessDetailContext({
+        processNumber: process.process_number,
+        statusLabel,
+        statusBadgeClass: this.getStatusClass(statusLabel),
+        isManualSync: process.is_manual_sync === true,
+        lastActivityDate: this.formatDateSafe(process.last_activity_date, 'shortDate'),
+      });
+    });
+
+    this._destroyRef.onDestroy(() => {
+      this._headerContext.clearProcessDetail();
+    });
+  }
+
+  /**
+   * Muestra la barra compacta del header al hacer scroll (solo escritorio).
+   */
+  onDetailScroll(event: Event): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return;
+    }
+    const target = event.target as HTMLElement;
+    this._headerContext.setCompactVisible(target.scrollTop > DETAIL_HEADER_SCROLL_THRESHOLD);
   }
 
   public openTrashModal(): void {
@@ -660,6 +766,10 @@ export class ProcessDetailComponent {
     this.selectedActionForDocuments.set(null);
   }
 
+  public onActionDocumentsModalCancel(): void {
+    this.closeActionDocumentsModal();
+  }
+
   public onActionDocumentsChanged(event: ActionDocumentsChangedEvent): void {
     const actionId = this.selectedActionForDocuments()?.id;
     if (!actionId) return;
@@ -719,7 +829,124 @@ export class ProcessDetailComponent {
       this.openEditActionDates(event.row);
     } else if (event.key === 'documents') {
       this.openActionDocuments(event.row);
+    } else if (event.key === 'mark_removed') {
+      this.openMarkRemovedModal(event.row);
     }
+  }
+
+  public openMarkRemovedModal(action: Action): void {
+    if (action.removed_from_judicial_branch) return;
+    this.selectedActionForMarkRemoved.set(action);
+    this.showMarkRemovedModal.set(true);
+    this.accordionSection.set('actions');
+  }
+
+  public closeMarkRemovedModal(): void {
+    if (this.markingRemovedActionId()) return;
+    this.showMarkRemovedModal.set(false);
+    this.selectedActionForMarkRemoved.set(null);
+  }
+
+  public onMarkRemovedSaved(response: MarkActionRemovedFromJudicialBranchResponse): void {
+    const updated = response.action;
+    this._applyUpdatedAction(updated);
+    this.closeMarkRemovedModal();
+
+    const processId = this.process()?.id;
+    if (processId) {
+      this._refreshProcessHeader(processId);
+    }
+
+    let toastMessage = response.message;
+    if (response.organizations_notified > 0) {
+      toastMessage += ` ${this._transloco.translate('processDetail.actions.markRemovedModal.organizationsNotified', {
+        count: response.organizations_notified,
+      })}`;
+    }
+    this.showToast('success', toastMessage);
+  }
+
+  public getDigestDetailUrl(organizationId: string, digestId: string): string {
+    const tree = this._router.createUrlTree(['/admin', 'notification-digests'], {
+      queryParams: {
+        digest: digestId,
+        digest_organization: organizationId,
+      },
+    });
+    return this._router.serializeUrl(tree);
+  }
+
+  private _applyUpdatedAction(updated: Action): void {
+    this.actions.update((list) =>
+      list.map((item) => {
+        if (item.id === updated.id) {
+          return {
+            ...item,
+            ...updated,
+            related_action: item.related_action ?? updated.related_action ?? null,
+          };
+        }
+        if (item.related_action?.id === updated.id) {
+          return { ...item, related_action: { ...item.related_action, ...updated } };
+        }
+        return item;
+      })
+    );
+  }
+
+  private buildRemovedBadgeHtml(): string {
+    const label = this._escapeHtml(this._transloco.translate('processDetail.actions.removedBadge'));
+    return `<span class="rama-removed-badge">${label}</span>`;
+  }
+
+  private buildRamaStatusCell(row: Action): string {
+    if (!row.removed_from_judicial_branch) {
+      return '–';
+    }
+
+    const chunks: string[] = [this.buildRemovedBadgeHtml()];
+
+    if (row.removed_from_judicial_branch_at?.trim()) {
+      chunks.push(
+        `<p class="text-[10px] font-semibold text-base-content/60 mt-1">${this._escapeHtml(row.removed_from_judicial_branch_at)}</p>`
+      );
+    }
+    if (row.removed_from_judicial_branch_reason?.trim()) {
+      chunks.push(
+        `<p class="text-[10px] text-base-content/50 mt-0.5 italic">${this._escapeHtml(row.removed_from_judicial_branch_reason.trim())}</p>`
+      );
+    }
+
+    const consolidadosHtml = this.buildNotifiedConsolidadosHtml(row.notified_consolidados);
+    if (consolidadosHtml) {
+      chunks.push(consolidadosHtml);
+    }
+
+    return `<div class="process-rama-status-cell">${chunks.join('')}</div>`;
+  }
+
+  private buildNotifiedConsolidadosHtml(consolidados: ActionNotifiedConsolidado[] | undefined): string {
+    if (!consolidados?.length) return '';
+    const intro = this._escapeHtml(this._transloco.translate('processDetail.actions.notifiedInDigest'));
+    const links = consolidados
+      .map((entry) => {
+        const href = this._escapeHtml(this.getDigestDetailUrl(entry.organization_id, entry.notification_digest_id));
+        const text = this._escapeHtml(`${entry.organization_name} · ${entry.consolidado_date}`);
+        const sent = entry.email_sent_at?.trim()
+          ? `<span class="text-base-content/40 font-normal"> (${this._escapeHtml(entry.email_sent_at)})</span>`
+          : '';
+        return `<a href="${href}" class="link link-primary text-[11px] font-semibold leading-snug block">${text}${sent}</a>`;
+      })
+      .join('');
+    return `<div class="mt-2 pt-2 border-t border-dashed border-base-200"><p class="text-[9px] font-bold uppercase text-base-content/35 mb-1">${intro}</p>${links}</div>`;
+  }
+
+  private _escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   public onActionDatesSaved(response: UpdateProcessActionResponse): void {
@@ -757,6 +984,7 @@ export class ProcessDetailComponent {
           ...current,
           ...response.process,
           last_activity_date: response.process.last_activity_date,
+          removed_from_judicial_branch_count: response.process.removed_from_judicial_branch_count,
         });
       },
       error: () => undefined,
@@ -945,6 +1173,17 @@ export class ProcessDetailComponent {
     });
   }
 
+  public viewActions(onlyRemovedFromRama = false): void {
+    if (onlyRemovedFromRama) {
+      this.actionFilterForm.patchValue({ removed_from_judicial_branch: 'true' });
+      this.loadActions(1, this.actionsPagination()?.per_page || 10);
+    }
+    this.accordionSection.set('actions');
+    requestAnimationFrame(() => {
+      document.getElementById('process-actions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   public getOrganizationLawyerRole(org: ProcessInterestedOrganization): string | null {
     return org.lawyer_role_label ?? org.lawyer_role;
   }
@@ -975,6 +1214,22 @@ export class ProcessDetailComponent {
     const level = org.inactivity_alert_level;
     if (level === 'red' || level === 'yellow' || level === 'green') return level;
     return null;
+  }
+
+  public getOrganizationSemaphoreShortLabel(org: ProcessInterestedOrganization): string {
+    const level = this.getOrganizationInactivityAlertLevel(org);
+    if (level) {
+      return this._transloco.translate(`processDetail.organizations.semaphoreShort.${level}`);
+    }
+    return this._transloco.translate('processDetail.organizations.semaphoreShort.waiting');
+  }
+
+  public getOrganizationSemaphoreDotClass(org: ProcessInterestedOrganization): string {
+    const level = this.getOrganizationInactivityAlertLevel(org);
+    if (level === 'red') return 'alert-red alert-pulse';
+    if (level === 'yellow') return 'alert-yellow';
+    if (level === 'green') return 'alert-green';
+    return 'organization-card__dot--waiting';
   }
 
   public isOrganizationPlaintiff(org: ProcessInterestedOrganization): boolean {
@@ -1077,6 +1332,7 @@ export class ProcessDetailComponent {
     const actionDateRange: DateRange | null = formValue.action_date_range;
     const registrationDateRange: DateRange | null = formValue.registration_date_range;
     const alertSlug = formValue.alert_slug?.trim();
+    const removedFilter = String(formValue.removed_from_judicial_branch ?? '').trim();
 
     const filters: ActionFilter = {
       action_date_from: actionDateRange?.from && actionDateRange.from.trim() ? actionDateRange.from : undefined,
@@ -1087,6 +1343,8 @@ export class ProcessDetailComponent {
         registrationDateRange?.to && registrationDateRange.to.trim() ? registrationDateRange.to : undefined,
       alert_slug: alertSlug || undefined,
       search: formValue.search?.trim() || undefined,
+      removed_from_judicial_branch:
+        removedFilter === 'true' ? true : removedFilter === 'false' ? false : undefined,
       page,
       per_page: perPage,
     };
@@ -1157,6 +1415,7 @@ export class ProcessDetailComponent {
       action_date_range: null,
       registration_date_range: null,
       alert_slug: null,
+      removed_from_judicial_branch: '',
       search: '',
     });
     this.loadActions(1, this.actionsPagination()?.per_page || 10);

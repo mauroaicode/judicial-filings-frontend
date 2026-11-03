@@ -31,6 +31,8 @@ import {
   UploadActionDocumentsResponse,
   UpdateMediaOrganizationsPayload,
   UpdateMediaOrganizationsResponse,
+  MarkActionRemovedFromJudicialBranchPayload,
+  MarkActionRemovedFromJudicialBranchResponse,
 } from '@app/core/models/process/process.model';
 import { ProcessDataSource } from '@app/core/models/process/process-data-source.model';
 
@@ -74,6 +76,9 @@ export class ProcessService {
     if (filters.organization) {
       params = params.set('organization', filters.organization);
     }
+    if (filters.organization_id?.trim()) {
+      params = params.set('organization_id', filters.organization_id.trim());
+    }
     if (filters.status) {
       params = params.set('status', filters.status);
     }
@@ -82,6 +87,11 @@ export class ProcessService {
     }
     if (filters.alta_manual === true) {
       params = params.set('alta_manual', '1');
+    }
+    if (filters.removed_from_judicial_branch === true) {
+      params = params.set('removed_from_judicial_branch', '1');
+    } else if (filters.removed_from_judicial_branch === false) {
+      params = params.set('removed_from_judicial_branch', '0');
     }
     if (filters.has_multiple_instances !== undefined && filters.has_multiple_instances !== null) {
       params = params.set('has_multiple_instances', filters.has_multiple_instances.toString());
@@ -198,9 +208,14 @@ export class ProcessService {
   /**
    * Get dashboard stats for process KPI cards
    */
-  getDashboardStats(): Observable<ProcessDashboardStats> {
+  getDashboardStats(organizationId?: string): Observable<ProcessDashboardStats> {
     const url = `${environment.apiBaseUrl}/dashboard/stats`;
-    return this._http.get<ProcessDashboardStats>(url);
+    let params = new HttpParams();
+    const orgId = organizationId?.trim();
+    if (orgId) {
+      params = params.set('organization_id', orgId);
+    }
+    return this._http.get<ProcessDashboardStats>(url, { params });
   }
 
   /**
@@ -268,6 +283,11 @@ export class ProcessService {
     if (filters.registration_date_to) params = params.set('registration_date_to', filters.registration_date_to);
     if (filters.search) params = params.set('search', filters.search);
     if (filters.alert_slug) params = params.set('alert_slug', filters.alert_slug);
+    if (filters.removed_from_judicial_branch === true) {
+      params = params.set('removed_from_judicial_branch', 'true');
+    } else if (filters.removed_from_judicial_branch === false) {
+      params = params.set('removed_from_judicial_branch', 'false');
+    }
 
     const url = `${environment.apiBaseUrl}/processes/${id}/actions`;
     return this._http.get<ActionResponse>(url, { params });
@@ -363,6 +383,26 @@ export class ProcessService {
   ): Observable<UpdateProcessActionResponse> {
     const url = `${environment.apiBaseUrl}/processes/${processId}/actions/${actionId}`;
     return this._http.patch<UpdateProcessActionResponse>(url, payload);
+  }
+
+  /**
+   * Marca una actuación como eliminada en el portal de la Rama Judicial (soft flag).
+   * POST /processes/{processId}/actions/{actionId}/mark-removed-from-judicial-branch
+   */
+  markActionRemovedFromJudicialBranch(
+    processId: string,
+    actionId: string,
+    payload: MarkActionRemovedFromJudicialBranchPayload = {}
+  ): Observable<MarkActionRemovedFromJudicialBranchResponse> {
+    const url = `${environment.apiBaseUrl}/processes/${processId}/actions/${actionId}/mark-removed-from-judicial-branch`;
+    const body: MarkActionRemovedFromJudicialBranchPayload = {
+      notify_organizations: payload.notify_organizations ?? false,
+    };
+    const reason = payload.reason?.trim();
+    if (reason) {
+      body.reason = reason;
+    }
+    return this._http.post<MarkActionRemovedFromJudicialBranchResponse>(url, body);
   }
 
   /**

@@ -1,4 +1,4 @@
-<div class="w-full">
+<div class="w-full process-detail-page">
   @if (copiedMessage()) {
     <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
       <div class="alert alert-success shadow-lg border-none bg-success text-success-content rounded-2xl animate-fade-in-up">
@@ -24,7 +24,7 @@
   }
 
   <div class="flex flex-col lg:flex-row gap-0 h-[calc(100vh-64px)] overflow-hidden">
-    <div class="flex-1 min-w-0 w-full h-full overflow-y-auto px-0 py-5 pb-8 sm:py-6">
+    <div class="process-detail-scroll flex-1 min-w-0 w-full h-full overflow-y-auto px-0 py-5 pb-8 sm:py-6" (scroll)="onDetailScroll($event)">
       @if (loading()) {
         <div class="flex flex-col justify-center items-center py-16 gap-3">
           <span class="loading loading-spinner loading-md text-primary"></span>
@@ -43,7 +43,7 @@
 
       @if (process() && !loading()) {
         <div class="space-y-6 pb-8" [class.process-inactive]="isProcessInactive()">
-          <div class="sm:hidden flex items-start justify-between gap-3">
+          <div class="sm:hidden flex items-start justify-between gap-3 mb-3">
             <h1 class="text-2xl font-bold text-base-content min-w-0">
               {{ 'processDetail.title' | transloco }}
             </h1>
@@ -61,162 +61,192 @@
                 </button>
               }
               <span
-                [class]="'badge badge-sm font-bold uppercase shrink-0 ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
+                [class]="'badge badge-sm font-bold shrink-0 ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
               >
-                {{ initialStatusLabel() || process()!.status_label }}
+                {{ (initialStatusLabel() || process()!.status_label) | badgeLabel }}
               </span>
             </div>
           </div>
 
-          <div class="detail-header-card p-4 sm:p-6 bg-base-100 border border-base-200 rounded-2xl shadow-sm relative mb-6 sm:mb-7">
-        <div class="flex flex-col gap-0">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
-              <div class="w-8 h-8 sm:w-12 sm:h-12 bg-primary/10 text-primary rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="min-w-0 flex-1">
-                <h1 class="hidden sm:block text-xl font-bold text-base-content md:text-2xl">
-                  {{ 'processDetail.title' | transloco }}
-                </h1>
-                @if (process()) {
-                  <div class="flex flex-wrap items-center gap-2 mt-1.5 sm:mt-1.5">
-                    <div class="inline-flex items-center gap-1 max-w-full group/header-radicado cursor-default">
-                      <span class="text-xs sm:text-sm font-bold text-primary tracking-tight break-words sm:break-all">
-                        {{ process()!.process_number | processNumber }}
-                      </span>
-                      <button
-                        (click)="copyToClipboard(process()!.process_number, $event)"
-                        class="btn btn-ghost btn-circle btn-xs shrink-0 -ms-0.5 opacity-40 group-hover/header-radicado:opacity-100 transition-all hover:bg-primary/20 text-primary active:scale-90"
-                        title="Copiar radicado (solo números)"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    @if (process()!.alert_level) {
-                      <app-process-alert-tooltip
-                        [alertLevel]="process()!.alert_level"
-                        [lawyerRole]="process()!.lawyer_role"
-                        position="bottom"
-                        [leftAligned]="true"
-                      ></app-process-alert-tooltip>
-                    }
-                    @if (process()!.is_manual_sync === true) {
-                      <span
-                        class="tooltip tooltip-bottom"
-                        [attr.data-tip]="'processes.table.originManualTooltip' | transloco"
-                      >
-                        <span class="badge badge-outline badge-warning badge-sm font-bold uppercase text-[0.65rem] leading-tight">
-                          {{ 'processes.table.originManual' | transloco }}
-                        </span>
-                      </span>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
+          <div class="detail-header-card mb-6 sm:mb-7 p-4 sm:p-6 bg-base-100 border border-base-200 rounded-2xl shadow-sm relative">
             @if (process()) {
-              <div class="flex items-start gap-2 shrink-0">
+              <div class="md:hidden absolute end-2 top-2 z-20">
                 @if (hasOrganizations()) {
                   <button
                     type="button"
-                    class="btn btn-ghost btn-sm text-error hover:bg-error/10 font-bold normal-case gap-1.5"
+                    class="btn btn-ghost btn-circle btn-sm text-error hover:bg-error/10"
                     (click)="openTrashModal()"
                     [attr.aria-label]="'processDetail.trash.buttonAria' | transloco"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    <span class="hidden sm:inline">{{ 'processDetail.trash.button' | transloco }}</span>
                   </button>
                 }
-                <span
-                  [class]="'badge badge-sm font-bold uppercase shrink-0 hidden sm:inline-flex self-start ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
+              </div>
+            }
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                <div class="detail-section-icon w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1 max-md:pe-9">
+                  @if (process()) {
+                    <div class="inline-flex max-w-full items-center gap-1.5 group/header-radicado cursor-default">
+                      <span class="min-w-0 text-xs sm:text-sm font-bold text-base-content tracking-tight break-words sm:break-all leading-snug">
+                        {{ process()!.process_number | processNumber }}
+                      </span>
+                      <button
+                        (click)="copyToClipboard(process()!.process_number, $event)"
+                        class="btn btn-ghost btn-circle btn-xs sm:btn-sm shrink-0 opacity-20 group-hover/header-radicado:opacity-100 transition-all hover:bg-primary/20 text-primary active:scale-90"
+                        title="Copiar radicado (solo números)"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h3m-3 4h3" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                      <span
+                        [class]="'badge badge-sm font-bold ' + getStatusClass(initialStatusLabel() || process()!.status_label)"
+                      >
+                        {{ (initialStatusLabel() || process()!.status_label) | badgeLabel }}
+                      </span>
+
+                      @if (process()!.is_manual_sync === true) {
+                        <span
+                          class="tooltip tooltip-bottom"
+                          [attr.data-tip]="'processes.table.originManualTooltip' | transloco"
+                        >
+                          <span class="badge badge-outline badge-warning badge-sm font-bold text-[0.65rem] leading-tight">
+                            {{ 'processes.table.originManual' | transloco | badgeLabel }}
+                          </span>
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              @if (process()) {
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-4 md:pt-0 border-t md:border-t-0 border-base-200 flex-1 md:flex-initial">
+                  <div class="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10 md:ml-auto">
+                    <div class="text-left md:text-right group cursor-help relative">
+                      <h2 class="detail-meta-label text-[9px] uppercase font-bold text-base-content/85 mb-1 tracking-widest flex items-center gap-1.5 md:justify-end">
+                        <span>Última Actuación</span>
+                        <div class="w-3.5 h-3.5 rounded-full bg-base-200/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 opacity-50 group-hover:text-primary group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </h2>
+                      <p class="text-[13px] font-semibold text-base-content tracking-tight leading-none transition-colors">
+                        {{ formatDateSafe(process()!.last_activity_date, 'shortDate') }}
+                      </p>
+                      <div class="absolute top-full md:right-0 mt-3 w-56 p-4 bg-base-100 border border-base-200 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[110] translate-y-2 group-hover:translate-y-0">
+                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-base-100">
+                          <span class="text-[9px] font-black uppercase text-base-content/30 tracking-widest">En el Juzgado</span>
+                        </div>
+                        <p class="text-[11px] font-bold text-base-content leading-relaxed">
+                          Corresponde a la fecha del <b>último movimiento oficial</b> reportado por el despacho judicial en los sistemas de consulta oficiales.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="hidden md:block w-[1px] h-8 bg-base-200/40 self-center opacity-50"></div>
+
+                    <div class="text-left md:text-right group cursor-help relative">
+                      <h2 class="detail-meta-label text-[9px] uppercase font-bold text-base-content/85 mb-1 tracking-widest flex items-center gap-1.5 md:justify-end">
+                        <span>Última Sincronización</span>
+                        <div class="w-3.5 h-3.5 rounded-full bg-base-200/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 opacity-50 group-hover:text-primary group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </h2>
+                      <p class="text-[13px] font-semibold text-base-content tracking-tight leading-none transition-colors">
+                        {{ formatDateSafe(process()!.last_api_update, 'short') }}
+                      </p>
+                      <div class="absolute top-full md:right-0 mt-3 w-56 p-4 bg-base-100 border border-base-200 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[110] translate-y-2 group-hover:translate-y-0">
+                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-base-100">
+                          <span class="text-[9px] font-black uppercase text-base-content/30 tracking-widest">En el Sistema</span>
+                        </div>
+                        <p class="text-[11px] font-bold text-base-content leading-relaxed">
+                          Indica la última vez que nuestra plataforma <b>consultó y actualizó</b> los datos desde los servidores oficiales de consulta.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (hasOrganizations()) {
+                    <div class="hidden md:flex items-center gap-2 shrink-0 self-start">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm text-error hover:bg-error/10 font-bold normal-case gap-1.5"
+                        (click)="openTrashModal()"
+                        [attr.aria-label]="'processDetail.trash.buttonAria' | transloco"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>{{ 'processDetail.trash.button' | transloco }}</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (process() && (hasOrganizations() || showRemovedFromRamaStat())) {
+              <div class="detail-header-stats mt-5 pt-5 border-t border-base-200">
+                <div
+                  class="detail-header-stats__grid"
+                  [class.detail-header-stats__grid--two]="hasOrganizations() && showRemovedFromRamaStat()"
+                  [class.detail-header-stats__grid--two-with-removed]="!hasOrganizations() && showRemovedFromRamaStat()"
                 >
-                  {{ initialStatusLabel() || process()!.status_label }}
-                </span>
+                  @if (hasOrganizations()) {
+                    <div class="detail-header-stats__item">
+                      <h2 class="detail-header-stats__label">
+                        {{ 'processDetail.organizations.interested' | transloco }}
+                      </h2>
+                      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p class="detail-header-stats__value mb-0">{{ organizationsCount() }}</p>
+                        <button
+                          type="button"
+                          (click)="viewOrganizations()"
+                          class="detail-header-stats__link"
+                        >
+                          {{ 'processDetail.organizations.viewAll' | transloco }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  @if (showRemovedFromRamaStat()) {
+                    <div class="detail-header-stats__item">
+                      <h2 class="detail-header-stats__label">
+                        {{ 'processDetail.removedFromRamaCount' | transloco }}
+                      </h2>
+                      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p class="detail-header-stats__value mb-0">{{ removedFromRamaCount() }}</p>
+                        <button
+                          type="button"
+                          (click)="viewActions(true)"
+                          class="detail-header-stats__link"
+                        >
+                          {{ 'processDetail.removedFromRamaViewActions' | transloco }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
-
-          @if (process()) {
-            <div class="detail-header-stats mt-5 pt-5 border-t border-base-200">
-              <div
-                class="detail-header-stats__grid"
-                [class.detail-header-stats__grid--three]="hasOrganizations()"
-                [class.detail-header-stats__grid--two]="!hasOrganizations()"
-              >
-                @if (hasOrganizations()) {
-                  <div class="detail-header-stats__item">
-                    <h2 class="detail-header-stats__label">
-                      {{ 'processDetail.organizations.interested' | transloco }}
-                    </h2>
-                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <p class="detail-header-stats__value mb-0">{{ organizationsCount() }}</p>
-                      <button
-                        type="button"
-                        (click)="viewOrganizations()"
-                        class="text-[11px] font-bold text-primary hover:text-primary/80 p-0 h-auto min-h-0 underline-offset-2 hover:underline transition-colors"
-                      >
-                        {{ 'processDetail.organizations.viewAll' | transloco }}
-                      </button>
-                    </div>
-                  </div>
-                }
-
-                <div class="detail-header-stats__item group cursor-help relative">
-                  <h2 class="detail-header-stats__label flex items-center gap-1.5">
-                    <span>Última Actuación</span>
-                    <div class="w-3.5 h-3.5 rounded-full bg-base-200/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 opacity-50 group-hover:text-primary group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </h2>
-                  <p class="detail-header-stats__value group-hover:text-base-content transition-colors">
-                    {{ formatDateSafe(process()!.last_activity_date, 'shortDate') }}
-                  </p>
-                  <div class="absolute top-full left-0 mt-3 w-56 p-4 bg-white border border-base-200 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[110] translate-y-2 group-hover:translate-y-0">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-base-100">
-                      <span class="text-[9px] font-black uppercase text-base-content/30 tracking-widest">En el Juzgado</span>
-                    </div>
-                    <p class="text-[11px] font-bold text-base-content leading-relaxed">
-                      Corresponde a la fecha del <b>último movimiento oficial</b> reportado por el despacho judicial en los sistemas de consulta oficiales.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="detail-header-stats__item group cursor-help relative">
-                  <h2 class="detail-header-stats__label flex items-center gap-1.5">
-                    <span>Última Sincronización</span>
-                    <div class="w-3.5 h-3.5 rounded-full bg-base-200/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 opacity-50 group-hover:text-primary group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </h2>
-                  <p class="detail-header-stats__value group-hover:text-base-content transition-colors">
-                    {{ formatDateSafe(process()!.last_api_update, 'short') }}
-                  </p>
-                  <div class="absolute top-full left-0 mt-3 w-56 p-4 bg-white border border-base-200 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[110] translate-y-2 group-hover:translate-y-0">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-base-100">
-                      <span class="text-[9px] font-black uppercase text-base-content/30 tracking-widest">En el Sistema</span>
-                    </div>
-                    <p class="text-[11px] font-bold text-base-content leading-relaxed">
-                      Indica la última vez que nuestra plataforma <b>consultó y actualizó</b> los datos desde los servidores oficiales de consulta.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
 
             @if (showMultipleInstancesSection()) {
               <div class="process-instances-module bg-base-100 border border-base-200 rounded-2xl overflow-hidden shadow-sm">
@@ -226,7 +256,7 @@
                       <h3 class="text-lg font-bold text-base-content">{{ 'processDetail.instances.title' | transloco }}</h3>
                       <p class="text-[11px] text-base-content/40 font-medium uppercase tracking-wider mt-0.5">{{ 'processDetail.instances.subtitle' | transloco }}</p>
                     </div>
-                    <span class="badge badge-secondary badge-outline font-bold text-[10px] px-3 h-7 rounded-lg">
+                    <span class="instance-count-badge">
                       {{ processInstances().length }} {{ (processInstances().length === 1 ? 'generics.instance' : 'generics.instances') | transloco | uppercase }}
                     </span>
                   </div>
@@ -234,7 +264,7 @@
                   <div class="sm:hidden flex flex-col gap-4">
                     <div class="flex items-center justify-between">
                       <h3 class="text-lg font-bold">{{ 'processDetail.instances.title' | transloco }}</h3>
-                      <span class="badge badge-secondary font-bold text-[9px] px-2">
+                      <span class="instance-count-badge">
                         {{ processInstances().length }} {{ (processInstances().length === 1 ? 'generics.instance' : 'generics.instances') | transloco | uppercase }}
                       </span>
                     </div>
@@ -273,7 +303,7 @@
             }
 
             <div class="space-y-4">
-                <div id="process-organizations-section" class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm organizations-collapse">
+                <div id="process-organizations-section" class="collapse collapse-plus detail-accordion bg-base-100 border border-base-200 rounded-2xl shadow-sm organizations-collapse overflow-hidden">
                   <input
                     type="radio"
                     name="process-accordion"
@@ -281,19 +311,19 @@
                     (change)="accordionSection.set('organizations')"
                   />
                   <div class="collapse-title flex items-center gap-3 py-4 px-6 hover:bg-base-200/20 transition-colors">
-                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <div class="detail-section-icon w-8 h-8 rounded-lg flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
                     <span class="text-base font-bold">{{ 'processDetail.organizations.title' | transloco }}</span>
                   </div>
-                  <div class="collapse-content px-6 pb-6 pt-0">
-                    <div class="flex justify-end mt-3 mb-4">
+                  <div class="collapse-content px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
+                    <div class="flex justify-end mt-2 mb-3">
                       <button
                         type="button"
                         (click)="openAddOrganizationsModal()"
-                        class="btn btn-sm btn-outline border-base-200 bg-base-100 font-bold text-[11px] normal-case text-primary hover:border-primary/40 hover:bg-primary/5"
+                        class="btn btn-primary btn-sm font-semibold normal-case h-8 min-h-8 gap-1.5 px-4 rounded-xl"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -303,143 +333,146 @@
                     </div>
 
                     @if (organizations().length === 0) {
-                      <div class="text-center py-6 bg-base-200/20 rounded-xl border border-dashed border-base-300">
-                        <p class="text-base-content/40 font-medium text-xs">{{ 'processDetail.organizations.empty' | transloco }}</p>
+                      <div class="text-center py-8 bg-base-200/20 rounded-xl border border-dashed border-base-300/80">
+                        <p class="text-base-content/45 font-medium text-sm">{{ 'processDetail.organizations.empty' | transloco }}</p>
                       </div>
                     } @else {
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       @for (org of organizations(); track org.id) {
                         <div
-                          class="organization-card rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm hover:border-primary/20 transition-all"
+                          class="organization-card flex flex-col rounded-xl border border-base-200/90 bg-base-100 p-4 shadow-sm"
                           [class.organization-inactive]="isOrganizationInactive(org)"
                         >
-                          <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3 min-w-0 flex-1">
-                              <div class="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-                                {{ (org.name || '?').charAt(0).toUpperCase() }}
-                              </div>
-                              <div class="min-w-0 flex-1">
-                                <p class="font-bold text-base text-base-content leading-tight">{{ org.name }}</p>
-                                <p class="text-[10px] font-medium text-base-content/45 mt-1">{{ org.type_label }}</p>
-                              </div>
+                          <div class="flex items-start gap-3 min-w-0">
+                            <div class="organization-card__avatar w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
+                              {{ (org.name || '?').charAt(0).toUpperCase() }}
                             </div>
-                            <div class="flex flex-col items-end gap-2 shrink-0 organization-semaforo-slot">
-                              <span [class]="'badge badge-sm font-bold uppercase ' + getStatusClass(org.status_label)">
-                                {{ org.status_label }}
+                            <div class="min-w-0 flex-1">
+                              <p class="font-bold text-sm text-base-content leading-snug break-words">{{ org.name }}</p>
+                              <p class="organization-card__type mt-0.5">{{ org.type_label }}</p>
+                            </div>
+                          </div>
+
+                          <div class="organization-card__indicators mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-primary/10 bg-primary/[0.04] px-3 py-2.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="organization-card__label organization-card__label--inline shrink-0">
+                                {{ 'processDetail.organizations.trackingStatus' | transloco }}
                               </span>
-                              @if (hasOrganizationRole(org)) {
+                              <span [class]="'badge badge-sm font-bold ' + getStatusClass(org.status_label)">
+                                {{ org.status_label | badgeLabel }}
+                              </span>
+                            </div>
+
+                            @if (hasOrganizationRole(org)) {
+                              <div class="flex items-center gap-2 min-w-0 sm:justify-end">
+                                <span class="organization-card__label organization-card__label--inline shrink-0 sm:inline">
+                                  {{ 'processDetail.organizations.inactivitySemaphore' | transloco }}
+                                </span>
                                 @if (getOrganizationInactivityAlertLevel(org); as alertLevel) {
                                   <app-process-alert-tooltip
                                     [alertLevel]="alertLevel"
                                     [lawyerRole]="normalizeOrganizationRole(org)"
                                     position="bottom"
-                                  ></app-process-alert-tooltip>
+                                    [leftAligned]="false"
+                                  >
+                                    <div class="inline-flex max-w-full items-center gap-2 rounded-full border border-base-200/80 bg-base-100 px-2.5 py-1 shadow-sm">
+                                      <span class="alert-dot shrink-0" [class]="getOrganizationSemaphoreDotClass(org)"></span>
+                                      <span class="organization-card__semaphore-label text-[10px] font-bold leading-tight truncate max-w-[9rem] sm:max-w-[11rem]">
+                                        {{ getOrganizationSemaphoreShortLabel(org) }}
+                                      </span>
+                                    </div>
+                                  </app-process-alert-tooltip>
                                 } @else {
-                                  <div class="flex flex-col items-center group/org-espera relative cursor-help">
-                                    <div class="w-3.5 h-3.5 rounded-full bg-base-300 ring-2 ring-base-200 shadow-inner group-hover/org-espera:bg-base-400 transition-all"></div>
-                                    <div class="absolute top-full right-0 mt-3 w-44 p-3 bg-white border border-base-200 rounded-xl shadow-2xl opacity-0 group-hover/org-espera:opacity-100 transition-all pointer-events-none z-[100] translate-y-2 group-hover/org-espera:translate-y-0">
-                                      <div class="flex items-center gap-2 mb-1.5">
-                                        <div class="w-2 h-2 rounded-full bg-base-300"></div>
-                                        <span class="text-[9px] font-black uppercase text-base-content/30 tracking-widest">Estado</span>
-                                      </div>
-                                      <p class="text-[11px] font-bold text-base-content leading-tight">
-                                        {{
-                                          isOrganizationPlaintiff(org)
-                                            ? 'Esperando actividad (+45 días)'
-                                            : 'Esperando actividad (+90 días)'
-                                        }}
-                                      </p>
+                                  <div class="inline-flex max-w-full items-center gap-2 rounded-full border border-base-200/80 bg-base-100 px-2.5 py-1 shadow-sm group/org-espera relative cursor-help">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-base-300 ring-2 ring-base-200/80 shrink-0"></span>
+                                    <span class="organization-card__semaphore-label text-[10px] font-bold leading-tight">
+                                      {{ getOrganizationSemaphoreShortLabel(org) }}
+                                    </span>
+                                    <div class="absolute top-full right-0 mt-1.5 w-48 p-2.5 bg-base-100 border border-base-200 rounded-lg shadow-lg opacity-0 group-hover/org-espera:opacity-100 transition-opacity pointer-events-none z-[100] text-[10px] font-semibold text-base-content leading-snug">
+                                      {{
+                                        isOrganizationPlaintiff(org)
+                                          ? 'Esperando actividad (+45 días)'
+                                          : 'Esperando actividad (+90 días)'
+                                      }}
                                     </div>
                                   </div>
                                 }
-                              }
-                            </div>
+                              </div>
+                            }
                           </div>
 
-                          <div class="mt-4 pt-4 border-t border-base-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div class="organization-interest-field min-w-0">
-                              <p class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider mb-1">
-                                {{ 'processDetail.organizations.interestDate' | transloco }}
-                              </p>
-                              <p class="text-sm font-semibold text-base-content">{{ org.interest_date || '—' }}</p>
+                          <dl class="organization-card__facts mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
+                            <div class="min-w-0">
+                              <dt class="organization-card__label">{{ 'processDetail.organizations.interestDate' | transloco }}</dt>
+                              <dd class="text-xs font-semibold text-base-content mt-1">{{ org.interest_date || '—' }}</dd>
                             </div>
-                            <div class="organization-role-field min-w-0">
-                              <p class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider mb-1.5">
-                                {{ 'processDetail.organizations.role' | transloco }}
-                              </p>
-                              @if (getOrganizationRoleLabel(org)) {
-                                <div class="flex items-center gap-2 flex-wrap">
-                                  <span class="badge badge-primary badge-outline font-extrabold text-[9px] uppercase tracking-widest px-2.5 h-6">
-                                    {{ getOrganizationRoleLabel(org) }}
-                                  </span>
+                            <div class="min-w-0">
+                              <dt class="organization-card__label">{{ 'processDetail.organizations.role' | transloco }}</dt>
+                              <dd class="mt-1">
+                                @if (getOrganizationRoleLabel(org)) {
+                                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span class="badge badge-primary badge-sm font-bold text-[9px] px-2 h-6 border-none normal-case">
+                                      {{ getOrganizationRoleLabel(org) | badgeLabel }}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      (click)="openOrganizationRoleModal(org)"
+                                      class="organization-card__text-action"
+                                    >
+                                      {{ 'processDetail.organizations.changeRole' | transloco }}
+                                    </button>
+                                  </div>
+                                } @else {
                                   <button
                                     type="button"
                                     (click)="openOrganizationRoleModal(org)"
-                                    class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-primary font-bold normal-case hover:bg-primary/10"
+                                    class="btn btn-primary btn-sm h-8 min-h-8 font-semibold normal-case w-full rounded-xl"
                                   >
-                                    {{ 'processDetail.organizations.changeRole' | transloco }}
+                                    {{ 'processDetail.organizations.assignRole' | transloco }}
                                   </button>
-                                </div>
+                                }
+                              </dd>
+                            </div>
+                          </dl>
+
+                          <div class="organization-card__actions mt-4 pt-3 border-t border-base-200/80 grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              (click)="openOrganizationStatusConfirm(org)"
+                              [disabled]="updatingOrganizationStatusId() === org.id"
+                              class="btn btn-sm h-8 min-h-8 font-semibold normal-case col-span-2 disabled:opacity-50 border-0 shadow-none rounded-xl organization-card__tracking-btn"
+                              [class.btn-primary]="isOrganizationInactive(org)"
+                              [class.organization-card__tracking-btn--mute]="isOrganizationActive(org)"
+                            >
+                              @if (updatingOrganizationStatusId() === org.id) {
+                                <span class="loading loading-spinner loading-xs"></span>
                               } @else {
-                                <button
-                                  type="button"
-                                  (click)="openOrganizationRoleModal(org)"
-                                  class="organization-role-btn btn btn-sm btn-outline w-full justify-center gap-2 h-9 min-h-9 border-base-200 bg-base-100 font-bold text-[11px] normal-case text-base-content/70 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                  {{ 'processDetail.organizations.assignRole' | transloco }}
-                                </button>
+                                {{
+                                  isOrganizationActive(org)
+                                    ? ('processDetail.organizations.deactivateTracking' | transloco)
+                                    : ('processDetail.organizations.activateTracking' | transloco)
+                                }}
                               }
-                            </div>
-                            <div class="organization-status-field min-w-0">
-                              <p class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider mb-1.5">
-                                {{ 'processDetail.organizations.trackingStatus' | transloco }}
-                              </p>
-                              <div class="flex flex-col items-start gap-0.5">
-                                <button
-                                  type="button"
-                                  (click)="openOrganizationStatusConfirm(org)"
-                                  [disabled]="updatingOrganizationStatusId() === org.id"
-                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 font-bold normal-case hover:bg-transparent disabled:opacity-50"
-                                  [class.text-error]="isOrganizationActive(org)"
-                                  [class.text-success]="isOrganizationInactive(org)"
-                                >
-                                  @if (updatingOrganizationStatusId() === org.id) {
-                                    <span class="loading loading-spinner loading-xs"></span>
-                                  } @else {
-                                    {{
-                                      isOrganizationActive(org)
-                                        ? ('processDetail.organizations.deactivateTracking' | transloco)
-                                        : ('processDetail.organizations.activateTracking' | transloco)
-                                    }}
-                                  }
-                                </button>
-                                <button
-                                  type="button"
-                                  (click)="openDetachOrganizationConfirm(org)"
-                                  [disabled]="detachingOrganizationId() === org.id"
-                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 font-bold normal-case hover:bg-transparent disabled:opacity-40 gap-1"
-                                >
-                                  @if (detachingOrganizationId() === org.id) {
-                                    <span class="loading loading-spinner loading-xs"></span>
-                                  } @else {
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    {{ 'processDetail.organizations.remove' | transloco }}
-                                  }
-                                </button>
-                                <button
-                                  type="button"
-                                  (click)="openTrashModalForOrganization(org)"
-                                  class="btn btn-ghost btn-xs h-7 min-h-7 px-0 text-error font-bold normal-case hover:bg-transparent"
-                                >
-                                  {{ 'processDetail.organizations.trashFromOrg' | transloco }}
-                                </button>
-                              </div>
-                            </div>
+                            </button>
+                            <button
+                              type="button"
+                              (click)="openDetachOrganizationConfirm(org)"
+                              [disabled]="detachingOrganizationId() === org.id"
+                              class="btn btn-sm h-8 min-h-8 font-semibold normal-case disabled:opacity-40 border-0 shadow-none rounded-xl organization-card__remove"
+                            >
+                              @if (detachingOrganizationId() === org.id) {
+                                <span class="loading loading-spinner loading-xs"></span>
+                              } @else {
+                                {{ 'processDetail.organizations.remove' | transloco }}
+                              }
+                            </button>
+                            <button
+                              type="button"
+                              (click)="openTrashModalForOrganization(org)"
+                              class="btn btn-sm h-8 min-h-8 font-semibold normal-case border-0 shadow-none rounded-xl organization-card__trash"
+                            >
+                              {{ 'processDetail.organizations.trashFromOrg' | transloco }}
+                            </button>
                           </div>
                         </div>
                       }
@@ -448,7 +481,7 @@
                   </div>
                 </div>
 
-              <div class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
+              <div class="collapse collapse-plus detail-accordion bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
                 <input
                   type="radio"
                   name="process-accordion"
@@ -456,7 +489,7 @@
                   (change)="accordionSection.set('general')"
                 />
                 <div class="collapse-title flex items-center gap-3 py-4 px-6 hover:bg-base-200/20 transition-colors">
-                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <div class="detail-section-icon w-8 h-8 rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -468,7 +501,7 @@
                     <button
                       type="button"
                       (click)="openEditGeneralInfo()"
-                      class="btn btn-sm btn-outline border-base-200 bg-base-100 font-bold text-[11px] normal-case text-primary hover:border-primary/40 hover:bg-primary/5"
+                      class="btn btn-sm font-bold text-[11px] normal-case detail-section-action-btn"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -486,11 +519,12 @@
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.subclassProcess', value: process()!.subclass_process }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.location', value: process()!.location }"></ng-container>
                     <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.processDate', value: formatDateSafe(process()!.process_date, 'shortDate') }"></ng-container>
+                    <ng-container *ngTemplateOutlet="infoItem; context: { label: 'processDetail.removedFromRamaCount', value: removedFromRamaCount() }"></ng-container>
                   </div>
                 </div>
               </div>
 
-              <div class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
+              <div class="collapse collapse-plus detail-accordion bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
                 <input
                   type="radio"
                   name="process-accordion"
@@ -498,7 +532,7 @@
                   (change)="accordionSection.set('subjects')"
                 />
                 <div class="collapse-title flex items-center gap-3 py-4 px-6 hover:bg-base-200/20 transition-colors">
-                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <div class="detail-section-icon w-8 h-8 rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -510,7 +544,7 @@
                     <button
                       type="button"
                       (click)="openCreateSubjectModal()"
-                      class="btn btn-sm btn-outline border-base-200 bg-base-100 font-bold text-[11px] normal-case text-primary hover:border-primary/40 hover:bg-primary/5"
+                      class="btn btn-sm font-bold text-[11px] normal-case detail-section-action-btn"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -526,7 +560,7 @@
                   } @else if (hasClassicSubjectLayout()) {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div class="space-y-4">
-                        <h4 class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider">Demandante(s)</h4>
+                        <h4 class="detail-subjects-subtitle">Demandante(s)</h4>
                         <div class="space-y-2">
                           @for (subject of plaintiffSubjects(); track subject.id; let i = $index) {
                             <ng-container *ngTemplateOutlet="subjectRow; context: { subject: subject, index: i + 1, accentClass: 'text-primary/40' }"></ng-container>
@@ -534,7 +568,7 @@
                         </div>
                       </div>
                       <div class="space-y-4">
-                        <h4 class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider">Demandado(s)</h4>
+                        <h4 class="detail-subjects-subtitle">Demandado(s)</h4>
                         <div class="space-y-2">
                           @for (subject of defendantSubjects(); track subject.id; let i = $index) {
                             <ng-container *ngTemplateOutlet="subjectRow; context: { subject: subject, index: i + 1, accentClass: 'text-secondary/40' }"></ng-container>
@@ -544,7 +578,7 @@
                     </div>
                     @if (otherSubjects().length > 0) {
                       <div class="space-y-4 mt-6">
-                        <h4 class="text-[9px] uppercase font-bold text-base-content/40 tracking-wider">{{ 'processDetail.subjects.others' | transloco }}</h4>
+                        <h4 class="detail-subjects-subtitle">{{ 'processDetail.subjects.others' | transloco }}</h4>
                         <div class="space-y-2">
                           @for (subject of otherSubjects(); track subject.id; let i = $index) {
                             <ng-container *ngTemplateOutlet="subjectRow; context: { subject: subject, index: i + 1, accentClass: 'text-base-content/30' }"></ng-container>
@@ -562,7 +596,7 @@
                 </div>
               </div>
 
-              <div class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden mb-8">
+              <div id="process-actions-section" class="collapse collapse-plus detail-accordion bg-base-100 border border-base-200 rounded-2xl shadow-sm mb-8">
                 <input
                   type="radio"
                   name="process-accordion"
@@ -570,12 +604,15 @@
                   (change)="accordionSection.set('actions')"
                 />
                 <div class="collapse-title flex items-center gap-3 py-4 px-6 hover:bg-base-200/20 transition-colors">
-                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <div class="detail-section-icon w-8 h-8 rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                     </svg>
                   </div>
                   <span class="text-base font-bold">{{ 'processDetail.actions.title' | transloco }}</span>
+                  @if (showRemovedFromRamaStat()) {
+                    <span class="rama-removed-badge ml-1">{{ removedFromRamaCount() }} {{ 'processDetail.removedFromRamaCountShort' | transloco }}</span>
+                  }
                 </div>
                 <div class="collapse-content px-0 pb-6 pt-0">
                   <div class="px-5 sm:px-6 space-y-6">
@@ -585,7 +622,7 @@
                           <button
                             type="button"
                             (click)="applyAlertFilter(stat.slug)"
-                            class="btn btn-xs h-auto py-2 px-3 bg-white hover:bg-primary/10 border border-base-200 hover:border-primary/30 rounded-lg gap-2 transition-all"
+                            class="btn btn-xs h-auto py-2 px-3 bg-base-100 hover:bg-primary/10 border border-base-200 hover:border-primary/30 rounded-lg gap-2 transition-all"
                           >
                             <span class="text-[9px] font-bold text-base-content/60">{{ stat.name }}</span>
                             <span class="badge badge-xs bg-primary/5 text-primary border-none font-bold">{{ stat.count }}</span>
@@ -594,7 +631,7 @@
                       </div>
                     }
 
-                    <div class="p-6 bg-white rounded-2xl border border-base-200 shadow-sm shadow-base-200/50">
+                    <div class="p-6 bg-base-100 rounded-2xl border border-base-200 shadow-sm process-actions-filters">
                       <div class="flex items-center gap-2 mb-8">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -602,7 +639,7 @@
                         <span class="text-[11px] font-bold uppercase text-base-content tracking-[0.2em]">FILTROS DE BÚSQUEDA</span>
                       </div>
 
-                      <form [formGroup]="actionFilterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6" (ngSubmit)="onSearchActions()">
+                      <form [formGroup]="actionFilterForm" class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-4" (ngSubmit)="onSearchActions()">
                         <div class="form-control">
                           <label class="label !pt-0 !pb-1"><span class="label-standard">{{ 'processDetail.actions.filters.actionDateRange' | transloco }}</span></label>
                           <app-date-range-picker [size]="'sm'" formControlName="action_date_range"></app-date-range-picker>
@@ -615,12 +652,11 @@
 
                         <div class="form-control">
                           <label class="label !pt-0 !pb-1"><span class="label-standard">{{ 'processDetail.actions.filters.alertKeyword' | transloco }}</span></label>
-                          <select formControlName="alert_slug" class="select-standard select select-bordered">
-                            <option [ngValue]="null">{{ 'processDetail.actions.filters.alertKeywordPlaceholder' | transloco }}</option>
-                            @for (keyword of alertKeywords(); track keyword.id) {
-                              <option [ngValue]="keyword.slug">{{ keyword.name }}</option>
-                            }
-                          </select>
+                          <app-filter-select
+                            formControlName="alert_slug"
+                            size="sm"
+                            [options]="alertSlugFilterOptions()"
+                          />
                         </div>
 
                         <div class="form-control">
@@ -628,16 +664,28 @@
                           <input type="text" formControlName="search" class="input-standard input input-bordered" [placeholder]="'processDetail.actions.filters.searchPlaceholder' | transloco" />
                         </div>
 
-                      <div class="mt-2 flex justify-end items-center gap-6 border-t border-base-200/50 pt-6 md:col-span-2 lg:col-span-4">
+                        <div class="form-control">
+                          <label class="label !pt-0 !pb-1"><span class="label-standard">{{ 'processDetail.actions.filters.removedFromRama' | transloco }}</span></label>
+                          <app-filter-select
+                            formControlName="removed_from_judicial_branch"
+                            size="sm"
+                            [options]="removedFromRamaFilterOptions()"
+                          />
+                        </div>
+
+                      <div class="mt-2 flex justify-end items-center gap-4 border-t border-base-200/50 pt-4 sm:col-span-2 lg:col-span-4">
                         <button
                           type="button"
-                          class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold"
+                          class="btn btn-link btn-sm normal-case text-base-content/60 no-underline hover:text-base-content font-bold min-h-8 h-8"
                           (click)="onResetActionFilters()"
                         >
                           {{ 'processDetail.actions.filters.reset' | transloco }}
                         </button>
-                        <button type="submit" class="btn-standard-search">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button
+                          type="submit"
+                          class="btn btn-primary btn-sm font-semibold normal-case gap-1.5 px-4 min-h-[2.75rem] h-[2.75rem] rounded-xl shrink-0"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                           {{ 'processDetail.actions.filters.search' | transloco }}
@@ -646,13 +694,14 @@
                       </form>
                     </div>
 
-                    <div class="bg-white border border-base-200 overflow-hidden shadow-sm action-data-container">
+                    <div class="bg-base-100 border border-base-200 shadow-sm action-data-container">
                       <div class="hidden lg:block">
                         <app-data-table
                           [columns]="actionColumns"
                           [data]="actions()"
                           [pagination]="actionsPagination()"
                           [loading]="loadingActions()"
+                          [rowClass]="actionRowClass"
                           [emptyMessage]="'processDetail.actions.empty' | transloco"
                           (pageChange)="onActionsPageChange($event)"
                           (actionClick)="onActionTableAction($event)"
@@ -669,46 +718,100 @@
                         } @else {
                           <div class="divide-y divide-base-200">
                             @for (action of actions(); track action.id; let i = $index) {
-                              <div class="p-4 sm:p-5 hover:bg-base-200/5 transition-colors">
+                              <div
+                                class="p-4 sm:p-5 hover:bg-base-200/5 transition-colors"
+                                [class.process-action-row--removed]="action.removed_from_judicial_branch"
+                              >
                                 <div class="flex items-start gap-4">
                                   <span class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center text-[10px] font-bold text-base-content/40 shrink-0 mt-1">
                                     {{ (actionsPagination()?.from || 0) + i }}
                                   </span>
                                   <div class="min-w-0 flex-1 space-y-3">
-                                    <div class="flex justify-between items-start gap-3">
-                                      <h4 class="text-sm font-bold text-base-content leading-tight">{{ action.action }}</h4>
-                                      <div class="flex items-center gap-1 shrink-0">
-                                        <button
-                                          type="button"
-                                          (click)="openActionDocuments(action)"
-                                          class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-primary font-bold normal-case hover:bg-primary/10"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path
-                                              stroke-linecap="round"
-                                              stroke-linejoin="round"
-                                              stroke-width="2"
-                                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                                            />
-                                          </svg>
-                                          {{ 'processDetail.actions.documentsModal.attach' | transloco }}
-                                          @if (action.documents?.length) {
-                                            <span class="badge badge-primary badge-xs tabular-nums">{{ action.documents!.length }}</span>
+                                    @if (action.removed_from_judicial_branch) {
+                                      <div class="flex flex-wrap items-center gap-2">
+                                        <span class="rama-removed-badge">
+                                          {{ 'processDetail.actions.removedBadge' | transloco }}
+                                        </span>
+                                        @if (action.removed_from_judicial_branch_at) {
+                                          <span class="text-[10px] font-semibold text-base-content/50">{{ action.removed_from_judicial_branch_at }}</span>
+                                        }
+                                      </div>
+                                      @if (action.removed_from_judicial_branch_reason) {
+                                        <p class="text-[11px] text-base-content/50 italic">{{ action.removed_from_judicial_branch_reason }}</p>
+                                      }
+                                      @if (action.notified_consolidados?.length) {
+                                        <div class="text-xs space-y-1 border-t border-dashed border-base-200 pt-2">
+                                          <p class="text-[9px] font-bold uppercase text-base-content/35">{{ 'processDetail.actions.notifiedInDigest' | transloco }}</p>
+                                          @for (entry of action.notified_consolidados!; track entry.notification_digest_id + entry.organization_id) {
+                                            <a
+                                              [routerLink]="['/admin', 'notification-digests']"
+                                              [queryParams]="{ digest: entry.notification_digest_id, digest_organization: entry.organization_id }"
+                                              class="link link-primary font-semibold block"
+                                            >
+                                              {{ entry.organization_name }} · {{ entry.consolidado_date }}
+                                              @if (entry.email_sent_at) {
+                                                <span class="text-base-content/40 font-normal"> ({{ entry.email_sent_at }})</span>
+                                              }
+                                            </a>
                                           }
-                                        </button>
-                                        <button
-                                          type="button"
-                                          (click)="openEditActionDates(action)"
-                                          class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-primary font-bold normal-case hover:bg-primary/10"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                          </svg>
-                                          {{ 'processDetail.actions.datesModal.edit' | transloco }}
-                                        </button>
+                                        </div>
+                                      }
+                                    }
+                                    <div class="flex justify-between items-start gap-3">
+                                      <h4
+                                        class="text-sm font-bold leading-tight"
+                                        [class.text-base-content]="!action.removed_from_judicial_branch"
+                                        [class.text-base-content/45]="action.removed_from_judicial_branch"
+                                      >{{ action.action }}</h4>
+                                      <div class="flex items-center gap-1 shrink-0">
+                                        <details class="dropdown dropdown-end process-action-row-menu">
+                                          <summary
+                                            class="btn btn-ghost btn-xs btn-circle text-base-content/55 hover:text-primary hover:bg-primary/10 list-none [&::-webkit-details-marker]:hidden"
+                                            [attr.aria-label]="'processDetail.actions.table.actionsColumn' | transloco"
+                                            (click)="$event.stopPropagation()"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                              <circle cx="5" cy="12" r="1.75" />
+                                              <circle cx="12" cy="12" r="1.75" />
+                                              <circle cx="19" cy="12" r="1.75" />
+                                            </svg>
+                                          </summary>
+                                          <ul class="dropdown-content menu menu-sm z-[50] mb-1 min-w-[15rem] max-w-[20rem] rounded-xl border border-base-200 bg-base-100 p-1.5 shadow-xl">
+                                            <li>
+                                              <button type="button" class="rounded-lg font-semibold text-sm text-left py-2.5" (click)="openActionDocuments(action)">
+                                                <span class="flex items-center justify-between gap-2 w-full">
+                                                  <span>{{ 'processDetail.actions.table.documents' | transloco }}</span>
+                                                  @if (action.documents?.length) {
+                                                    <span class="badge badge-primary badge-xs tabular-nums">{{ action.documents!.length }}</span>
+                                                  }
+                                                </span>
+                                              </button>
+                                            </li>
+                                            <li>
+                                              <button type="button" class="rounded-lg font-semibold text-sm text-left py-2.5" (click)="openEditActionDates(action)">
+                                                {{ 'processDetail.actions.table.edit' | transloco }}
+                                              </button>
+                                            </li>
+                                            @if (!action.removed_from_judicial_branch) {
+                                              <li>
+                                                <button type="button" class="rounded-lg font-semibold text-sm text-left py-2.5 process-action-menu-item--mark-removed" (click)="openMarkRemovedModal(action)">
+                                                  {{ 'processDetail.actions.table.markRemoved' | transloco }}
+                                                </button>
+                                              </li>
+                                            }
+                                          </ul>
+                                        </details>
                                       </div>
                                     </div>
-                                    <p class="text-xs font-medium text-base-content/80 leading-relaxed italic border-l-3 border-primary/20 pl-4 bg-base-200/20 py-2 rounded-r-lg">
+                                    <p
+                                      class="text-xs font-medium leading-relaxed italic border-l-3 pl-4 py-2 rounded-r-lg"
+                                      [class.text-base-content/80]="!action.removed_from_judicial_branch"
+                                      [class.text-base-content/40]="action.removed_from_judicial_branch"
+                                      [class.border-primary/20]="!action.removed_from_judicial_branch"
+                                      [class.bg-base-200/20]="!action.removed_from_judicial_branch"
+                                      [class.border-base-300/50]="action.removed_from_judicial_branch"
+                                      [class.bg-base-200/40]="action.removed_from_judicial_branch"
+                                    >
                                       {{ action.annotation || 'Sin anotación' }}
                                     </p>
                                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 border-t border-dashed border-base-200">
@@ -752,11 +855,14 @@
                                   >Siguiente</button>
                                 </div>
                               </div>
-                              <select class="select select-bordered select-xs w-full font-bold text-base-content/60" (change)="onActionsPageChange({ page: 1, perPage: +$any($event.target).value })">
-                                @for (size of [10, 20, 50]; track size) {
-                                  <option [value]="size" [selected]="pagination.per_page === size">{{ size }} por página</option>
-                                }
-                              </select>
+                              <app-filter-select
+                                class="admin-page-size-select w-full"
+                                size="sm"
+                                placement="up"
+                                [options]="actionsPerPageOptions()"
+                                [ngModel]="pagination.per_page + ''"
+                                (ngModelChange)="onActionsPageChange({ page: 1, perPage: +$event })"
+                              />
                             </div>
                           }
                         }
@@ -796,33 +902,31 @@
     <ng-template #instanceCard let-instance>
       <div
         (click)="onSelectInstance(instance.id)"
-        class="w-full text-left rounded-xl border p-5 transition-all active:scale-[0.98] cursor-pointer relative group"
-        [class.bg-primary/[0.03]]="isSelectedInstance(instance.id)"
-        [class.border-primary/40]="isSelectedInstance(instance.id)"
-        [class.bg-base-100]="!isSelectedInstance(instance.id)"
-        [class.border-base-200]="!isSelectedInstance(instance.id)"
-        [class.hover:border-primary/20]="!isSelectedInstance(instance.id)"
-        [class.shadow-sm]="!isSelectedInstance(instance.id)"
-        [class.shadow-md]="isSelectedInstance(instance.id)"
-        [class.shadow-primary/5]="isSelectedInstance(instance.id)"
+        class="instance-card w-full text-left rounded-xl border p-5 transition-all active:scale-[0.98] cursor-pointer relative group"
+        [class.instance-card--selected]="isSelectedInstance(instance.id)"
+        role="radio"
+        [attr.aria-checked]="isSelectedInstance(instance.id)"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-4 mb-4">
               <div
-                class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl transition-all shrink-0"
-                [class]="isSelectedInstance(instance.id) ? 'bg-primary text-white shadow-md' : 'bg-base-200 text-base-content/30 group-hover:text-primary'"
+                class="instance-card__avatar w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl transition-all shrink-0"
+                [class.instance-card__avatar--selected]="isSelectedInstance(instance.id)"
               >
                 {{ (instance.court || '-').charAt(0).toUpperCase() }}
               </div>
               <div class="min-w-0 flex-1">
-                <p class="font-bold text-base text-base-content leading-tight transition-colors" [class.text-primary]="isSelectedInstance(instance.id)">
+                <p
+                  class="instance-card__title font-bold text-base leading-tight transition-colors"
+                  [class.instance-card__title--selected]="isSelectedInstance(instance.id)"
+                >
                   {{ instance.court }}
                 </p>
                 <span
                   *ngIf="isSelectedInstance(instance.id)"
-                  class="text-[9px] font-bold uppercase tracking-[0.1em] text-primary mt-1.5 inline-block"
-                  >SELECCIONADA</span
+                  class="instance-card__selected-label"
+                  >{{ 'processDetail.instances.selected' | transloco }}</span
                 >
               </div>
             </div>
@@ -895,24 +999,28 @@
                 </div>
               }
 
-              <span [class]="'badge badge-sm font-bold uppercase rounded py-1.5 ' + getStatusClass(instance.status_label)">
-                {{ instance.status_label }}
+              <span [class]="'badge badge-sm font-bold rounded py-1.5 ' + getStatusClass(instance.status_label)">
+                {{ instance.status_label | badgeLabel }}
               </span>
             </div>
 
             @if (instance.lawyer_role) {
-              <span class="badge badge-primary badge-outline font-extrabold text-[9px] uppercase tracking-widest px-3 h-5">
-                {{ getRoleLabel(instance.lawyer_role) }}
+              <span class="badge badge-primary badge-outline font-extrabold text-[9px] tracking-wide px-3 h-5 normal-case">
+                {{ getRoleLabel(instance.lawyer_role) | badgeLabel }}
               </span>
             }
 
-            @if (isSelectedInstance(instance.id)) {
-              <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 mt-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div
+              class="instance-card__marker mt-auto"
+              [class.instance-card__marker--selected]="isSelectedInstance(instance.id)"
+              aria-hidden="true"
+            >
+              @if (isSelectedInstance(instance.id)) {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                 </svg>
-              </div>
-            }
+              }
+            </div>
           </div>
         </div>
       </div>
@@ -927,7 +1035,7 @@
             <span [class]="getSubjectSourceBadgeClass(subject)">{{ getSubjectSourceLabelKey(subject) | transloco }}</span>
           </div>
           @if (subject.subject_type) {
-            <p class="text-[10px] font-medium text-base-content/45">{{ subject.subject_type }}</p>
+            <p class="detail-subject-role">{{ subject.subject_type }}</p>
           }
           @if (subject.identification) {
             <p class="text-[10px] font-medium text-base-content/35 mt-0.5">{{ subject.identification }}</p>
@@ -937,7 +1045,7 @@
           <button
             type="button"
             (click)="openEditSubjectModal(subject)"
-            class="btn btn-ghost btn-xs h-7 min-h-7 px-2 text-primary font-bold normal-case opacity-60 group-hover/subject:opacity-100 hover:bg-primary/10"
+            class="btn btn-xs h-7 min-h-7 px-3 font-bold normal-case detail-section-action-btn"
           >
             {{ 'processDetail.subjects.editSubject' | transloco }}
           </button>
@@ -960,10 +1068,13 @@
     </ng-template>
 
     <ng-template #infoItem let-label="label" let-value="value" let-strong="strong" let-isCopyable="isCopyable" let-originalValue="originalValue">
-      <div class="p-4 bg-base-200/20 border border-base-200/50 rounded-xl hover:bg-white hover:border-primary/10 transition-all h-full group/item relative cursor-default">
-        <span class="block text-[9px] uppercase font-bold text-base-content/30 tracking-wider mb-1">{{ label | transloco }}</span>
+      <div class="detail-info-tile p-4 rounded-xl h-full group/item relative cursor-default">
+        <span class="detail-info-tile__label block text-[9px] uppercase font-bold tracking-wider mb-1">{{ label | transloco }}</span>
         <div class="flex items-center justify-between gap-2">
-          <p class="text-sm font-semibold text-base-content leading-snug break-words flex-1" [class.text-primary]="strong">
+          <p
+            class="detail-info-tile__value text-sm font-semibold leading-snug break-words flex-1"
+            [class.detail-info-tile__value--accent]="strong"
+          >
             {{ value || '–' }}
           </p>
           @if (isCopyable && (originalValue || value) && value !== '–') {
@@ -981,7 +1092,7 @@
       </div>
     </ng-template>
 
-    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showSubjectModal()">
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showSubjectModal()" (cancel)="$event.preventDefault(); closeSubjectModal()">
       @if (showSubjectModal() && process()) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-lg">
           <app-subject-form-modal
@@ -997,7 +1108,7 @@
       </form>
     </dialog>
 
-    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showAddOrganizationsModal()">
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showAddOrganizationsModal()" (cancel)="$event.preventDefault(); closeAddOrganizationsModal()">
       @if (showAddOrganizationsModal() && process()) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-xl">
           <app-add-process-organizations-modal
@@ -1013,7 +1124,7 @@
       </form>
     </dialog>
 
-    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showGeneralInfoModal()">
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showGeneralInfoModal()" (cancel)="$event.preventDefault(); closeGeneralInfoModal()">
       @if (showGeneralInfoModal() && process()) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-2xl">
           <app-process-general-info-modal
@@ -1028,7 +1139,7 @@
       </form>
     </dialog>
 
-    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showActionDatesModal()">
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showActionDatesModal()" (cancel)="$event.preventDefault(); closeActionDatesModal()">
       @if (showActionDatesModal() && process() && selectedActionForEdit(); as action) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-xl">
           <app-action-dates-modal
@@ -1044,10 +1155,21 @@
       </form>
     </dialog>
 
+    @if (showMarkRemovedModal() && process() && selectedActionForMarkRemoved(); as markAction) {
+      <app-mark-action-removed-modal
+        [open]="showMarkRemovedModal()"
+        [processId]="process()!.id"
+        [action]="markAction"
+        (closed)="closeMarkRemovedModal()"
+        (saved)="onMarkRemovedSaved($event)"
+      ></app-mark-action-removed-modal>
+    }
+
     <dialog
       class="modal modal-bottom sm:modal-middle action-documents-dialog"
       [class.modal-open]="showActionDocumentsModal()"
       [class.action-documents-dialog--viewer]="actionDocumentsViewerOpen()"
+      (cancel)="$event.preventDefault(); onActionDocumentsModalCancel()"
     >
       @if (showActionDocumentsModal() && process() && selectedActionForDocuments(); as action) {
         <div
@@ -1076,7 +1198,7 @@
       </form>
     </dialog>
 
-    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showOrganizationRoleModal()">
+    <dialog class="modal modal-bottom sm:modal-middle" [class.modal-open]="showOrganizationRoleModal()" (cancel)="$event.preventDefault(); closeOrganizationRoleModal()">
       @if (showOrganizationRoleModal() && process() && selectedOrganizationForRole(); as org) {
         <div class="modal-box p-0 bg-transparent shadow-none border-none max-w-lg">
           <app-role-selection-modal

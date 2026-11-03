@@ -35,8 +35,9 @@
     <div class="hidden lg:flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
       <button
         type="button"
-        class="hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border"
-        [ngClass]="showFilters() ? 'bg-primary/10 text-primary border-primary/30 shadow-sm' : 'btn-ghost border-transparent text-base-content/80 hover:bg-base-200'"
+        class="admin-filters-toggle hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"
+        [class.admin-filters-toggle--active]="showFilters()"
+        [class.admin-filters-toggle--idle]="!showFilters()"
         (click)="toggleFilters()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -144,6 +145,43 @@
     </button>
   </div>
 
+  @if (appliedOrganizationFilterId(); as orgFilterId) {
+    <div
+      class="processes-org-filter-context flex flex-col gap-2 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      role="status"
+      [attr.aria-label]="'processes.filters.organizationActiveAria' | transloco: { name: appliedOrganizationFilterLabel() }"
+    >
+      <div class="flex min-w-0 flex-1 items-start gap-3">
+        <div
+          class="processes-org-filter-context__icon mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"
+          aria-hidden="true"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[10px] font-black uppercase tracking-widest text-base-content/45">
+            {{ 'processes.filters.organizationActiveLabel' | transloco }}
+          </p>
+          <p class="processes-org-filter-context__name mt-0.5 truncate text-base font-bold text-base-content sm:text-lg">
+            {{ appliedOrganizationFilterLabel() }}
+          </p>
+          <p class="mt-1 text-xs leading-relaxed text-base-content/60">
+            {{ 'processes.filters.organizationActiveHint' | transloco }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost self-start border border-base-300/80 sm:self-center"
+        (click)="clearOrganizationFilter()"
+      >
+        {{ 'processes.filters.clearOrganization' | transloco }}
+      </button>
+    </div>
+  }
+
   <!-- KPI Cards -->
   @if (dashboardStatsLoading()) {
     <div class="card border-0 bg-base-100 shadow-md">
@@ -156,7 +194,7 @@
     </div>
   } @else if (dashboardStats(); as stats) {
     @let healthTone = getSyncHealthTone(stats);
-    <div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-12">
+    <div class="processes-kpi-section grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-12">
       <!-- Volumen y estado operativo -->
       <div
         class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] md:col-span-2 xl:col-span-5 rounded-2xl sm:rounded-3xl"
@@ -164,11 +202,11 @@
         <div class="card-body gap-3 p-4 sm:gap-4 sm:p-6">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <p class="text-xs font-semibold tracking-wide uppercase text-primary/80">
+              <p class="processes-kpi-operational-title text-xs font-semibold tracking-wide uppercase text-primary/80">
                 {{ 'processes.kpi.operational.title' | transloco }}
               </p>
-              <h3 class="mt-2 text-3xl font-bold text-primary sm:text-4xl">{{ stats.total_processes }}</h3>
-              <p class="mt-1 text-sm text-base-content/70">{{ 'processes.kpi.operational.subtitle' | transloco }}</p>
+              <h3 class="processes-kpi-operational-value mt-2 text-3xl font-bold text-primary sm:text-4xl">{{ stats.total_processes }}</h3>
+              <p class="processes-kpi-operational-subtitle mt-1 text-sm text-base-content/70">{{ 'processes.kpi.operational.subtitle' | transloco }}</p>
             </div>
             <div class="kpi-icon-box bg-primary/10 text-primary" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -216,11 +254,11 @@
               </p>
             </div>
             <div
-              class="rounded-xl border border-primary/15 bg-primary/10 p-3"
+              class="processes-kpi-private-box rounded-xl border border-primary/15 bg-primary/10 p-3"
               [attr.title]="'processes.kpi.operational.privateProcessesHint' | transloco"
             >
-              <p class="text-xs font-medium text-primary/85">{{ 'processes.kpi.operational.privateProcesses' | transloco }}</p>
-              <p class="mt-1 text-2xl font-bold text-primary">{{ stats.private_processes ?? 0 }}</p>
+              <p class="processes-kpi-private-label text-xs font-medium text-primary/85">{{ 'processes.kpi.operational.privateProcesses' | transloco }}</p>
+              <p class="processes-kpi-private-value mt-1 text-2xl font-bold text-primary">{{ stats.private_processes ?? 0 }}</p>
             </div>
           </div>
         </div>
@@ -228,13 +266,13 @@
 
       <!-- Alerta crítica -->
       <div
-        class="card overflow-hidden border-0 bg-error/[0.09] shadow-[0_8px_28px_-8px_rgba(220,38,38,0.22)] md:col-span-1 xl:col-span-2 rounded-2xl sm:rounded-3xl"
+        class="processes-kpi-critical card overflow-hidden border-0 bg-error/[0.09] shadow-[0_8px_28px_-8px_rgba(220,38,38,0.22)] md:col-span-1 xl:col-span-2 rounded-2xl sm:rounded-3xl"
       >
         <div class="card-body gap-2 p-4 sm:p-6">
           <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-error"></span>
-              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+              <p class="processes-kpi-muted-title text-xs font-semibold tracking-wide uppercase text-base-content/75">
                 {{ 'processes.kpi.critical.title' | transloco }}
               </p>
             </div>
@@ -245,7 +283,7 @@
             </div>
           </div>
           <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.critical_alert_processes }}</p>
-          <p class="text-xs text-base-content/60">{{ 'processes.kpi.critical.subtitle' | transloco }}</p>
+          <p class="processes-kpi-muted-subtitle text-xs text-base-content/60">{{ 'processes.kpi.critical.subtitle' | transloco }}</p>
         </div>
       </div>
 
@@ -257,7 +295,7 @@
           <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-warning"></span>
-              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+              <p class="processes-kpi-muted-title text-xs font-semibold tracking-wide uppercase text-base-content/75">
                 {{ 'processes.kpi.early.title' | transloco }}
               </p>
             </div>
@@ -268,19 +306,19 @@
             </div>
           </div>
           <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.early_attention_processes }}</p>
-          <p class="text-xs text-base-content/60">{{ 'processes.kpi.early.subtitle' | transloco }}</p>
+          <p class="processes-kpi-muted-subtitle text-xs text-base-content/60">{{ 'processes.kpi.early.subtitle' | transloco }}</p>
         </div>
       </div>
 
       <!-- Doble instancia: secondary (morado marca) para distinguir sin romper semántica error/warning -->
       <div
-        class="card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] md:col-span-2 xl:col-span-3 rounded-2xl sm:rounded-3xl"
+        class="processes-kpi-instances card border-0 bg-base-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.07)] md:col-span-2 xl:col-span-3 rounded-2xl sm:rounded-3xl"
       >
         <div class="card-body gap-2 p-4 sm:p-6">
           <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-secondary"></span>
-              <p class="text-xs font-semibold tracking-wide uppercase text-base-content/75">
+              <p class="processes-kpi-muted-title text-xs font-semibold tracking-wide uppercase text-base-content/75">
                 {{ 'processes.kpi.instances.title' | transloco }}
               </p>
             </div>
@@ -296,7 +334,7 @@
             </div>
           </div>
           <p class="mt-1 text-2xl font-bold text-base-content sm:text-3xl">{{ stats.processes_with_multiple_instances }}</p>
-          <p class="text-xs text-base-content/60">{{ 'processes.kpi.instances.subtitle' | transloco }}</p>
+          <p class="processes-kpi-muted-subtitle text-xs text-base-content/60">{{ 'processes.kpi.instances.subtitle' | transloco }}</p>
         </div>
       </div>
     </div>
@@ -365,7 +403,7 @@
     <div class="card-body">
       <h2 class="card-title text-lg mb-4">{{ 'processes.filters.title' | transloco }}</h2>
       <form [formGroup]="filterForm" class="flex flex-col gap-5" autocomplete="off" (ngSubmit)="onSearch()">
-        <!-- Campos de texto y selects: rejilla estable (8 celdas → 4+4 en xl) -->
+        <!-- Una sola rejilla (4 cols en lg) para que el orden fluya sin filas huérfanas -->
         <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <!-- Row 1: Process Number, Court, Process Class, Plaintiff -->
         <!-- Process Number Filter -->
@@ -427,7 +465,6 @@
           />
         </div>
 
-        <!-- Row 2: Defendant, Organization, Status, Has Multiple Instances -->
         <!-- Defendant Filter -->
         <div class="form-control min-w-0">
           <label class="label">
@@ -442,10 +479,26 @@
           />
         </div>
 
-        <!-- Organization Filter -->
+        <!-- Organization (exact) -->
         <div class="form-control min-w-0">
           <label class="label">
             <span class="label-text">{{ 'processes.filters.organization' | transloco }}</span>
+          </label>
+          <app-searchable-select
+            [value]="filterForm.value.organization_id ?? ''"
+            (valueChange)="onOrganizationIdFilter($event)"
+            [options]="filterOrganizationOptions()"
+            [placeholder]="'processes.filters.organizationSelectPlaceholder' | transloco"
+            [searchPlaceholder]="'processes.filters.organizationSearch' | transloco"
+            [noResultsText]="'processes.filters.organizationEmpty' | transloco"
+            [loading]="importOrganizationsLoading()"
+          />
+        </div>
+
+        <!-- Organization name (partial) -->
+        <div class="form-control min-w-0">
+          <label class="label">
+            <span class="label-text">{{ 'processes.filters.organizationName' | transloco }}</span>
           </label>
           <input
             type="text"
@@ -461,14 +514,12 @@
           <label class="label">
             <span class="label-text">{{ 'processes.filters.status' | transloco }}</span>
           </label>
-          <select
+          <app-filter-select
             formControlName="status"
-            class="select select-bordered select-sm w-full"
-          >
-            <option value="">{{ 'processes.filters.statusPlaceholder' | transloco }}</option>
-            <option value="active">{{ 'processes.filters.statusActive' | transloco }}</option>
-            <option value="inactive">{{ 'processes.filters.statusInactive' | transloco }}</option>
-          </select>
+            size="sm"
+            [options]="statusFilterOptions()"
+            [placeholder]="'processes.filters.statusPlaceholder' | transloco"
+          />
         </div>
 
         <!-- Has Multiple Instances Filter -->
@@ -476,19 +527,14 @@
           <label class="label">
             <span class="label-text">{{ 'processes.filters.hasMultipleInstances' | transloco }}</span>
           </label>
-          <select
+          <app-filter-select
             formControlName="has_multiple_instances"
-            class="select select-bordered select-sm w-full"
-          >
-            <option [value]="null">{{ 'processes.filters.all' | transloco }}</option>
-            <option [value]="true">{{ 'processes.filters.yes' | transloco }}</option>
-            <option [value]="false">{{ 'processes.filters.no' | transloco }}</option>
-          </select>
-        </div>
+            size="sm"
+            [options]="multipleInstancesFilterOptions()"
+            [placeholder]="'processes.filters.all' | transloco"
+          />
         </div>
 
-        <!-- Fechas + privacidad: fila aparte (evita solapamientos con lg:grid-cols-3 y etiquetas largas) -->
-        <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <!-- Process Date Range Filter (Fecha de Radicación) -->
         <div class="form-control min-w-0">
           <app-date-range-picker
@@ -524,21 +570,36 @@
           <label class="label py-0">
             <span class="label-text leading-snug break-words">{{ 'processes.filters.privacy' | transloco }}</span>
           </label>
-          <select formControlName="privacy" class="select select-bordered select-sm w-full max-w-full">
-            <option value="">{{ 'processes.filters.privacyPlaceholder' | transloco }}</option>
-            <option value="private">{{ 'processes.filters.privacyPrivate' | transloco }}</option>
-            <option value="public">{{ 'processes.filters.privacyPublic' | transloco }}</option>
-          </select>
+          <app-filter-select
+            formControlName="privacy"
+            size="sm"
+            [options]="privacyFilterOptions()"
+            [placeholder]="'processes.filters.privacyPlaceholder' | transloco"
+          />
         </div>
 
         <div class="form-control min-w-0">
           <label class="label py-0">
             <span class="label-text leading-snug break-words">{{ 'processes.filters.altaManual' | transloco }}</span>
           </label>
-          <select formControlName="alta_manual" class="select select-bordered select-sm w-full max-w-full">
-            <option value="">{{ 'processes.filters.all' | transloco }}</option>
-            <option value="1">{{ 'processes.filters.yes' | transloco }}</option>
-          </select>
+          <app-filter-select
+            formControlName="alta_manual"
+            size="sm"
+            [options]="altaManualFilterOptions()"
+            [placeholder]="'processes.filters.all' | transloco"
+          />
+        </div>
+
+        <div class="form-control min-w-0">
+          <label class="label py-0">
+            <span class="label-text leading-snug break-words">{{ 'processes.filters.removedFromRama' | transloco }}</span>
+          </label>
+          <app-filter-select
+            formControlName="removed_from_judicial_branch"
+            size="sm"
+            [options]="removedFromRamaFilterOptions()"
+            [placeholder]="'processes.filters.removedFromRamaAll' | transloco"
+          />
         </div>
         </div>
 
@@ -741,7 +802,7 @@
                           "
                         >
                           <span
-                            class="badge badge-outline badge-primary badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
+                            class="badge process-origin-private-badge badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
                           >
                             {{ 'processes.table.originPrivate' | transloco }}
                           </span>
@@ -749,7 +810,7 @@
                       }
                       @if (process.is_private !== true) {
                         <span
-                          class="badge badge-ghost badge-sm border border-base-200 font-semibold uppercase text-[0.6rem] leading-tight text-base-content/75"
+                          class="badge process-origin-judicial-badge badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
                         >
                           {{ 'processes.table.originJudicial' | transloco }}
                         </span>
@@ -801,7 +862,7 @@
                       @if (orgM.extraCount > 0) {
                         <button
                           type="button"
-                          class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                          class="process-party-extra-count inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
                           [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
                           (click)="openPartyListSheet('organization', orgM.fullList, process.process_number, $event)"
                         >
@@ -829,7 +890,7 @@
                         @if (pM.extraCount > 0) {
                           <button
                             type="button"
-                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            class="process-party-extra-count inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
                             [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
                             (click)="openPartyListSheet('plaintiff', pM.fullList, process.process_number, $event)"
                           >
@@ -845,7 +906,7 @@
                         @if (dM.extraCount > 0) {
                           <button
                             type="button"
-                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            class="process-party-extra-count inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
                             [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
                             (click)="openPartyListSheet('defendant', dM.fullList, process.process_number, $event)"
                           >
@@ -861,7 +922,7 @@
                         @if (oM.extraCount > 0) {
                           <button
                             type="button"
-                            class="inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
+                            class="process-party-extra-count inline p-0 align-baseline text-primary font-bold underline decoration-primary/50 decoration-dotted underline-offset-2 bg-transparent border-0 cursor-pointer text-inherit"
                             [attr.aria-label]="'processes.partyList.showAllHint' | transloco"
                             (click)="openPartyListSheet('other', oM.fullList, process.process_number, $event)"
                           >
@@ -954,7 +1015,7 @@
                                   "
                                 >
                                   <span
-                                    class="badge badge-outline badge-primary badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
+                                    class="badge process-origin-private-badge badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
                                   >
                                     {{ 'processes.table.originPrivate' | transloco }}
                                   </span>
@@ -962,7 +1023,7 @@
                               }
                               @if (instance.is_private !== true) {
                                 <span
-                                  class="badge badge-ghost badge-sm border border-base-200 font-semibold uppercase text-[0.6rem] leading-tight text-base-content/75"
+                                  class="badge process-origin-judicial-badge badge-sm font-semibold uppercase text-[0.6rem] leading-tight"
                                 >
                                   {{ 'processes.table.originJudicial' | transloco }}
                                 </span>
@@ -1117,7 +1178,7 @@
                         "
                       >
                         <span
-                          class="badge badge-outline badge-primary whitespace-nowrap text-[10px] font-bold uppercase leading-tight"
+                          class="badge process-origin-private-badge whitespace-nowrap text-[10px] font-bold uppercase leading-tight"
                         >
                           {{ 'processes.table.originPrivate' | transloco }}
                         </span>
@@ -1125,7 +1186,7 @@
                     }
                     @if (process.is_private !== true) {
                       <span
-                        class="badge badge-ghost whitespace-nowrap border border-base-200 text-[10px] font-semibold uppercase leading-tight text-base-content/80"
+                        class="badge process-origin-judicial-badge whitespace-nowrap text-[10px] font-semibold uppercase leading-tight"
                       >
                         {{ 'processes.table.originJudicial' | transloco }}
                       </span>
@@ -1156,7 +1217,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                            <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ plaintiffDisplay.extraCount }})
                             </span>
                           </span>
@@ -1178,7 +1239,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                            <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ defendantDisplay.extraCount }})
                             </span>
                           </span>
@@ -1200,7 +1261,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                            <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ othersDisplay.extraCount }})
                             </span>
                           </span>
@@ -1222,7 +1283,7 @@
                                 <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                               }
                             </div>
-                            <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                            <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                               (+{{ orgDisplay.extraCount }})
                             </span>
                           </span>
@@ -1301,7 +1362,7 @@
                             "
                           >
                             <span
-                              class="badge badge-outline badge-primary badge-sm whitespace-nowrap text-[10px] font-bold uppercase leading-tight"
+                              class="badge process-origin-private-badge badge-sm whitespace-nowrap text-[10px] font-bold uppercase leading-tight"
                             >
                               {{ 'processes.table.originPrivate' | transloco }}
                             </span>
@@ -1309,7 +1370,7 @@
                         }
                         @if (instance.is_private !== true) {
                           <span
-                            class="badge badge-ghost badge-sm whitespace-nowrap border border-base-200 text-[10px] font-semibold uppercase leading-tight text-base-content/80"
+                            class="badge process-origin-judicial-badge badge-sm whitespace-nowrap text-[10px] font-semibold uppercase leading-tight"
                           >
                             {{ 'processes.table.originJudicial' | transloco }}
                           </span>
@@ -1340,7 +1401,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instPlaint.extraCount }})
                                 </span>
                               </span>
@@ -1362,7 +1423,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instDef.extraCount }})
                                 </span>
                               </span>
@@ -1384,7 +1445,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instOthers.extraCount }})
                                 </span>
                               </span>
@@ -1406,7 +1467,7 @@
                                     <div class="text-base-content">{{ i + 1 }}. {{ name }}</div>
                                   }
                                 </div>
-                                <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
+                                <span class="process-party-extra-count text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ instOrg.extraCount }})
                                 </span>
                               </span>
@@ -1429,8 +1490,8 @@
 
         <!-- Pagination: izquierda = resultados, centro = numeración, derecha = por página -->
         @if (pagination(); as paginationInfo) {
-          <div class="processes-pagination border-t border-base-300 bg-base-100 shrink-0">
-            <div class="processes-pagination__results">
+          <div class="processes-pagination admin-table-pagination admin-table-pagination--inset border-t border-base-300 bg-base-100 shrink-0">
+            <div class="processes-pagination__results admin-table-pagination__results">
               {{ 'table.showing' | transloco }}
               <span class="font-semibold">{{ getShowingRange().from }}</span>
               {{ 'table.to' | transloco }}
@@ -1439,7 +1500,7 @@
               <span class="font-semibold">{{ paginationInfo.total }}</span>
               {{ 'table.results' | transloco }}
             </div>
-            <div class="processes-pagination__controls join">
+            <div class="processes-pagination__controls admin-table-pagination__controls join">
               <button
                 class="join-item btn btn-sm"
                 [class.btn-disabled]="paginationInfo.current_page === 1"
@@ -1474,18 +1535,15 @@
                 [disabled]="paginationInfo.current_page === paginationInfo.last_page"
               >»»</button>
             </div>
-            <div class="processes-pagination__per-page">
-              <select
-                class="select select-bordered select-sm"
-                [value]="paginationInfo.per_page"
-                (change)="onPageChangeFromTable(1, +$any($event.target).value)"
-              >
-                @for (size of pageSizeOptions; track size) {
-                  <option [value]="size" [attr.selected]="size === paginationInfo.per_page ? '' : null">
-                    {{ size }} {{ 'table.perPage' | transloco }}
-                  </option>
-                }
-              </select>
+            <div class="processes-pagination__per-page admin-table-pagination__per-page">
+              <app-filter-select
+                class="processes-pagination__page-size-select"
+                size="sm"
+                placement="up"
+                [options]="perPageSelectOptions"
+                [ngModel]="paginationInfo.per_page + ''"
+                (ngModelChange)="onPageChangeFromTable(1, +$event)"
+              />
             </div>
           </div>
         }

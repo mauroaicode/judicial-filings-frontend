@@ -1,4 +1,8 @@
-<dialog class="modal confirmation-dialog-modal" [class.modal-open]="open()">
+<dialog
+  class="modal confirmation-dialog-modal"
+  [class.modal-open]="open()"
+  (cancel)="$event.preventDefault(); onCancel()"
+>
   <div class="modal-box confirmation-dialog-modal__box max-w-xl">
     <h3 class="font-bold text-lg text-base-content pr-9">{{ title() }}</h3>
 

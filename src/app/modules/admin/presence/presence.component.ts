@@ -36,6 +36,11 @@ import {
   DateRange,
   DateRangePickerComponent,
 } from '@app/shared/components/date-range-picker/date-range-picker.component';
+import {
+  FilterSelectComponent,
+  FilterSelectOption,
+} from '@app/shared/components/filter-select/filter-select.component';
+import { buildPerPageSelectOptions } from '@app/shared/utils/filter-select-options.util';
 
 const APP_USERS_ONLINE = 'app-users.online';
 const ADMIN_PRESENCE = 'admin.presence';
@@ -80,6 +85,7 @@ function isAdminMember(member: PresenceChannelMember | null | undefined): boolea
     SearchableSelectComponent,
     DatePickerComponent,
     DateRangePickerComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './presence.component.html',
   styleUrl: './presence.component.scss',
@@ -104,6 +110,10 @@ export class PresenceComponent {
   private _summaryRequest = 0;
 
   readonly pageSizeOptions = [10, 20, 50, 100] as const;
+
+  get perPageSelectOptions(): FilterSelectOption[] {
+    return buildPerPageSelectOptions(this.pageSizeOptions, this._transloco.translate('table.perPage'));
+  }
 
   organizationId = signal('');
   organizationsLoading = signal(true);

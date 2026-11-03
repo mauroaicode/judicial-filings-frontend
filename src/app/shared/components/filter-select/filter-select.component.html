@@ -1,0 +1,73 @@
+<div
+  class="filter-select relative w-full"
+  [class.filter-select--open]="isOpen()"
+  [class.filter-select--sm]="size() === 'sm'"
+>
+  <button
+    type="button"
+    class="filter-select__trigger w-full flex cursor-pointer items-center justify-between gap-2 text-left text-sm font-semibold normal-case disabled:cursor-not-allowed disabled:opacity-50"
+    [disabled]="isDisabled()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="listbox"
+    (click)="onTriggerClick($event)"
+  >
+    <span class="filter-select__value min-h-[1.25rem] flex-1 truncate">
+      @if (selectedLabel()) {
+        {{ selectedLabel() }}
+      } @else {
+        <span class="filter-select__placeholder opacity-60">{{ placeholder() }}</span>
+      }
+    </span>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="filter-select__chevron h-4 w-4 shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  @if (isOpen() && !isDisabled()) {
+    <div
+      class="filter-select__panel absolute left-0 z-[900] w-full min-w-full overflow-hidden rounded-xl border shadow-xl"
+      [class.filter-select__panel--drop-up]="dropUp()"
+      [class.filter-select__panel--drop-down]="!dropUp()"
+      role="listbox"
+      (click)="$event.stopPropagation()"
+    >
+      <ul class="filter-select__list menu menu-sm max-h-64 w-full overflow-y-auto p-1.5">
+        @for (opt of options(); track opt.id) {
+          <li class="w-full">
+            <button
+              type="button"
+              class="filter-select__option w-full rounded-lg font-semibold"
+              [class.filter-select__option--selected]="isSelected(opt)"
+              role="option"
+              [attr.aria-selected]="isSelected(opt)"
+              (click)="selectOption(opt)"
+            >
+              @if (isSelected(opt)) {
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0 opacity-90"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+              } @else {
+                <span class="inline-block h-4 w-4 shrink-0" aria-hidden="true"></span>
+              }
+              <span class="truncate">{{ opt.label }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>

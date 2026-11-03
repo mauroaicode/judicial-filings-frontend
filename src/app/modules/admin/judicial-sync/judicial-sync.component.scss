@@ -100,3 +100,12 @@
     color: #fff;
   }
 }
+
+.judicial-sync-processes-queued-number {
+  color: var(--color-brand-primary, #4b2a7d);
+  -webkit-text-fill-color: var(--color-brand-primary, #4b2a7d);
+}
+
+.judicial-sync-run-stat--queued {
+  box-shadow: 0 1px 2px rgba(75, 42, 125, 0.06);
+}

@@ -5,7 +5,7 @@ import { environment } from '@app/core/config/environment.config';
 import { AppNotification, NotificationResponse, UnreadCountResponse } from '@app/core/models/notification/notification.model';
 import { ManualRegistrationService } from '@app/core/services/process/manual-registration.service';
 import { ProcessExportService } from '@app/core/services/process/process-export.service';
-import { normalizeNotificationBusinessType } from '@app/core/constants/notification-navigation.constant';
+import { normalizeNotificationBusinessType, isProcessExportFinishedNotification } from '@app/core/constants/notification-navigation.constant';
 
 @Injectable({
     providedIn: 'root'
@@ -194,8 +194,13 @@ export class NotificationService {
             this._manualRegistrationService.refreshPendingCount();
             this._manualRegistrationService.notifyQueueUpdated();
         }
-        if (normalizedType === 'process-export-finished') {
-            this._processExportService.notifyHistoryUpdated();
+        const exportFinished = isProcessExportFinishedNotification(businessType, {
+            exportId: exportId || resourceId,
+            status: String(inner.status ?? payload?.status ?? ''),
+            downloadable,
+        });
+        if (exportFinished) {
+            this._processExportService.notifyHistoryUpdated(exportId || resourceId || null);
         }
     }
 }

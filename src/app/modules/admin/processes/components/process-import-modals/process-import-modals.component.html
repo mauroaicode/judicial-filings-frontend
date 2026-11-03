@@ -85,19 +85,14 @@
           <label class="label">
             <span class="label-text">{{ 'processes.import.dataSourceLabel' | transloco }}</span>
           </label>
-          <select
-            class="select select-bordered w-full min-h-12"
-            [value]="importDataSourceSlug()"
+          <app-filter-select
+            size="md"
             [disabled]="importSubmitting() || importDataSourcesLoading()"
-            (change)="importDataSourceSlug.set($any($event.target).value)"
-          >
-            <option value="" disabled>
-              {{ 'processes.import.dataSourcePlaceholder' | transloco }}
-            </option>
-            @for (opt of importDataSourceOptions(); track opt.id) {
-              <option [value]="opt.id">{{ opt.label }}</option>
-            }
-          </select>
+            [placeholder]="'processes.import.dataSourcePlaceholder' | transloco"
+            [options]="importDataSourceOptions()"
+            [ngModel]="importDataSourceSlug()"
+            (ngModelChange)="importDataSourceSlug.set($event)"
+          />
         </div>
 
         <app-file-drop-zone

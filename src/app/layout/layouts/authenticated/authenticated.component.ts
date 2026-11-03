@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   inject,
   signal,
   ViewChild,
@@ -20,6 +21,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { SidebarComponent } from '@app/layout/common/sidebar/sidebar.component';
 import { HeaderComponent } from '@app/layout/common/header/header.component';
 import { NotificationsComponent } from '@app/layout/common/notifications/notifications.component';
+import { JudicialSyncLiveService } from '@app/core/services/judicial-sync/judicial-sync-live.service';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -33,6 +35,8 @@ import { NotificationsComponent } from '@app/layout/common/notifications/notific
 export class AuthenticatedLayoutComponent {
   private _router = inject(Router);
   private _cdr = inject(ChangeDetectorRef);
+  private _liveSync = inject(JudicialSyncLiveService);
+  private _destroyRef = inject(DestroyRef);
 
   @ViewChild(SidebarComponent) sidebar!: SidebarComponent;
 
@@ -74,6 +78,9 @@ export class AuthenticatedLayoutComponent {
   public sidebarOpen = signal<boolean>(true);
 
   constructor() {
+    this._liveSync.start();
+    this._destroyRef.onDestroy(() => this._liveSync.stop());
+
     this._router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),

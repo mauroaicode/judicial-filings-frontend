@@ -86,11 +86,15 @@ export interface ProcessFilter {
   plaintiff?: string;
   defendant?: string;
   organization?: string;
+  /** UUID — procesos con vínculo activo en la organización */
+  organization_id?: string;
   status?: string; // 'active' | 'inactive'
   /** Filtra por origen: `private` | `public` (query `privacy`) */
   privacy?: 'private' | 'public';
   /** Solo procesos con solicitud de alta manual `registered` (query `alta_manual=1`) */
   alta_manual?: boolean;
+  /** `true`: al menos una actuación retirada en Rama; `false`: ninguna */
+  removed_from_judicial_branch?: boolean;
   has_multiple_instances?: boolean;
   process_date?: string;
   process_date_from?: string;
@@ -310,6 +314,8 @@ export interface ProcessDetail {
   updated_at: string;
   alert_level?: 'red' | 'yellow' | 'green' | null;
   lawyer_role?: string | null;
+  /** Actuaciones marcadas como retiradas en el portal de la Rama Judicial. */
+  removed_from_judicial_branch_count?: number;
 }
 
 /**
@@ -432,6 +438,16 @@ export interface UpdateMediaOrganizationsResponse {
   document: ActionDocument;
 }
 
+/** Consolidado histórico en el que ya se notificó esta actuación (admin). */
+export interface ActionNotifiedConsolidado {
+  organization_id: string;
+  organization_name: string;
+  notification_digest_id: string;
+  notification_type: string;
+  consolidado_date: string;
+  email_sent_at: string;
+}
+
 export interface Action {
   index?: number;
   id: string;
@@ -460,6 +476,23 @@ export interface Action {
   related_action?: Action | null;
   /** PDFs adjuntos (admin). Solo en la instancia donde se subieron. */
   documents?: ActionDocument[];
+  removed_from_judicial_branch?: boolean;
+  removed_from_judicial_branch_at?: string | null;
+  removed_from_judicial_branch_reason?: string | null;
+  notified_consolidados?: ActionNotifiedConsolidado[];
+}
+
+export interface MarkActionRemovedFromJudicialBranchPayload {
+  notify_organizations?: boolean;
+  reason?: string | null;
+}
+
+export interface MarkActionRemovedFromJudicialBranchResponse {
+  message: string;
+  action: Action;
+  notified_consolidados: ActionNotifiedConsolidado[];
+  pending_notifications_silenced: number;
+  organizations_notified: number;
 }
 
 /**
@@ -535,6 +568,7 @@ export interface ActionFilter {
   registration_date_to?: string;
   alert_slug?: string;
   search?: string;
+  removed_from_judicial_branch?: boolean;
   page?: number;
   per_page?: number;
 }
