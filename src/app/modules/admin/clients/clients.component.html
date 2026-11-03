@@ -1,7 +1,7 @@
 <div class="w-full space-y-6 pb-24 lg:pb-0">
   <!-- Page Header -->
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
+  <div class="admin-page-header">
+    <div class="admin-page-header__title">
       <h1 class="text-2xl font-bold text-base-content md:text-3xl">
         {{ 'clients.title' | transloco }}
       </h1>
@@ -9,7 +9,7 @@
         {{ 'clients.description' | transloco }}
       </p>
     </div>
-    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+    <div class="admin-page-header__actions hidden lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
       <button
         type="button"
         class="admin-filters-toggle hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"

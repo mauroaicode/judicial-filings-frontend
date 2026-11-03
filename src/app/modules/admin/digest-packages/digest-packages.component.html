@@ -24,8 +24,8 @@
   }
 
   <!-- Page header -->
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-    <div class="min-w-0">
+  <div class="admin-page-header admin-page-header--start">
+    <div class="admin-page-header__title">
       <div class="flex flex-wrap items-center gap-2">
         <h1 class="text-2xl font-bold text-base-content md:text-3xl">
           {{ 'digestPackages.title' | transloco }}
@@ -50,7 +50,7 @@
       </p>
     </div>
 
-    <div class="flex shrink-0 flex-wrap items-center gap-2">
+    <div class="admin-page-header__actions flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
       <button
         type="button"
         class="btn btn-ghost btn-sm btn-toolbar-tall rounded-xl border border-base-200 gap-2"

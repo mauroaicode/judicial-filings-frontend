@@ -2005,3 +2005,39 @@ dialog.digest-action-detail-dialog::backdrop,
 [data-theme='dark'] .label:has(.toggle:checked) .label-text {
   color: #f3ebff !important;
 }
+
+/* Page titles: keep full width until lg so they are not squeezed by toolbars */
+.admin-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.admin-page-header__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-page-header__title > h1 {
+  line-height: 1.2;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.admin-page-header__actions {
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .admin-page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .admin-page-header--start {
+    align-items: flex-start;
+  }
+}
