@@ -49,14 +49,29 @@
   }
 }
 
-.digest-action-detail-dialog {
-  &.modal:is(.modal-open, [open]) {
-    z-index: 11001 !important;
-  }
+.digest-action-detail-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(26, 22, 37, 0.58);
+  pointer-events: auto !important;
+  overflow: auto;
 }
 
-.digest-detail-dialog::backdrop,
-.digest-action-detail-dialog::backdrop {
+.digest-action-detail-box {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto !important;
+  user-select: text;
+  max-height: min(90vh, 52rem);
+  overflow: auto;
+}
+
+.digest-detail-dialog::backdrop {
   background: rgba(26, 22, 37, 0.58);
 }
 

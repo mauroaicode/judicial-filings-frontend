@@ -61,8 +61,6 @@ export class PendingDigestDetailComponent {
   private _route = inject(ActivatedRoute);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly digestDialogRef = viewChild<ElementRef<HTMLDialogElement>>('digestDetailDialog');
-  private readonly actionDetailDialogRef =
-    viewChild<ElementRef<HTMLDialogElement>>('actionDetailDialog');
   private _router = inject(Router);
   private _service = inject(NotificationDigestService);
   private _transloco = inject(TranslocoService);
@@ -129,9 +127,6 @@ export class PendingDigestDetailComponent {
       afterNextRender(() => {
         effect(() => {
           this._syncNativeDialog(this.digestDialogRef()?.nativeElement, this.isOpen());
-        });
-        effect(() => {
-          this._syncNativeDialog(this.actionDetailDialogRef()?.nativeElement, this.showActionDetailModal());
         });
       });
     }
@@ -263,6 +258,14 @@ export class PendingDigestDetailComponent {
   close(): void {
     this.closeActionDetail();
     this.closed.emit();
+  }
+
+  onDialogCancel(): void {
+    if (this.showActionDetailModal()) {
+      this.closeActionDetail();
+      return;
+    }
+    this.close();
   }
 
   private _syncNativeDialog(dialog: HTMLDialogElement | undefined, open: boolean): void {

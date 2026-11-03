@@ -1892,15 +1892,17 @@ html[data-theme='dark'] app-processes .process-list-table tbody tr.is-selected:n
 }
 
 dialog.digest-detail-dialog::backdrop,
-dialog.digest-action-detail-dialog::backdrop,
 .digest-detail-backdrop {
   background-color: rgba(26, 22, 37, 0.58) !important;
 }
 
 [data-theme='dark'] dialog.digest-detail-dialog::backdrop,
-[data-theme='dark'] dialog.digest-action-detail-dialog::backdrop,
 [data-theme='dark'] .digest-detail-backdrop {
   background-color: rgba(8, 6, 14, 0.82) !important;
+}
+
+[data-theme='dark'] .digest-action-detail-overlay {
+  background: rgba(8, 6, 14, 0.72);
 }
 
 [data-theme='dark'] dialog.modal .bg-base-200,
