@@ -28,7 +28,8 @@
             ],
             "styles": [
               "src/styles/tailwind.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/styles/process-detail.scss"
             ]
           },
           "configurations": {
@@ -83,7 +84,8 @@
             ],
             "styles": [
               "src/styles/tailwind.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/styles/process-detail.scss"
             ]
           }
         }
