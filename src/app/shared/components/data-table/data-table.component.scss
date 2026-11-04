@@ -224,7 +224,7 @@ app-data-table {
 
 .data-table-root > table.data-table-grid {
   table-layout: fixed !important;
-  width: var(--data-table-width) !important;
+  width: 100% !important;
   min-width: var(--data-table-width) !important;
   max-width: none !important;
 }

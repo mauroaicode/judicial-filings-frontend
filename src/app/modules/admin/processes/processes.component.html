@@ -32,10 +32,10 @@
         {{ 'processes.description' | transloco }}
       </p>
     </div>
-    <div class="admin-page-header__actions hidden lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-end lg:gap-2">
+    <div class="admin-page-header__actions hidden lg:flex lg:w-auto lg:flex-nowrap lg:items-center lg:justify-end lg:gap-2">
       <button
         type="button"
-        class="admin-filters-toggle hidden lg:inline-flex items-center btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"
+        class="admin-filters-toggle hidden lg:inline-flex items-center whitespace-nowrap btn btn-sm sm:btn-md rounded-xl px-4 transition-all border font-bold"
         [class.admin-filters-toggle--active]="showFilters()"
         [class.admin-filters-toggle--idle]="!showFilters()"
         (click)="toggleFilters()"
@@ -47,7 +47,7 @@
       </button>
       <button
         type="button"
-        class="hidden lg:inline-flex items-center btn btn-success btn-sm sm:btn-md btn-toolbar-tall"
+        class="hidden lg:inline-flex items-center whitespace-nowrap btn btn-success btn-sm sm:btn-md btn-toolbar-tall"
         (click)="openImportModal()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +62,7 @@
       </button>
       <button
         type="button"
-        class="hidden lg:inline-flex items-center btn btn-outline btn-success btn-sm sm:btn-md btn-toolbar-tall"
+        class="hidden lg:inline-flex items-center whitespace-nowrap btn btn-outline btn-success btn-sm sm:btn-md btn-toolbar-tall"
         (click)="openActuacionesImportModal()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

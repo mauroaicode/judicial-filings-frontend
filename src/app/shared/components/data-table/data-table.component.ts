@@ -213,7 +213,7 @@ export class DataTableComponent {
     return column.maxWidth ?? null;
   }
 
-  /** Ancho fijo de la tabla: suma de columnas, para scroll horizontal sin estirar celdas. */
+  /** Ancho mínimo de la tabla (suma de columnas). Si el contenedor es más ancho, la tabla se estira. */
   tableWidth(): string {
     const total = this.columns().reduce((sum, col) => {
       if (col.key === 'process_number') {
