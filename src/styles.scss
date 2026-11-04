@@ -2008,31 +2008,32 @@ dialog.digest-detail-dialog::backdrop,
   color: #f3ebff !important;
 }
 
-/* Page header: título + acciones. En lg evitar width:100% en la fila flex (aplastaba el texto). */
+/* Page header: título usa el espacio restante; acciones solo el ancho de los botones. */
 .admin-page-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
   width: 100%;
+  min-width: 0;
 }
 
 .admin-page-header__title {
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
-  max-width: 100%;
+  max-width: none;
 }
 
 .admin-page-header__title h1 {
   line-height: 1.2;
-  overflow-wrap: normal;
+  overflow-wrap: break-word;
   word-break: normal;
-  text-wrap: balance;
+  text-wrap: wrap;
 }
 
 .admin-page-header__title p {
-  overflow-wrap: normal;
+  overflow-wrap: break-word;
   word-break: normal;
   max-width: 48rem;
 }
@@ -2048,23 +2049,27 @@ dialog.digest-detail-dialog::backdrop,
 @media (min-width: 1024px) {
   .admin-page-header {
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
   }
 
+  .admin-page-header--start {
+    align-items: flex-start;
+  }
+
   .admin-page-header__title {
-    flex: 1 1 0%;
+    flex: 1 1 auto;
     width: auto;
-    min-width: 0;
+    min-width: min(100%, 16rem);
+    max-width: none;
   }
 
   .admin-page-header__actions {
+    width: auto !important;
     max-width: none;
     justify-content: flex-end;
-  }
-
-  .admin-page-header--start {
-    align-items: flex-start;
+    flex-wrap: nowrap;
   }
 }

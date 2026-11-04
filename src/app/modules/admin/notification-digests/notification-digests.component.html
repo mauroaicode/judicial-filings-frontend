@@ -8,7 +8,7 @@
         {{ 'notificationDigests.description' | transloco }}
       </p>
     </div>
-    <div class="admin-page-header__actions flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto">
+    <div class="admin-page-header__actions flex max-lg:w-full items-center justify-end gap-2 lg:w-auto">
       @if (pagination(); as pageInfo) {
         <div class="recent-total hidden items-center gap-2 rounded-xl border border-base-300 bg-base-100 px-3 py-2 sm:flex">
           <span class="text-xs font-medium text-base-content/55">{{ 'notificationDigests.cards.total' | transloco }}</span>
