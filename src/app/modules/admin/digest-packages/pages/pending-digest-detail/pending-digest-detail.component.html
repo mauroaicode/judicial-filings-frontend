@@ -263,7 +263,7 @@
 
           <!-- Desktop table -->
           <div class="hidden lg:block h-full min-h-0">
-            <div class="digest-detail-table-scroll w-full h-full min-h-0 border border-base-200 rounded-xl">
+            <div class="digest-detail-table-scroll w-full h-full min-h-0 border border-base-200 rounded-xl" (scroll)="hidePartyTooltip()">
               <table class="table table-zebra digest-detail-table">
                 <thead>
                   <tr>
@@ -349,21 +349,27 @@
                       <td class="align-middle digest-col-party text-sm text-base-content/80">
                         @let plaintiffDisplay = getPartyDisplay(action.plaintiffs ?? (action.plaintiff ? [action.plaintiff] : []));
                         @if (plaintiffDisplay.mainText || plaintiffDisplay.extraCount > 0) {
-                          <span>
-                            <span class="truncate block max-w-full" [title]="plaintiffDisplay.mainText">{{ plaintiffDisplay.mainText }}</span>
+                          <div class="digest-party-cell">
+                            <span
+                              class="digest-party-name-tooltip"
+                              (mouseenter)="showPartyTooltip($event, plaintiffDisplay.fullList)"
+                              (mouseleave)="hidePartyTooltip()"
+                            >
+                              <span class="digest-party-cell__name">{{ plaintiffDisplay.mainText }}</span>
+                            </span>
                             @if (plaintiffDisplay.extraCount > 0) {
-                              <span class="process-list-tooltip" (click)="$event.stopPropagation()">
-                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
-                                  @for (name of plaintiffDisplay.fullList; track name; let j = $index) {
-                                    <div class="text-base-content">{{ j + 1 }}. {{ name }}</div>
-                                  }
-                                </div>
+                              <span
+                                class="digest-party-extra shrink-0"
+                                (click)="$event.stopPropagation()"
+                                (mouseenter)="showPartyTooltip($event, plaintiffDisplay.fullList)"
+                                (mouseleave)="hidePartyTooltip()"
+                              >
                                 <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ plaintiffDisplay.extraCount }})
                                 </span>
                               </span>
                             }
-                          </span>
+                          </div>
                         } @else {
                           <span class="opacity-50">–</span>
                         }
@@ -371,21 +377,27 @@
                       <td class="align-middle digest-col-party text-sm text-base-content/80">
                         @let defendantDisplay = getPartyDisplay(action.defendants ?? (action.defendant ? [action.defendant] : []));
                         @if (defendantDisplay.mainText || defendantDisplay.extraCount > 0) {
-                          <span>
-                            <span class="truncate block max-w-full" [title]="defendantDisplay.mainText">{{ defendantDisplay.mainText }}</span>
+                          <div class="digest-party-cell">
+                            <span
+                              class="digest-party-name-tooltip"
+                              (mouseenter)="showPartyTooltip($event, defendantDisplay.fullList)"
+                              (mouseleave)="hidePartyTooltip()"
+                            >
+                              <span class="digest-party-cell__name">{{ defendantDisplay.mainText }}</span>
+                            </span>
                             @if (defendantDisplay.extraCount > 0) {
-                              <span class="process-list-tooltip" (click)="$event.stopPropagation()">
-                                <div class="tooltip-content text-left text-sm max-w-xs rounded-lg shadow-lg bg-base-100 border border-base-300 p-3 space-y-1">
-                                  @for (name of defendantDisplay.fullList; track name; let j = $index) {
-                                    <div class="text-base-content">{{ j + 1 }}. {{ name }}</div>
-                                  }
-                                </div>
+                              <span
+                                class="digest-party-extra shrink-0"
+                                (click)="$event.stopPropagation()"
+                                (mouseenter)="showPartyTooltip($event, defendantDisplay.fullList)"
+                                (mouseleave)="hidePartyTooltip()"
+                              >
                                 <span class="text-primary font-bold cursor-pointer whitespace-nowrap underline decoration-primary/50 decoration-dotted underline-offset-1">
                                   (+{{ defendantDisplay.extraCount }})
                                 </span>
                               </span>
                             }
-                          </span>
+                          </div>
                         } @else {
                           <span class="opacity-50">–</span>
                         }
@@ -491,6 +503,20 @@
   <form method="dialog" class="modal-backdrop digest-detail-backdrop" (click)="close()">
     <button type="button">close</button>
   </form>
+
+  @if (partyTooltip(); as tip) {
+    <div
+      class="digest-party-tooltip-portal rounded-lg border border-base-300 bg-base-100 p-3 text-left text-sm shadow-lg space-y-1"
+      [style.left.px]="tip.left"
+      [style.top.px]="tip.top"
+      (mouseenter)="keepPartyTooltip()"
+      (mouseleave)="hidePartyTooltip()"
+    >
+      @for (name of tip.names; track $index) {
+        <div class="text-base-content leading-snug">{{ $index + 1 }}. {{ name }}</div>
+      }
+    </div>
+  }
 
   @if (showActionDetailModal() && selectedActionDetail(); as detail) {
     <div

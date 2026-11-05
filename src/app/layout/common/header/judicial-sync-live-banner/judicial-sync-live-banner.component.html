@@ -8,17 +8,37 @@
     [attr.aria-label]="banner.ariaLabel"
     [style.--sync-marquee-duration]="banner.duration"
   >
-    <div class="judicial-sync-live__track" aria-hidden="true">
+    <div class="judicial-sync-live__track">
       @for (group of banner.groups; track group.key) {
         <div class="judicial-sync-live__group" [attr.aria-hidden]="group.hidden ? true : null">
           @for (chip of group.chips; track chip.key) {
-            <span class="judicial-sync-live__chip" [attr.title]="chip.text">
+            <button
+              type="button"
+              class="judicial-sync-live__chip"
+              (click)="goToJudicialSync()"
+              (mouseenter)="showTip($event, chip.startedTooltip)"
+              (mouseleave)="hideTip()"
+              (focus)="showTip($event, chip.startedTooltip)"
+              (blur)="hideTip()"
+              [attr.aria-label]="chip.text + '. ' + chip.startedTooltip"
+            >
               <span class="judicial-sync-live__dot" aria-hidden="true"></span>
               <span class="judicial-sync-live__text">{{ chip.text }}</span>
-            </span>
+            </button>
           }
         </div>
       }
     </div>
+  </div>
+}
+
+@if (activeTip(); as tip) {
+  <div
+    class="judicial-sync-live__tip-fixed"
+    role="tooltip"
+    [style.left.px]="tip.x"
+    [style.top.px]="tip.y"
+  >
+    {{ tip.text }}
   </div>
 }

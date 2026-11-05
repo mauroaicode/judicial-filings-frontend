@@ -14,10 +14,37 @@
   font-weight: 600;
   line-height: 1.35;
   word-break: break-word;
+  color: var(--color-brand-primary, hsl(var(--p)));
+}
+
+.confirmation-dialog-footnote {
+  border-color: color-mix(in srgb, var(--color-brand-primary, hsl(var(--p))) 40%, transparent);
 }
 
 .confirmation-dialog-details__row--split {
   padding-top: 1rem;
   margin-top: 1rem;
   border-top: 1px solid hsl(var(--b3));
+}
+
+html[data-theme='dark'] {
+  .confirmation-dialog-details__label {
+    color: color-mix(in srgb, var(--color-base-content) 58%, transparent);
+  }
+
+  .confirmation-dialog-details__value {
+    color: #e9d5ff;
+    -webkit-text-fill-color: #e9d5ff;
+    text-shadow: 0 0 24px color-mix(in srgb, #c4b5fd 35%, transparent);
+  }
+
+  .confirmation-dialog-footnote {
+    color: color-mix(in srgb, var(--color-base-content) 72%, transparent);
+    border-color: color-mix(in srgb, #c4b5fd 55%, transparent);
+  }
+
+  .confirmation-dialog-details {
+    border-color: color-mix(in srgb, var(--color-base-content) 14%, transparent);
+    background: color-mix(in srgb, var(--color-base-100) 88%, #2a1f40);
+  }
 }

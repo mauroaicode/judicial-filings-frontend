@@ -13,13 +13,21 @@
   cursor: pointer;
   transition: background-color 0.15s ease;
 
-  &:hover td {
-    background-color: #f3f0f9;
+  &:hover td,
+  &:focus-visible td {
+    background-color: var(--admin-table-row-hover, var(--process-table-sticky-hover, #f3f0f9)) !important;
   }
 
   &:focus-visible {
     outline: 2px solid hsl(var(--p));
     outline-offset: -2px;
+  }
+}
+
+:host-context([data-theme='dark']) {
+  .dp-row--clickable:hover td,
+  .dp-row--clickable:focus-visible td {
+    background-color: var(--process-table-sticky-hover, #2a1f40) !important;
   }
 }
 

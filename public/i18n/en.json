@@ -165,7 +165,9 @@
         },
         "liveBanner": {
             "progress": "Syncing {{source}}: {{pending}} of {{total}} left",
-            "preparing": "Syncing {{source}}: preparing…"
+            "preparing": "Syncing {{source}}: preparing…",
+            "startedAt": "{{source}} — started: {{datetime}}",
+            "startedAtUnknown": "{{source}} — start time unavailable"
         }
     },
     "historialImportaciones": {

@@ -17,12 +17,12 @@
           @for (row of rows; track row.label + row.value; let i = $index) {
             <div class="confirmation-dialog-details__row" [class.confirmation-dialog-details__row--split]="i > 0">
               <p class="confirmation-dialog-details__label">{{ row.label }}</p>
-              <p class="confirmation-dialog-details__value text-primary">{{ row.value }}</p>
+              <p class="confirmation-dialog-details__value">{{ row.value }}</p>
             </div>
           }
         </div>
         @if ((footnote() ?? '').trim()) {
-          <p class="text-xs leading-snug text-base-content/60 border-l-[3px] border-primary/40 pl-3 py-1">
+          <p class="confirmation-dialog-footnote text-xs leading-snug text-base-content/60 border-l-[3px] pl-3 py-1">
             {{ footnote() }}
           </p>
         }

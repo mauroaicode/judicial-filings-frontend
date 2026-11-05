@@ -33,9 +33,15 @@ export class JudicialSyncLiveService {
   private readonly _isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly _activeSources = signal<JudicialSyncLiveSource[]>([]);
+  /** Cierre de batch (completado / cancelado / error) recibido por WS. */
+  private readonly _terminalByKey = signal<Record<string, JudicialSyncStatusUpdatedEvent>>({});
+  private readonly _runLiveTick = signal(0);
   private readonly _listening = signal(false);
 
   readonly activeSources = this._activeSources.asReadonly();
+  readonly terminalEvents = this._terminalByKey.asReadonly();
+  /** Sube en cada cambio de activos o de estado terminal (historial en vivo). */
+  readonly runLiveTick = this._runLiveTick.asReadonly();
 
   private _stopped = true;
   private _joinedConnectionId = 0;
@@ -88,6 +94,8 @@ export class JudicialSyncLiveService {
     this._sourceEpoch.clear();
     this._epoch = 0;
     this._activeSources.set([]);
+    this._terminalByKey.set({});
+    this._runLiveTick.set(0);
     this._listening.set(false);
   }
 
@@ -205,6 +213,7 @@ export class JudicialSyncLiveService {
     }
 
     this._activeSources.set(next);
+    this._bumpRunLive();
   }
 
   private _applyEvent(payload: unknown): void {
@@ -213,6 +222,12 @@ export class JudicialSyncLiveService {
 
     this._epoch += 1;
     this._sourceEpoch.set(event.data_source, this._epoch);
+
+    if (event.is_active) {
+      this._clearTerminalForSource(event.data_source, event.run_id);
+    } else {
+      this._storeTerminal(event);
+    }
 
     this._activeSources.update((current) => {
       if (!event.is_active) {
@@ -229,6 +244,41 @@ export class JudicialSyncLiveService {
       }
       return [...current, nextSource];
     });
+    this._bumpRunLive();
+  }
+
+  private _bumpRunLive(): void {
+    this._runLiveTick.update((value) => value + 1);
+  }
+
+  private _storeTerminal(event: JudicialSyncStatusUpdatedEvent): void {
+    this._terminalByKey.update((current) => {
+      const next = { ...current };
+      for (const key of this._terminalKeysForEvent(event)) {
+        next[key] = event;
+      }
+      return next;
+    });
+  }
+
+  private _clearTerminalForSource(dataSource: string, _runId: string | null): void {
+    this._terminalByKey.update((current) => {
+      const next = { ...current };
+      for (const terminal of Object.values(current)) {
+        if (terminal.data_source !== dataSource) continue;
+        for (const alias of this._terminalKeysForEvent(terminal)) {
+          delete next[alias];
+        }
+      }
+      return next;
+    });
+  }
+
+  private _terminalKeysForEvent(event: JudicialSyncStatusUpdatedEvent): string[] {
+    const keys = [`source:${event.data_source}`];
+    if (event.run_id) keys.push(`run:${event.run_id}`);
+    if (event.laravel_batch_id) keys.push(`batch:${event.laravel_batch_id}`);
+    return keys;
   }
 
   private _sourceFromEvent(

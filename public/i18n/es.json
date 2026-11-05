@@ -164,7 +164,9 @@
     },
     "liveBanner": {
       "progress": "Sincronizando {{source}}: quedan {{pending}} de {{total}}",
-      "preparing": "Sincronizando {{source}}: preparando…"
+      "preparing": "Sincronizando {{source}}: preparando…",
+      "startedAt": "{{source}} — inicio: {{datetime}}",
+      "startedAtUnknown": "{{source}} — inicio no disponible"
     }
   },
   "processes": {

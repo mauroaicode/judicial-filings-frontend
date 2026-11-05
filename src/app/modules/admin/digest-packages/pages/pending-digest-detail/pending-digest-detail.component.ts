@@ -105,7 +105,9 @@ export class PendingDigestDetailComponent {
   public downloadingPdfId = signal<string | null>(null);
   public pdfToast = signal<string | null>(null);
   public mobileSummaryExpanded = signal(false);
+  public partyTooltip = signal<{ names: string[]; left: number; top: number } | null>(null);
   private _copiedTimer: ReturnType<typeof setTimeout> | null = null;
+  private _partyTooltipHideTimer: ReturnType<typeof setTimeout> | null = null;
   private _pdfToastTimer: ReturnType<typeof setTimeout> | null = null;
   private _loadedOrgId: string | null = null;
   private _loadedDigestKey: string | null = null;
@@ -257,6 +259,7 @@ export class PendingDigestDetailComponent {
 
   close(): void {
     this.closeActionDetail();
+    this.partyTooltip.set(null);
     this.closed.emit();
   }
 
@@ -403,6 +406,50 @@ export class PendingDigestDetailComponent {
     this.selectedActionDetail.set(null);
   }
 
+  showPartyTooltip(event: Event, names: string[]): void {
+    event.stopPropagation();
+    this.keepPartyTooltip();
+    const el = event.currentTarget as HTMLElement | null;
+    if (!el) {
+      return;
+    }
+    const list = names.map((n) => n.trim()).filter(Boolean);
+    if (list.length === 0) {
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    const width = 280;
+    const pad = 8;
+    const estimatedHeight = Math.min(280, 24 + list.length * 22);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openBelow = spaceBelow >= estimatedHeight + pad || rect.top < estimatedHeight + pad;
+    let left = rect.left;
+    if (left + width > window.innerWidth - pad) {
+      left = Math.max(pad, window.innerWidth - width - pad);
+    }
+    const top = openBelow
+      ? Math.min(rect.bottom + 8, window.innerHeight - estimatedHeight - pad)
+      : Math.max(pad, rect.top - estimatedHeight - 8);
+    this.partyTooltip.set({ names: list, left, top });
+  }
+
+  keepPartyTooltip(): void {
+    if (this._partyTooltipHideTimer) {
+      clearTimeout(this._partyTooltipHideTimer);
+      this._partyTooltipHideTimer = null;
+    }
+  }
+
+  hidePartyTooltip(): void {
+    if (this._partyTooltipHideTimer) {
+      clearTimeout(this._partyTooltipHideTimer);
+    }
+    this._partyTooltipHideTimer = setTimeout(() => {
+      this.partyTooltip.set(null);
+      this._partyTooltipHideTimer = null;
+    }, 140);
+  }
+
   toggleMobileSummary(event?: Event): void {
     if (event) {
       event.preventDefault();
@@ -518,6 +565,7 @@ export class PendingDigestDetailComponent {
     this.loadError.set(false);
     this.loadErrorMessage.set(null);
     this.closeActionDetail();
+    this.partyTooltip.set(null);
     this.mobileSummaryExpanded.set(false);
     this.hoveredRowId.set(null);
   }

@@ -21,6 +21,7 @@ import {
   JudicialSyncDispatchableSource,
   JudicialSyncLiveSource,
   JudicialSyncRun,
+  JudicialSyncStatusUpdatedEvent,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
 import { ConfirmationDialogComponent, ConfirmationDialogDetailRow } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
@@ -88,9 +89,11 @@ export class JudicialSyncComponent {
 
     effect(
       () => {
+        this._liveSync.runLiveTick();
         const live = this._liveSync.activeSources();
+        const terminals = this._liveSync.terminalEvents();
         untracked(() => {
-          this.runs.update((runs) => this._applyLiveProgress(runs, live));
+          this.runs.update((runs) => this._applyLiveProgress(runs, live, terminals));
         });
       },
       { injector: this._injector },
@@ -228,10 +231,11 @@ export class JudicialSyncComponent {
       .subscribe({
         next: (response) => {
           const live = this._liveSync.activeSources();
+          const terminals = this._liveSync.terminalEvents();
           if (reset) {
-            this.runs.set(this._applyLiveProgress(response.data, live));
+            this.runs.set(this._applyLiveProgress(response.data, live, terminals));
           } else {
-            this.runs.update((prev) => this._applyLiveProgress([...prev, ...response.data], live));
+            this.runs.update((prev) => this._applyLiveProgress([...prev, ...response.data], live, terminals));
           }
           this.currentPage.set(response.current_page);
           this.lastPage.set(response.last_page);
@@ -264,7 +268,11 @@ export class JudicialSyncComponent {
       .subscribe({
         next: (response) => {
           this.runs.update((prev) =>
-            this._applyLiveProgress([...prev, ...response.data], this._liveSync.activeSources()),
+            this._applyLiveProgress(
+              [...prev, ...response.data],
+              this._liveSync.activeSources(),
+              this._liveSync.terminalEvents(),
+            ),
           );
           this.currentPage.set(response.current_page);
           this.lastPage.set(response.last_page);
@@ -356,7 +364,11 @@ export class JudicialSyncComponent {
   /**
    * El historial sale de GET /runs (estático). El countdown usa el mismo snapshot/WS del banner.
    */
-  private _applyLiveProgress(runs: JudicialSyncRun[], live: JudicialSyncLiveSource[]): JudicialSyncRun[] {
+  private _applyLiveProgress(
+    runs: JudicialSyncRun[],
+    live: JudicialSyncLiveSource[],
+    terminals: Record<string, JudicialSyncStatusUpdatedEvent>,
+  ): JudicialSyncRun[] {
     if (runs.length === 0) {
       this._liveMatchedKeys = new Set();
       return runs;
@@ -366,7 +378,7 @@ export class JudicialSyncComponent {
     const nowKeys = new Set<string>();
     let changed = false;
 
-    const next = runs.map((run) => {
+    let next = runs.map((run) => {
       const src = this._liveSourceForRun(run, live, claimed);
       if (!src) return run;
 
@@ -374,44 +386,16 @@ export class JudicialSyncComponent {
       if (run.id) nowKeys.add(run.id);
       if (run.laravel_batch_id) nowKeys.add(run.laravel_batch_id);
 
-      const queuePending =
-        typeof src.queue_pending_jobs === 'number' ? src.queue_pending_jobs : run.queue_pending_jobs;
-      const failedJobs =
-        typeof src.failed_jobs_count === 'number' ? src.failed_jobs_count : run.failed_jobs_count;
-      const queued = src.processes_queued > 0 ? src.processes_queued : run.processes_queued;
-      const status = src.status || run.status;
-      const statusLabel = src.status_label ?? run.status_label;
-      const batchId = src.laravel_batch_id || run.laravel_batch_id;
-
-      if (
-        queuePending === run.queue_pending_jobs &&
-        failedJobs === run.failed_jobs_count &&
-        queued === run.processes_queued &&
-        status === run.status &&
-        statusLabel === run.status_label &&
-        batchId === run.laravel_batch_id
-      ) {
-        return run;
-      }
-
-      changed = true;
-      return {
-        ...run,
-        queue_pending_jobs: queuePending,
-        failed_jobs_count: failedJobs,
-        processes_queued: queued,
-        status,
-        status_label: statusLabel,
-        laravel_batch_id: batchId,
-      };
+      const patched = this._patchRunFromLiveSource(run, src);
+      if (patched !== run) changed = true;
+      return patched;
     });
 
     const finishedKeys = [...this._liveMatchedKeys].filter((key) => !nowKeys.has(key));
     this._liveMatchedKeys = nowKeys;
 
-    let result = changed ? next : runs;
     if (finishedKeys.length > 0) {
-      result = result.map((run) => {
+      next = next.map((run) => {
         const finished =
           (!!run.id && finishedKeys.includes(run.id)) ||
           (!!run.laravel_batch_id && finishedKeys.includes(run.laravel_batch_id));
@@ -421,7 +405,105 @@ export class JudicialSyncComponent {
       });
     }
 
-    return changed ? result : runs;
+    next = next.map((run) => {
+      const terminal = this._terminalEventForRun(run, terminals);
+      if (!terminal) return run;
+      const patched = this._patchRunFromTerminal(run, terminal);
+      if (patched !== run) changed = true;
+      return patched;
+    });
+
+    return changed ? next : runs;
+  }
+
+  private _patchRunFromLiveSource(run: JudicialSyncRun, src: JudicialSyncLiveSource): JudicialSyncRun {
+    const queuePending =
+      typeof src.queue_pending_jobs === 'number' ? src.queue_pending_jobs : run.queue_pending_jobs;
+    const failedJobs =
+      typeof src.failed_jobs_count === 'number' ? src.failed_jobs_count : run.failed_jobs_count;
+    const queued = src.processes_queued > 0 ? src.processes_queued : run.processes_queued;
+    const status = src.status || run.status;
+    const statusLabel = src.status_label ?? run.status_label;
+    const batchId = src.laravel_batch_id || run.laravel_batch_id;
+
+    if (
+      queuePending === run.queue_pending_jobs &&
+      failedJobs === run.failed_jobs_count &&
+      queued === run.processes_queued &&
+      status === run.status &&
+      statusLabel === run.status_label &&
+      batchId === run.laravel_batch_id
+    ) {
+      return run;
+    }
+
+    return {
+      ...run,
+      queue_pending_jobs: queuePending,
+      failed_jobs_count: failedJobs,
+      processes_queued: queued,
+      status,
+      status_label: statusLabel,
+      laravel_batch_id: batchId,
+    };
+  }
+
+  private _patchRunFromTerminal(
+    run: JudicialSyncRun,
+    terminal: JudicialSyncStatusUpdatedEvent,
+  ): JudicialSyncRun {
+    const status = terminal.status || run.status;
+    const statusLabel = terminal.status_label ?? run.status_label;
+    const queuePending =
+      typeof terminal.queue_pending_jobs === 'number' ? terminal.queue_pending_jobs : 0;
+    const failedJobs =
+      typeof terminal.failed_jobs_count === 'number' ? terminal.failed_jobs_count : run.failed_jobs_count;
+    const batchId = terminal.laravel_batch_id || run.laravel_batch_id;
+    const batchFinishedAt = run.batch_finished_at ?? this._formatTerminalFinishedAt(new Date());
+
+    if (
+      status === run.status &&
+      statusLabel === run.status_label &&
+      queuePending === run.queue_pending_jobs &&
+      failedJobs === run.failed_jobs_count &&
+      batchId === run.laravel_batch_id &&
+      batchFinishedAt === run.batch_finished_at
+    ) {
+      return run;
+    }
+
+    return {
+      ...run,
+      status,
+      status_label: statusLabel,
+      queue_pending_jobs: queuePending,
+      failed_jobs_count: failedJobs,
+      laravel_batch_id: batchId,
+      batch_finished_at: batchFinishedAt,
+    };
+  }
+
+  private _formatTerminalFinishedAt(date: Date): string {
+    return date.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  private _terminalEventForRun(
+    run: JudicialSyncRun,
+    terminals: Record<string, JudicialSyncStatusUpdatedEvent>,
+  ): JudicialSyncStatusUpdatedEvent | undefined {
+    if (run.id && terminals[`run:${run.id}`]) {
+      return terminals[`run:${run.id}`];
+    }
+    if (run.laravel_batch_id && terminals[`batch:${run.laravel_batch_id}`]) {
+      return terminals[`batch:${run.laravel_batch_id}`];
+    }
+    const bySource = terminals[`source:${run.data_source}`];
+    if (!bySource) return undefined;
+    if (bySource.run_id && bySource.run_id !== run.id) return undefined;
+    if (bySource.laravel_batch_id && run.laravel_batch_id && bySource.laravel_batch_id !== run.laravel_batch_id) {
+      return undefined;
+    }
+    return bySource;
   }
 
   private _liveSourceForRun(

@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { JudicialSyncLiveSource } from '@app/core/models/judicial-sync/judicial-sync.model';
 import { JudicialSyncLiveService } from '@app/core/services/judicial-sync/judicial-sync-live.service';
@@ -14,6 +15,7 @@ import { JudicialSyncLiveService } from '@app/core/services/judicial-sync/judici
 interface LiveChip {
   key: string;
   text: string;
+  startedTooltip: string;
 }
 
 interface LiveGroup {
@@ -44,6 +46,7 @@ const SPEED_PX = 48;
 })
 export class JudicialSyncLiveBannerComponent {
   private _live = inject(JudicialSyncLiveService);
+  private _router = inject(Router);
   private _transloco = inject(TranslocoService);
   private _destroyRef = inject(DestroyRef);
 
@@ -52,6 +55,8 @@ export class JudicialSyncLiveBannerComponent {
   });
 
   private _reducedMotion = signal(false);
+
+  readonly activeTip = signal<{ text: string; x: number; y: number } | null>(null);
 
   readonly view = computed((): LiveBannerView | null => {
     this._lang();
@@ -72,10 +77,7 @@ export class JudicialSyncLiveBannerComponent {
           {
             key: 'static',
             hidden: false,
-            chips: sources.map((source, index) => ({
-              key: source.data_source,
-              text: texts[index],
-            })),
+            chips: sources.map((source, index) => this._chipView(source, texts[index])),
           },
         ],
       };
@@ -104,20 +106,70 @@ export class JudicialSyncLiveBannerComponent {
     this._reducedMotion.set(media.matches);
     const onChange = (event: MediaQueryListEvent) => this._reducedMotion.set(event.matches);
     media.addEventListener('change', onChange);
-    this._destroyRef.onDestroy(() => media.removeEventListener('change', onChange));
+    this._destroyRef.onDestroy(() => {
+      media.removeEventListener('change', onChange);
+      this.hideTip();
+    });
+  }
+
+  goToJudicialSync(): void {
+    void this._router.navigate(['/admin/judicial-sync']);
+  }
+
+  showTip(event: Event, text: string): void {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const rect = target.getBoundingClientRect();
+    this.activeTip.set({
+      text,
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 8,
+    });
+  }
+
+  hideTip(): void {
+    this.activeTip.set(null);
+  }
+
+  private _chipView(source: JudicialSyncLiveSource, text: string, keySuffix = ''): LiveChip {
+    return {
+      key: `${source.data_source}${keySuffix}`,
+      text,
+      startedTooltip: this._startedTooltip(source),
+    };
   }
 
   private _repeat(sources: JudicialSyncLiveSource[], texts: string[], prefix: string): LiveChip[] {
     const chips: LiveChip[] = [];
     for (let copy = 0; copy < COPIES_PER_HALF; copy++) {
       sources.forEach((source, index) => {
-        chips.push({
-          key: `${prefix}-${source.data_source}-${copy}`,
-          text: texts[index],
-        });
+        chips.push(this._chipView(source, texts[index], `-${prefix}-${copy}`));
       });
     }
     return chips;
+  }
+
+  private _startedTooltip(source: JudicialSyncLiveSource): string {
+    const label = source.data_source_label?.trim() || source.data_source;
+    const when = this._formatStartedAt(source.started_at);
+    if (when) {
+      return this._transloco.translate('judicialSync.liveBanner.startedAt', {
+        source: label,
+        datetime: when,
+      });
+    }
+    return this._transloco.translate('judicialSync.liveBanner.startedAtUnknown', { source: label });
+  }
+
+  private _formatStartedAt(value: string | null): string | null {
+    if (value == null) return null;
+    const raw = value.trim();
+    if (!raw) return null;
+    if (!/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw;
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    const lang = this._lang() === 'en' ? 'en-US' : 'es-CO';
+    return date.toLocaleString(lang, { dateStyle: 'full', timeStyle: 'short' });
   }
 
   private _chipText(source: JudicialSyncLiveSource): string {

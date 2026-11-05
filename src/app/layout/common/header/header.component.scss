@@ -9,6 +9,31 @@ header {
   overflow: visible;
 }
 
+.header-actions {
+  flex-shrink: 0;
+  max-width: min(100%, 52rem);
+}
+
+.header-sync-slot {
+  position: relative;
+  display: none;
+  overflow: hidden;
+  max-width: min(28rem, 42vw);
+
+  @media (min-width: 640px) {
+    display: block;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: min(22rem, 28vw);
+  }
+}
+
+.header-icon-actions {
+  position: relative;
+  z-index: 30;
+}
+
 .header-page-title {
   max-width: 100%;
 

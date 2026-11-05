@@ -81,13 +81,26 @@
   </div>
 
   <!-- Right Side Actions -->
-  <div class="flex min-w-0 items-center gap-2 px-4 md:gap-3 md:px-6">
-    <app-judicial-sync-live-banner class="header-sync-live-banner shrink min-w-0" />
+  <div class="header-actions flex min-w-0 items-center gap-2 px-4 md:gap-3 md:px-6">
+    <div class="header-sync-slot min-w-0 flex-1 sm:flex-none">
+      <app-judicial-sync-live-banner class="header-sync-live-banner" />
+    </div>
+
+    <div class="header-icon-actions flex shrink-0 items-center gap-1 sm:gap-2">
+    <!-- Messages -->
+    <button type="button" class="btn btn-ghost btn-circle btn-sm border-0 shadow-none" [attr.aria-label]="'header.messages' | transloco">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      <!-- Badge for notifications count (if needed) -->
+      <!-- <span class="badge badge-error badge-xs absolute -right-1 -top-1">3</span> -->
+    </button>
 
     <!-- Dark / Light Mode Toggle -->
     <button
       type="button"
-      class="btn btn-ghost btn-circle btn-sm border-0 shadow-none"
+      class="btn btn-ghost btn-circle btn-sm shrink-0 border-0 shadow-none"
       (click)="themeService.toggle()"
       [attr.aria-label]="(themeService.isDark() ? 'header.switchToLight' : 'header.switchToDark') | transloco"
       [attr.title]="(themeService.isDark() ? 'header.switchToLight' : 'header.switchToDark') | transloco">
@@ -102,16 +115,6 @@
             d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
         </svg>
       }
-    </button>
-
-    <!-- Messages -->
-    <button type="button" class="btn btn-ghost btn-circle btn-sm border-0 shadow-none" [attr.aria-label]="'header.messages' | transloco">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-      <!-- Badge for notifications count (if needed) -->
-      <!-- <span class="badge badge-error badge-xs absolute -right-1 -top-1">3</span> -->
     </button>
 
     <!-- Notifications -->
@@ -182,6 +185,7 @@
           </a>
         </li>
       </ul>
+    </div>
     </div>
   </div>
   </div>
