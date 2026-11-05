@@ -82,9 +82,11 @@
 
   <!-- Right Side Actions -->
   <div class="header-actions flex shrink-0 min-w-0 items-center justify-end gap-2 px-4 md:gap-2.5 md:px-6">
-    <div class="header-sync-slot min-w-0">
-      <app-judicial-sync-live-banner class="header-sync-live-banner" />
-    </div>
+    @if (!hideSyncLiveBanner()) {
+      <div class="header-sync-slot min-w-0">
+        <app-judicial-sync-live-banner class="header-sync-live-banner" />
+      </div>
+    }
 
     <div class="header-icon-actions flex shrink-0 items-center gap-1 sm:gap-2">
     <!-- Messages -->

@@ -48,6 +48,9 @@ export class HeaderComponent {
     () => this._headerContext.compactVisible() && this.processDetailHeader() !== null
   );
 
+  /** En detalle de proceso con scroll, el compacto del header tiene prioridad sobre el banner. */
+  readonly hideSyncLiveBanner = this.showCompactProcess;
+
   readonly copiedMessage = signal<string | null>(null);
 
   copyProcessNumber(processNumber: string, event: MouseEvent): void {
