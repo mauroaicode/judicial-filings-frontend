@@ -190,6 +190,18 @@
                 {{ formatLimit(org.settings.max_active_processes) }}
               </dd>
             </div>
+            @if (channelLimits(); as limits) {
+              @for (channel of limits.channels; track channel.channel_type) {
+                <div>
+                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-base-content/50">
+                    {{ channelTitle(channel.channel_type) }}
+                  </dt>
+                  <dd class="mt-0.5 tabular-nums font-semibold text-base-content">
+                    {{ channel.used }} / {{ channel.limit }}
+                  </dd>
+                </div>
+              }
+            }
           </dl>
         }
 
@@ -261,6 +273,59 @@
                       }
               }}
             </p>
+
+            <div class="org-settings-section rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
+              <h4 class="org-settings-section-title text-sm font-bold text-base-content">
+                {{ 'clients.settings.channelsTitle' | transloco }}
+              </h4>
+              <p class="mt-1 text-xs leading-relaxed text-base-content/75">
+                {{
+                  'clients.settings.channelsDescription'
+                    | transloco: { value: channelLimits()?.default_limit ?? 3 }
+                }}
+              </p>
+            </div>
+
+            @for (type of notificationChannelTypes; track type) {
+              <div class="rounded-2xl border border-base-300 bg-base-200/30 p-4">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                  <p class="text-sm font-semibold text-base-content">{{ channelTitle(type) }}</p>
+                  @if (channelLimitFor(type); as current) {
+                    <p class="text-xs text-base-content/65">
+                      {{ 'clients.settings.channelUsed' | transloco: { used: current.used, limit: current.limit } }}
+                    </p>
+                  }
+                </div>
+
+                <div class="mt-3 flex items-center justify-between gap-3">
+                  <p class="text-xs text-base-content/70">
+                    {{
+                      'clients.settings.channelUseDefault'
+                        | transloco: { value: channelLimits()?.default_limit ?? 3 }
+                    }}
+                  </p>
+                  <input
+                    type="checkbox"
+                    class="toggle toggle-primary toggle-sm shrink-0"
+                    [formControlName]="type + '_use_default'"
+                    (change)="onChannelDefaultChange(type, $any($event.target).checked)"
+                  />
+                </div>
+
+                <label class="mt-3 block text-xs font-medium text-base-content/80">
+                  {{ 'clients.settings.channelLimitLabel' | transloco }}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  inputmode="numeric"
+                  class="input input-bordered input-sm mt-1 w-full"
+                  [formControlName]="type + '_max'"
+                />
+              </div>
+            }
 
             <div class="org-settings-section rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
               <h4 class="org-settings-section-title text-sm font-bold text-base-content">

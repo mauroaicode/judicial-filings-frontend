@@ -13,6 +13,8 @@ import {
   OrganizationStats,
   SelectOptionsResponse,
   UpdateOrganizationActiveStatusPayload,
+  OrganizationNotificationChannelLimits,
+  UpdateOrganizationNotificationChannelLimitsPayload,
   UpdateOrganizationSettingsPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
@@ -160,6 +162,26 @@ export class OrganizationService {
     return this._http
       .put<UpdateOrganizationSettingsResponse | { data: UpdateOrganizationSettingsResponse }>(url, payload)
       .pipe(map((res) => this._unwrapData(res, 'settings')));
+  }
+
+  getNotificationChannelLimits(organizationId: string): Observable<OrganizationNotificationChannelLimits> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/notification-channel-limits`;
+    return this._http.get<OrganizationNotificationChannelLimits | { data: OrganizationNotificationChannelLimits }>(url).pipe(
+      map((res) => this._unwrapData(res, 'channels'))
+    );
+  }
+
+  /**
+   * Cupo de destinos por canal. `null` en un canal vuelve al default del sistema.
+   */
+  updateNotificationChannelLimits(
+    organizationId: string,
+    payload: UpdateOrganizationNotificationChannelLimitsPayload
+  ): Observable<OrganizationNotificationChannelLimits> {
+    const url = `${environment.apiBaseUrl}/organizations/${organizationId}/notification-channel-limits`;
+    return this._http
+      .put<{ message: string; limits: OrganizationNotificationChannelLimits }>(url, payload)
+      .pipe(map((res) => res.limits));
   }
 
   private _unwrapData<T extends object>(res: T | { data: T }, key: keyof T): T {

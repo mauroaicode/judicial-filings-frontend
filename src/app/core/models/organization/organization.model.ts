@@ -194,3 +194,31 @@ export interface UpdateOrganizationSettingsResponse {
   message: string;
   settings: OrganizationSettings;
 }
+
+export type NotificationChannelType = 'email' | 'whatsapp' | 'sms';
+
+export interface OrganizationNotificationChannelLimit {
+  channel_type: NotificationChannelType;
+  limit: number;
+  configured_limit: number | null;
+  default_limit: number;
+  used: number;
+  remaining: number;
+  can_add: boolean;
+}
+
+export interface OrganizationNotificationChannelLimits {
+  organization_id: string;
+  default_limit: number;
+  channels: OrganizationNotificationChannelLimit[];
+}
+
+/**
+ * PUT /organizations/{id}/notification-channel-limits
+ * `null` quita el override y vuelve al default del sistema.
+ */
+export interface UpdateOrganizationNotificationChannelLimitsPayload {
+  email?: number | null;
+  whatsapp?: number | null;
+  sms?: number | null;
+}

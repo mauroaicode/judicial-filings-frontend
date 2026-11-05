@@ -22,6 +22,24 @@
   overflow: hidden;
 }
 
+:host(.header-sync-live-banner) .judicial-sync-live--single {
+  .judicial-sync-live__track,
+  .judicial-sync-live__group {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .judicial-sync-live__chip {
+    max-width: 100%;
+    width: max-content;
+  }
+
+  .judicial-sync-live__text {
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
 .judicial-sync-live {
   display: flex;
   align-items: center;

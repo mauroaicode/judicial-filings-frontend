@@ -11,11 +11,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
+  NotificationChannelType,
   OrganizationDetail,
+  OrganizationNotificationChannelLimits,
   OrganizationStatusMode,
+  UpdateOrganizationNotificationChannelLimitsPayload,
   UpdateOrganizationSettingsPayload,
   UpdateOrganizationSettingsResponse,
 } from '@app/core/models/organization/organization.model';
@@ -63,12 +67,21 @@ export class OrganizationSettingsModalComponent implements OnInit {
   public saveError = signal<string | null>(null);
   public confirmSaveOpen = signal(false);
   public confirmDetailRows = signal<ConfirmationDialogDetailRow[]>([]);
+  public channelLimits = signal<OrganizationNotificationChannelLimits | null>(null);
+  readonly notificationChannelTypes: NotificationChannelType[] = ['email', 'whatsapp', 'sms'];
   private _pendingPayload: UpdateOrganizationSettingsPayload | null = null;
+  private _pendingChannelLimits: UpdateOrganizationNotificationChannelLimitsPayload | null = null;
 
   public settingsForm: FormGroup = this._fb.group({
     useDefault: [true],
     max_active_processes: [{ value: null as number | null, disabled: true }, [Validators.min(0)]],
     can_view_action_documents: [false],
+    email_use_default: [true],
+    email_max: [{ value: null as number | null, disabled: true }, [Validators.min(0), Validators.max(100)]],
+    whatsapp_use_default: [true],
+    whatsapp_max: [{ value: null as number | null, disabled: true }, [Validators.min(0), Validators.max(100)]],
+    sms_use_default: [true],
+    sms_max: [{ value: null as number | null, disabled: true }, [Validators.min(0), Validators.max(100)]],
   });
 
   ngOnInit(): void {
@@ -80,11 +93,17 @@ export class OrganizationSettingsModalComponent implements OnInit {
     this.loadError.set(null);
     this.saveError.set(null);
     this.detail.set(null);
+    this.channelLimits.set(null);
 
-    this._organizationService.getOrganization(this.organizationId()).subscribe({
-      next: (detail) => {
+    forkJoin({
+      detail: this._organizationService.getOrganization(this.organizationId()),
+      limits: this._organizationService.getNotificationChannelLimits(this.organizationId()),
+    }).subscribe({
+      next: ({ detail, limits }) => {
         this.detail.set(detail);
+        this.channelLimits.set(limits);
         this._patchForm(detail);
+        this._patchChannelLimits(limits);
         this.loading.set(false);
       },
       error: (err) => {
@@ -140,10 +159,17 @@ export class OrganizationSettingsModalComponent implements OnInit {
     }
 
     const canViewActionDocuments = !!this.settingsForm.get('can_view_action_documents')?.value;
+    const channelLimits = this._readChannelLimits();
+    if (!channelLimits) {
+      this.activeTab.set('settings');
+      return;
+    }
+
     this._pendingPayload = {
       max_active_processes: maxActiveProcesses,
       can_view_action_documents: canViewActionDocuments,
     };
+    this._pendingChannelLimits = channelLimits;
 
     this.confirmDetailRows.set([
       {
@@ -160,6 +186,15 @@ export class OrganizationSettingsModalComponent implements OnInit {
           ? this._transloco.translate('clients.settings.confirmYes')
           : this._transloco.translate('clients.settings.confirmNo'),
       },
+      ...this.notificationChannelTypes.map((type) => ({
+        label: this.channelTitle(type),
+        value:
+          channelLimits[type] === null
+            ? this._transloco.translate('clients.settings.channelUseDefault', {
+                value: this.channelLimits()?.default_limit ?? 3,
+              })
+            : String(channelLimits[type]),
+      })),
     ]);
     this.confirmSaveOpen.set(true);
   }
@@ -168,6 +203,7 @@ export class OrganizationSettingsModalComponent implements OnInit {
     if (this.saving()) return;
     this.confirmSaveOpen.set(false);
     this._pendingPayload = null;
+    this._pendingChannelLimits = null;
   }
 
   onConfirmSave(): void {
@@ -177,15 +213,26 @@ export class OrganizationSettingsModalComponent implements OnInit {
     }
 
     const payload = this._pendingPayload;
+    const channelLimits = this._pendingChannelLimits;
     this.confirmSaveOpen.set(false);
     this.saving.set(true);
 
     this._organizationService
       .updateOrganizationSettings(this.organizationId(), payload)
-      .pipe(finalize(() => this.saving.set(false)))
+      .pipe(
+        switchMap((response) =>
+          channelLimits
+            ? this._organizationService
+                .updateNotificationChannelLimits(this.organizationId(), channelLimits)
+                .pipe(map(() => response))
+            : of(response)
+        ),
+        finalize(() => this.saving.set(false)),
+      )
       .subscribe({
         next: (response) => {
           this._pendingPayload = null;
+          this._pendingChannelLimits = null;
           this.saved.emit(response);
         },
         error: (err) => {
@@ -243,6 +290,72 @@ export class OrganizationSettingsModalComponent implements OnInit {
 
   defaultHintValue(): string {
     return this.formatLimit(this.detail()?.settings.default_max_active_processes);
+  }
+
+  channelTitle(type: NotificationChannelType): string {
+    const key =
+      type === 'email'
+        ? 'clients.settings.channelEmail'
+        : type === 'whatsapp'
+          ? 'clients.settings.channelWhatsapp'
+          : 'clients.settings.channelSms';
+    return this._transloco.translate(key);
+  }
+
+  channelLimitFor(type: NotificationChannelType) {
+    return this.channelLimits()?.channels.find((channel) => channel.channel_type === type);
+  }
+
+  onChannelDefaultChange(type: NotificationChannelType, checked: boolean): void {
+    const control = this.settingsForm.get(`${type}_max`);
+    if (!control) return;
+
+    if (checked) {
+      control.disable({ emitEvent: false });
+      control.setValue(this.channelLimits()?.default_limit ?? 3, { emitEvent: false });
+    } else {
+      control.enable({ emitEvent: false });
+      if (control.value === null || control.value === undefined || control.value === '') {
+        control.setValue(this.channelLimits()?.default_limit ?? 3, { emitEvent: false });
+      }
+    }
+  }
+
+  private _patchChannelLimits(limits: OrganizationNotificationChannelLimits): void {
+    for (const channel of limits.channels) {
+      const useDefault = channel.configured_limit === null || channel.configured_limit === undefined;
+      this.settingsForm.get(`${channel.channel_type}_use_default`)?.setValue(useDefault, { emitEvent: false });
+      const control = this.settingsForm.get(`${channel.channel_type}_max`);
+      control?.setValue(channel.configured_limit ?? channel.default_limit, { emitEvent: false });
+      if (useDefault) {
+        control?.disable({ emitEvent: false });
+      } else {
+        control?.enable({ emitEvent: false });
+      }
+    }
+  }
+
+  private _readChannelLimits(): UpdateOrganizationNotificationChannelLimitsPayload | null {
+    const payload: UpdateOrganizationNotificationChannelLimitsPayload = {};
+
+    for (const type of this.notificationChannelTypes) {
+      const useDefault = !!this.settingsForm.get(`${type}_use_default`)?.value;
+      if (useDefault) {
+        payload[type] = null;
+        continue;
+      }
+
+      const parsed = this._parseNonNegativeInteger(this.settingsForm.getRawValue()[`${type}_max`]);
+      if (parsed === null || parsed > 100) {
+        this.saveError.set(this._transloco.translate('clients.settings.channelInvalid'));
+        this.settingsForm.get(`${type}_max`)?.markAsTouched();
+        return null;
+      }
+
+      payload[type] = parsed;
+    }
+
+    return payload;
   }
 
   private _patchForm(detail: OrganizationDetail): void {
