@@ -10,30 +10,26 @@ header {
 }
 
 .header-actions {
-  flex: 1 1 0%;
+  flex: 0 1 auto;
   min-width: 0;
-  max-width: min(100%, 64rem);
-  justify-content: flex-end;
+  max-width: 100%;
 }
 
 .header-sync-slot {
   position: relative;
   display: none;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: min(56rem, calc(100vw - 12rem));
   min-width: 0;
   overflow: hidden;
-  max-width: min(48rem, calc(100vw - 14rem));
 
   @media (min-width: 640px) {
     display: block;
   }
 
   @media (min-width: 1024px) {
-    max-width: min(56rem, calc(100vw - 20rem));
-  }
-
-  @media (min-width: 1280px) {
-    max-width: min(62rem, calc(100vw - 24rem));
+    max-width: min(62rem, calc(100vw - 16rem));
   }
 }
 
