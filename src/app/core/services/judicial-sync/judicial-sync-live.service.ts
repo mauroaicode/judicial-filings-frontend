@@ -47,7 +47,8 @@ export class JudicialSyncLiveService {
   private _joinedConnectionId = 0;
   private _epoch = 0;
   private _fetchGen = 0;
-  private _sourceEpoch = new Map<string, number>();
+  /** Epoch del último evento WS, por run (no por data_source: global y organización conviven). */
+  private _chipEpoch = new Map<string, number>();
   private _refreshSub: Subscription | null = null;
   private _refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private _pusherConnection: ReverbConnection | null = null;
@@ -91,7 +92,7 @@ export class JudicialSyncLiveService {
     this._refreshSub = null;
     this._unbindPusher();
     this._ws.leave(ADMIN_JUDICIAL_SYNC);
-    this._sourceEpoch.clear();
+    this._chipEpoch.clear();
     this._epoch = 0;
     this._activeSources.set([]);
     this._terminalByKey.set({});
@@ -189,14 +190,15 @@ export class JudicialSyncLiveService {
     }
 
     const local = this._activeSources();
-    const localMap = new Map(local.map((item) => [item.data_source, item]));
+    const localMap = new Map(local.map((item) => [this._chipKey(item), item]));
     const consumed = new Set<string>();
     const next: JudicialSyncLiveSource[] = [];
 
     for (const apiItem of apiActive) {
-      consumed.add(apiItem.data_source);
-      const localEpoch = this._sourceEpoch.get(apiItem.data_source) ?? 0;
-      const localItem = localMap.get(apiItem.data_source);
+      const key = this._chipKey(apiItem);
+      consumed.add(key);
+      const localEpoch = this._chipEpoch.get(key) ?? 0;
+      const localItem = localMap.get(key);
       if (localEpoch > epochAtStart) {
         if (localItem?.is_active) next.push(localItem);
         continue;
@@ -205,8 +207,9 @@ export class JudicialSyncLiveService {
     }
 
     for (const localItem of local) {
-      if (consumed.has(localItem.data_source)) continue;
-      const localEpoch = this._sourceEpoch.get(localItem.data_source) ?? 0;
+      const key = this._chipKey(localItem);
+      if (consumed.has(key)) continue;
+      const localEpoch = this._chipEpoch.get(key) ?? 0;
       if (localEpoch > epochAtStart && localItem.is_active) {
         next.push(localItem);
       }
@@ -221,20 +224,21 @@ export class JudicialSyncLiveService {
     if (!event) return;
 
     this._epoch += 1;
-    this._sourceEpoch.set(event.data_source, this._epoch);
+    const key = this._chipKey(event);
+    this._chipEpoch.set(key, this._epoch);
 
     if (event.is_active) {
-      this._clearTerminalForSource(event.data_source, event.run_id);
+      this._clearTerminalForChip(event);
     } else {
       this._storeTerminal(event);
     }
 
     this._activeSources.update((current) => {
       if (!event.is_active) {
-        return current.filter((item) => item.data_source !== event.data_source);
+        return current.filter((item) => this._chipKey(item) !== key);
       }
 
-      const index = current.findIndex((item) => item.data_source === event.data_source);
+      const index = current.findIndex((item) => this._chipKey(item) === key);
       const previous = index >= 0 ? current[index] : undefined;
       const nextSource = this._sourceFromEvent(event, previous);
       if (index >= 0) {
@@ -261,11 +265,13 @@ export class JudicialSyncLiveService {
     });
   }
 
-  private _clearTerminalForSource(dataSource: string, _runId: string | null): void {
+  /** Solo borra el cierre de este run. Un cron de organización no limpia el global de la misma fuente. */
+  private _clearTerminalForChip(event: JudicialSyncStatusUpdatedEvent): void {
+    const key = this._chipKey(event);
     this._terminalByKey.update((current) => {
       const next = { ...current };
       for (const terminal of Object.values(current)) {
-        if (terminal.data_source !== dataSource) continue;
+        if (this._chipKey(terminal) !== key) continue;
         for (const alias of this._terminalKeysForEvent(terminal)) {
           delete next[alias];
         }
@@ -275,10 +281,30 @@ export class JudicialSyncLiveService {
   }
 
   private _terminalKeysForEvent(event: JudicialSyncStatusUpdatedEvent): string[] {
-    const keys = [`source:${event.data_source}`];
+    const keys: string[] = [];
     if (event.run_id) keys.push(`run:${event.run_id}`);
     if (event.laravel_batch_id) keys.push(`batch:${event.laravel_batch_id}`);
+    if (!event.organization_id && !event.organization_name) {
+      keys.push(`source:${event.data_source}`);
+    }
+    if (keys.length === 0) keys.push(this._chipKey(event));
     return keys;
+  }
+
+  /**
+   * Identidad del chip. `run_id` manda: el cron global y el de una organización
+   * comparten `data_source` y no deben pisarse.
+   */
+  private _chipKey(item: {
+    run_id?: string | null;
+    data_source: string;
+    organization_id?: string | null;
+  }): string {
+    const runId = item.run_id?.trim();
+    if (runId) return `run:${runId}`;
+    const orgId = item.organization_id?.trim();
+    if (orgId) return `org:${item.data_source}:${orgId}`;
+    return `source:${item.data_source}`;
   }
 
   private _sourceFromEvent(
@@ -300,6 +326,8 @@ export class JudicialSyncLiveService {
       laravel_batch_id: event.laravel_batch_id,
       started_at: event.started_at,
       radicado_filter: previous?.radicado_filter ?? null,
+      organization_id: event.organization_id,
+      organization_name: event.organization_name,
     };
   }
 
@@ -313,7 +341,7 @@ export class JudicialSyncLiveService {
     const failed = this._nullableCount(event.failed_jobs_count);
 
     return {
-      run_id: typeof event.run_id === 'string' ? event.run_id : null,
+      run_id: typeof event.run_id === 'string' && event.run_id.trim() ? event.run_id.trim() : null,
       data_source: dataSource,
       data_source_label: typeof event.data_source_label === 'string' ? event.data_source_label : '',
       status: typeof event.status === 'string' ? event.status : null,
@@ -324,7 +352,15 @@ export class JudicialSyncLiveService {
       failed_jobs_count: failed === undefined ? null : failed,
       laravel_batch_id: typeof event.laravel_batch_id === 'string' ? event.laravel_batch_id : null,
       started_at: typeof event.started_at === 'string' ? event.started_at : null,
+      organization_id: this._nullableText(event.organization_id),
+      organization_name: this._nullableText(event.organization_name),
     };
+  }
+
+  private _nullableText(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed || null;
   }
 
   /** `undefined` si el campo no vino; `null` si el batch aún se prepara. */
@@ -339,13 +375,29 @@ export class JudicialSyncLiveService {
     const fromSources = Array.isArray(response?.sources)
       ? response.sources.filter((source) => source?.is_active === true)
       : [];
-    // `active` es la lista canónica; si llega vacía con fuentes `is_active`, usar `sources`.
+    // `active` es la lista canónica (un chip por run, global y por organización).
+    // `sources` solo describe el cron global y se usa si `active` llega vacío.
     const listed = fromActive.length > 0 ? fromActive : fromSources;
 
-    return listed.filter(
-      (source): source is JudicialSyncLiveSource =>
-        !!source && source.is_active === true && typeof source.data_source === 'string' && source.data_source !== '',
-    );
+    const byKey = new Map<string, JudicialSyncLiveSource>();
+    for (const source of listed) {
+      if (!source || source.is_active === false) continue;
+      if (typeof source.data_source !== 'string' || source.data_source === '') continue;
+      const normalized = this._normalizeLiveSource(source);
+      byKey.set(this._chipKey(normalized), normalized);
+    }
+    return [...byKey.values()];
+  }
+
+  private _normalizeLiveSource(source: JudicialSyncLiveSource): JudicialSyncLiveSource {
+    const runId = typeof source.run_id === 'string' ? source.run_id.trim() : '';
+    return {
+      ...source,
+      is_active: true,
+      run_id: runId || null,
+      organization_id: this._nullableText(source.organization_id),
+      organization_name: this._nullableText(source.organization_name),
+    };
   }
 
   private _attachWindowListeners(): void {

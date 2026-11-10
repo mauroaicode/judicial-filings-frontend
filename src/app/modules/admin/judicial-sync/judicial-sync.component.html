@@ -1,7 +1,12 @@
 <div class="judicial-sync-page w-full space-y-5 pb-24 lg:pb-0">
   @if (toastMessage(); as tm) {
     <div class="toast toast-end toast-bottom z-[10000] pointer-events-none">
-      <div class="alert alert-success shadow-lg border-none rounded-2xl font-semibold pointer-events-none">
+      <div
+        class="alert shadow-lg border-none rounded-2xl font-semibold pointer-events-none"
+        [class.alert-success]="toastKind() === 'success'"
+        [class.alert-info]="toastKind() === 'info'"
+        [class.alert-error]="toastKind() === 'error'"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -11,76 +16,113 @@
   }
 
   <!-- Panel de disparo -->
-  <section class="js-hero rounded-2xl border border-base-200 bg-base-100 shadow-sm overflow-hidden">
+  <section class="js-hero rounded-2xl border border-base-200 bg-base-100 shadow-sm">
     <div class="js-hero__accent" aria-hidden="true"></div>
-    <div class="flex flex-col gap-5 p-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8 lg:p-6">
-      <div class="min-w-0 max-w-lg pt-0.5">
+    <div class="js-hero__body">
+      <div class="js-hero__intro">
         <h1 class="text-2xl font-bold tracking-tight text-base-content md:text-[1.75rem]">
           {{ 'judicialSync.title' | transloco }}
         </h1>
-        <p class="mt-1.5 text-sm leading-relaxed text-base-content/65">
+        <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-base-content/65">
           {{ 'judicialSync.description' | transloco }}
         </p>
       </div>
 
-      <form [formGroup]="dispatchForm" class="js-dispatch w-full shrink-0 lg:max-w-md" autocomplete="off">
-        <div class="form-control w-full min-w-0">
-          <label class="label cursor-default justify-start py-0 pb-1.5">
-            <span class="label-text text-[11px] font-semibold uppercase tracking-wider text-base-content/50">{{
-              'judicialSync.radicadoLabel' | transloco
-            }}</span>
-          </label>
-          <input
-            type="text"
-            formControlName="radicado"
-            inputmode="numeric"
-            class="input input-bordered w-full min-w-0 font-mono text-sm tracking-wide focus:outline-none focus:border-primary"
-            [placeholder]="'judicialSync.radicadoPlaceholder' | transloco"
-            maxlength="64"
-            (keydown.enter)="$event.preventDefault()"
-          />
-          @if (dispatchForm.controls.radicado.touched && dispatchForm.controls.radicado.hasError('radicadoFormat')) {
-            <p class="mt-1 text-xs text-error">{{ 'judicialSync.radicadoInvalid' | transloco }}</p>
-          }
+      <form [formGroup]="dispatchForm" class="js-dispatch" autocomplete="off">
+        <div class="js-dispatch__panel">
+          <div class="form-control w-full min-w-0">
+            <label class="label cursor-default justify-start py-0 pb-1.5">
+              <span class="label-text text-[11px] font-semibold uppercase tracking-wider text-base-content/50">{{
+                'judicialSync.radicadoLabel' | transloco
+              }}</span>
+            </label>
+            <input
+              type="text"
+              formControlName="radicado"
+              inputmode="numeric"
+              class="input input-bordered h-12 min-h-12 w-full min-w-0 font-mono text-sm tracking-wide focus:outline-none focus:border-primary"
+              [placeholder]="'judicialSync.radicadoPlaceholder' | transloco"
+              maxlength="64"
+              (keydown.enter)="$event.preventDefault()"
+            />
+            @if (dispatchForm.controls.radicado.touched && dispatchForm.controls.radicado.hasError('radicadoFormat')) {
+              <p class="mt-1 text-xs text-error">{{ 'judicialSync.radicadoInvalid' | transloco }}</p>
+            }
+          </div>
+
+          <div class="js-dispatch__actions">
+            <button
+              type="button"
+              class="btn btn-primary h-11 min-h-11 rounded-xl gap-2 font-semibold shadow-none"
+              [disabled]="submittingJudicial() || dispatchForm.invalid"
+              (click)="openDispatchConfirm('judicial_branch')"
+            >
+              @if (submittingJudicial()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                {{ 'judicialSync.dispatchSubmitting' | transloco }}
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ 'judicialSync.dispatchJudicial' | transloco }}
+              }
+            </button>
+
+            <button
+              type="button"
+              class="btn js-btn-samai h-11 min-h-11 rounded-xl gap-2 border-none font-semibold text-white shadow-none"
+              [disabled]="submittingSamai() || dispatchForm.invalid"
+              (click)="openDispatchConfirm('samai')"
+            >
+              @if (submittingSamai()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                {{ 'judicialSync.dispatchSubmitting' | transloco }}
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ 'judicialSync.dispatchSamai' | transloco }}
+              }
+            </button>
+          </div>
+
+          <p class="js-dispatch__hint">{{ 'judicialSync.dispatchHint' | transloco }}</p>
         </div>
 
-        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div class="js-dispatch__panel js-dispatch__panel--org">
+          <div class="form-control w-full min-w-0">
+            <label class="label cursor-default justify-start py-0 pb-1.5">
+              <span class="label-text text-[11px] font-semibold uppercase tracking-wider text-base-content/50">{{
+                'judicialSync.organizationLabel' | transloco
+              }}</span>
+            </label>
+            <app-searchable-select
+              [value]="organizationId()"
+              (valueChange)="organizationId.set($event)"
+              [options]="organizationOptions()"
+              [placeholder]="'judicialSync.organizationPlaceholder' | transloco"
+              [searchPlaceholder]="'judicialSync.organizationSearch' | transloco"
+              [noResultsText]="'judicialSync.organizationEmpty' | transloco"
+              [loading]="organizationsLoading()"
+              [disabled]="submittingOrganization()"
+            />
+          </div>
+
           <button
             type="button"
-            class="btn btn-primary h-11 min-h-0 rounded-xl gap-2 font-semibold shadow-none"
-            [disabled]="submittingJudicial() || dispatchForm.invalid"
-            (click)="openDispatchConfirm('judicial_branch')"
+            class="btn btn-outline btn-primary js-dispatch__org-btn h-11 min-h-11 w-full rounded-xl font-semibold"
+            [disabled]="submittingOrganization() || organizationsLoading() || !organizationId() || dispatchForm.invalid"
+            (click)="openOrganizationDispatchConfirm()"
           >
-            @if (submittingJudicial()) {
+            @if (submittingOrganization()) {
               <span class="loading loading-spinner loading-sm"></span>
               {{ 'judicialSync.dispatchSubmitting' | transloco }}
             } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {{ 'judicialSync.dispatchJudicial' | transloco }}
+              {{ 'judicialSync.dispatchOrganization' | transloco }}
             }
           </button>
-
-          <button
-            type="button"
-            class="btn js-btn-samai h-11 min-h-0 rounded-xl gap-2 border-none font-semibold text-white shadow-none"
-            [disabled]="submittingSamai() || dispatchForm.invalid"
-            (click)="openDispatchConfirm('samai')"
-          >
-            @if (submittingSamai()) {
-              <span class="loading loading-spinner loading-sm"></span>
-              {{ 'judicialSync.dispatchSubmitting' | transloco }}
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {{ 'judicialSync.dispatchSamai' | transloco }}
-            }
-          </button>
+          <p class="js-dispatch__hint">{{ 'judicialSync.dispatchOrganizationHint' | transloco }}</p>
         </div>
-
-        <p class="mt-2.5 text-[11px] leading-snug text-base-content/40">{{ 'judicialSync.dispatchHint' | transloco }}</p>
       </form>
     </div>
   </section>
@@ -164,6 +206,9 @@
                   }}</span>
                   <span class="badge badge-sm font-semibold whitespace-nowrap" [ngClass]="dataSourceBadgeClass(run.data_source)">
                     {{ run.data_source_label?.trim() || dataSourceLabel(run.data_source) }}
+                    @if (run.organization_name?.trim(); as organizationName) {
+                      · {{ organizationName }}
+                    }
                   </span>
                   <span class="badge badge-outline badge-sm font-normal">{{ momentTranslocoKey(run.moment_of_day) | transloco }}</span>
                 </div>
@@ -240,7 +285,7 @@
     [title]="'judicialSync.confirm.title' | transloco"
     [message]="'judicialSync.confirm.message' | transloco"
     [detailRows]="getConfirmDetailRows()"
-    [footnote]="'judicialSync.confirm.footnote' | transloco"
+    [footnote]="confirmFootnote()"
     [confirmLabel]="'judicialSync.confirm.submit' | transloco"
     [cancelLabel]="'common.cancel' | transloco"
     confirmClass="btn-primary"

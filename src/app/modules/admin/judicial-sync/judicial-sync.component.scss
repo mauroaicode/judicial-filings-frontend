@@ -6,7 +6,64 @@
 .judicial-sync-page {
   .js-hero__accent {
     height: 3px;
+    border-radius: 1rem 1rem 0 0;
     background: linear-gradient(90deg, hsl(var(--p)) 0%, #0f766e 55%, #92400e 100%);
+  }
+
+  .js-hero__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1.25rem 1.35rem;
+  }
+
+  .js-dispatch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .js-dispatch__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .js-dispatch__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .js-dispatch__hint {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.35;
+    color: hsl(var(--bc) / 0.4);
+  }
+
+  @media (min-width: 640px) {
+    .js-dispatch__actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .js-hero__body {
+      padding: 1.35rem 1.5rem 1.5rem;
+    }
+
+    .js-dispatch {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 0 2rem;
+    }
+
+    .js-dispatch__panel--org {
+      padding-left: 2rem;
+      border-left: 1px solid hsl(var(--bc) / 0.1);
+    }
   }
 
   .js-btn-samai {

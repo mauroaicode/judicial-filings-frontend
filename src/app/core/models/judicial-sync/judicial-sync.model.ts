@@ -20,6 +20,20 @@ export interface JudicialSyncDispatchResponse {
   data_source_label: string;
 }
 
+/**
+ * POST /judicial-sync/organizations/{organization}
+ * Solo Rama Judicial. El body no lleva organization_id ni data_source.
+ */
+export interface JudicialSyncOrganizationDispatchResponse {
+  jobs_dispatched: number;
+  batch_dispatched: boolean;
+  radicado_filter: string | null;
+  data_source: 'judicial_branch';
+  data_source_label: string;
+  organization_id: string;
+  organization_name: string;
+}
+
 export interface JudicialSyncRun {
   id: string;
   data_source: JudicialSyncDataSource | string;
@@ -43,6 +57,9 @@ export interface JudicialSyncRun {
   /** ISO o cadena ya localizada/formateada desde el backend. */
   created_at: string;
   updated_at: string;
+  /** `null` = cron global. Con valor = cron de esa organización (solo Rama Judicial). */
+  organization_id?: string | null;
+  organization_name?: string | null;
 }
 
 export interface JudicialSyncRunsQuery {
@@ -85,6 +102,9 @@ export interface JudicialSyncLiveSource {
   laravel_batch_id: string | null;
   started_at: string | null;
   radicado_filter: string | null;
+  /** `null` en el cron global. El cron por organización llega como otra entrada de `active`. */
+  organization_id?: string | null;
+  organization_name?: string | null;
 }
 
 export interface JudicialSyncLiveStatusResponse {
@@ -109,4 +129,7 @@ export interface JudicialSyncStatusUpdatedEvent {
   failed_jobs_count: number | null;
   laravel_batch_id: string | null;
   started_at: string | null;
+  /** `null` = cron global de la fuente. Con valor = cron de esa organización. */
+  organization_id?: string | null;
+  organization_name?: string | null;
 }

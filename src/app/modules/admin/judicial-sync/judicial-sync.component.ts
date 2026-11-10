@@ -11,11 +11,15 @@ import {
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Organization } from '@app/core/models/organization/organization.model';
 import { JudicialSyncLiveService } from '@app/core/services/judicial-sync/judicial-sync-live.service';
 import { JudicialSyncService } from '@app/core/services/judicial-sync/judicial-sync.service';
+import { OrganizationService } from '@app/core/services/organization/organization.service';
 import {
   JudicialSyncDataSource,
   JudicialSyncDispatchableSource,
@@ -24,6 +28,7 @@ import {
   JudicialSyncStatusUpdatedEvent,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
 import { ConfirmationDialogComponent, ConfirmationDialogDetailRow } from '@app/shared/components/confirmation-dialog/confirmation-dialog.component';
+import { SearchableSelectComponent, SearchableSelectOption } from '@app/shared/components/searchable-select/searchable-select.component';
 import { ProcessNumberPipe } from '@app/shared/pipes/process-number.pipe';
 
 const PER_PAGE = 15;
@@ -39,7 +44,14 @@ function radicadoOptional(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-judicial-sync',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, ConfirmationDialogComponent, ProcessNumberPipe],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslocoPipe,
+    ConfirmationDialogComponent,
+    ProcessNumberPipe,
+    SearchableSelectComponent,
+  ],
   templateUrl: './judicial-sync.component.html',
   styleUrls: ['./judicial-sync.component.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -48,6 +60,7 @@ function radicadoOptional(control: AbstractControl): ValidationErrors | null {
 export class JudicialSyncComponent {
   private _fb = inject(FormBuilder);
   private _judicialSync = inject(JudicialSyncService);
+  private _organizations = inject(OrganizationService);
   private _liveSync = inject(JudicialSyncLiveService);
   private _transloco = inject(TranslocoService);
   private _destroyRef = inject(DestroyRef);
@@ -63,6 +76,11 @@ export class JudicialSyncComponent {
   /** Fuentes en cola de envío (pueden ir en paralelo). */
   public submittingJudicial = signal<boolean>(false);
   public submittingSamai = signal<boolean>(false);
+  public submittingOrganization = signal<boolean>(false);
+
+  public organizationsLoading = signal<boolean>(true);
+  public organizationOptions = signal<SearchableSelectOption[]>([]);
+  public organizationId = signal<string>('');
 
   public currentPage = signal<number>(1);
   public lastPage = signal<number>(1);
@@ -72,7 +90,9 @@ export class JudicialSyncComponent {
 
   public confirmDispatchOpen = signal<boolean>(false);
   public pendingDataSource = signal<JudicialSyncDispatchableSource | null>(null);
+  public pendingOrganizationId = signal<string | null>(null);
   public toastMessage = signal<string | null>(null);
+  public toastKind = signal<'success' | 'info' | 'error'>('success');
 
   /** Body normalizado solo dígitos (23) para POST */
   dispatchForm = this._fb.group({
@@ -85,6 +105,7 @@ export class JudicialSyncComponent {
   private _liveMatchedKeys = new Set<string>();
 
   constructor() {
+    this._loadOrganizations();
     this.reloadRuns(true);
 
     effect(
@@ -136,13 +157,27 @@ export class JudicialSyncComponent {
       return;
     }
     if (this.isSubmitting(source)) return;
+    this.pendingOrganizationId.set(null);
     this.pendingDataSource.set(source);
+    this.confirmDispatchOpen.set(true);
+  }
+
+  openOrganizationDispatchConfirm(): void {
+    if (this.dispatchForm.invalid) {
+      this.dispatchForm.markAllAsTouched();
+      return;
+    }
+    const organizationId = this.organizationId().trim();
+    if (!organizationId || this.submittingOrganization()) return;
+    this.pendingDataSource.set(null);
+    this.pendingOrganizationId.set(organizationId);
     this.confirmDispatchOpen.set(true);
   }
 
   cancelDispatchConfirm(): void {
     this.confirmDispatchOpen.set(false);
     this.pendingDataSource.set(null);
+    this.pendingOrganizationId.set(null);
   }
 
   dataSourceLabel(source: string | null | undefined): string {
@@ -153,14 +188,29 @@ export class JudicialSyncComponent {
     return source?.trim() || '–';
   }
 
+  confirmFootnote(): string {
+    const key = this.pendingOrganizationId()
+      ? 'judicialSync.confirm.footnoteOrganization'
+      : 'judicialSync.confirm.footnote';
+    return this._transloco.translate(key);
+  }
+
   getConfirmDetailRows(): ConfirmationDialogDetailRow[] {
-    const source = this.pendingDataSource();
+    const organizationId = this.pendingOrganizationId();
+    const source = organizationId ? 'judicial_branch' : this.pendingDataSource();
     const rows: ConfirmationDialogDetailRow[] = [
       {
         label: this._transloco.translate('judicialSync.confirm.dataSourceLabel'),
         value: this.dataSourceLabel(source),
       },
     ];
+
+    if (organizationId) {
+      rows.push({
+        label: this._transloco.translate('judicialSync.confirm.organizationLabel'),
+        value: this._organizationName(organizationId),
+      });
+    }
 
     const raw = String(this.dispatchForm.get('radicado')?.value ?? '').trim();
     const digits = raw.replace(/\D/g, '');
@@ -172,16 +222,24 @@ export class JudicialSyncComponent {
     } else {
       rows.push({
         label: this._transloco.translate('judicialSync.confirm.scopeLabel'),
-        value: this._transloco.translate('judicialSync.confirm.scopeAll'),
+        value: this._transloco.translate(
+          organizationId ? 'judicialSync.confirm.scopeOrganization' : 'judicialSync.confirm.scopeAll',
+        ),
       });
     }
     return rows;
   }
 
   onConfirmDispatch(): void {
+    const organizationId = this.pendingOrganizationId();
     const source = this.pendingDataSource();
     this.confirmDispatchOpen.set(false);
     this.pendingDataSource.set(null);
+    this.pendingOrganizationId.set(null);
+    if (organizationId) {
+      this._dispatchOrganization(organizationId);
+      return;
+    }
     if (!source) return;
 
     const digits = String(this.dispatchForm.get('radicado')?.value ?? '')
@@ -204,9 +262,105 @@ export class JudicialSyncComponent {
       },
       error: () => {
         this._setSubmitting(source, false);
-        this.showToast(this._transloco.translate('judicialSync.toastError'));
+        this.showToast(this._transloco.translate('judicialSync.toastError'), 'error');
       },
     });
+  }
+
+  private _dispatchOrganization(organizationId: string): void {
+    const digits = String(this.dispatchForm.get('radicado')?.value ?? '')
+      .trim()
+      .replace(/\D/g, '');
+    const radicado = digits.length === 23 ? digits : undefined;
+    const organizationName = this._organizationName(organizationId);
+
+    this.submittingOrganization.set(true);
+    this._judicialSync.dispatchOrganizationSync(organizationId, radicado).subscribe({
+      next: (res) => {
+        this.submittingOrganization.set(false);
+        const name = res.organization_name?.trim() || organizationName;
+        if (!res.batch_dispatched && res.jobs_dispatched === 0) {
+          this.showToast(
+            this._transloco.translate('judicialSync.toastOrganizationEmpty', { organization: name }),
+            'info',
+          );
+        } else {
+          this.showToast(
+            this._transloco.translate('judicialSync.toastOrganizationSuccess', {
+              organization: name,
+              jobs: String(res.jobs_dispatched),
+            }),
+          );
+        }
+        this.reloadRuns(true);
+        this._liveSync.scheduleRefresh();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submittingOrganization.set(false);
+        if (error.status === 401) return;
+        if (error.status === 403) {
+          this.showToast(this._apiErrorMessage(error, 'judicialSync.toastForbidden'), 'error');
+          return;
+        }
+        if (error.status === 404) {
+          this.showToast(this._transloco.translate('judicialSync.toastOrganizationNotFound'), 'error');
+          return;
+        }
+        this.showToast(this._apiErrorMessage(error, 'judicialSync.toastError'), 'error');
+      },
+    });
+  }
+
+  private _loadOrganizations(): void {
+    this.organizationsLoading.set(true);
+    this._organizations
+      .getOrganizations({ per_page: 500, is_active: 'active' })
+      .pipe(takeUntilDestroyed(this._destroyRef))
+      .subscribe({
+        next: (response) => {
+          const options = response.data
+            .filter((org) => this._canRunOrganizationCron(org))
+            .map((org) => ({ id: org.id, label: org.name }))
+            .sort((a, b) => a.label.localeCompare(b.label, 'es'));
+          this.organizationOptions.set(options);
+          this.organizationsLoading.set(false);
+        },
+        error: () => {
+          this.organizationOptions.set([]);
+          this.organizationsLoading.set(false);
+        },
+      });
+  }
+
+  /** El endpoint rechaza organizaciones sin seguimiento de procesos. */
+  private _canRunOrganizationCron(org: Organization): boolean {
+    if (org.status_mode) return org.status_mode === 'active';
+    if (org.is_process_tracking_enabled === false) return false;
+    return org.is_active !== false;
+  }
+
+  private _organizationName(organizationId: string): string {
+    return this.organizationOptions().find((org) => org.id === organizationId)?.label ?? organizationId;
+  }
+
+  private _apiErrorMessage(error: HttpErrorResponse, fallbackKey: string): string {
+    const body = error?.error;
+    if (body && typeof body === 'object') {
+      const fieldErrors = (body as { errors?: unknown }).errors;
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        const parts: string[] = [];
+        for (const value of Object.values(fieldErrors as Record<string, unknown>)) {
+          if (!Array.isArray(value)) continue;
+          for (const item of value) {
+            if (typeof item === 'string' && item.trim()) parts.push(item.trim());
+          }
+        }
+        if (parts.length > 0) return parts.join(' ');
+      }
+      const message = (body as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) return message.trim();
+    }
+    return this._transloco.translate(fallbackKey);
   }
 
   setHistoryDataSource(value: '' | JudicialSyncDataSource): void {
@@ -382,7 +536,7 @@ export class JudicialSyncComponent {
       const src = this._liveSourceForRun(run, live, claimed);
       if (!src) return run;
 
-      claimed.add(src.data_source);
+      claimed.add(this._liveClaimKey(src));
       if (run.id) nowKeys.add(run.id);
       if (run.laravel_batch_id) nowKeys.add(run.laravel_batch_id);
 
@@ -498,7 +652,8 @@ export class JudicialSyncComponent {
       return terminals[`batch:${run.laravel_batch_id}`];
     }
     const bySource = terminals[`source:${run.data_source}`];
-    if (!bySource) return undefined;
+    if (!bySource || run.organization_id) return undefined;
+    if (bySource.organization_id) return undefined;
     if (bySource.run_id && bySource.run_id !== run.id) return undefined;
     if (bySource.laravel_batch_id && run.laravel_batch_id && bySource.laravel_batch_id !== run.laravel_batch_id) {
       return undefined;
@@ -516,9 +671,22 @@ export class JudicialSyncComponent {
         (src.run_id != null && src.run_id === run.id) ||
         (!!src.laravel_batch_id && src.laravel_batch_id === run.laravel_batch_id),
     );
-    if (exact) return exact;
+    if (exact) return claimed.has(this._liveClaimKey(exact)) ? undefined : exact;
     if (!this._runLooksActive(run)) return undefined;
-    return live.find((src) => src.data_source === run.data_source && !claimed.has(src.data_source));
+    return live.find((src) => {
+      if (claimed.has(this._liveClaimKey(src))) return false;
+      if (src.data_source !== run.data_source) return false;
+      return (src.organization_id ?? null) === (run.organization_id ?? null);
+    });
+  }
+
+  /** El cron de una organización comparte `data_source` con el global: la clave es el run. */
+  private _liveClaimKey(src: JudicialSyncLiveSource): string {
+    const runId = src.run_id?.trim();
+    if (runId) return `run:${runId}`;
+    const orgId = src.organization_id?.trim();
+    if (orgId) return `org:${src.data_source}:${orgId}`;
+    return `source:${src.data_source}`;
   }
 
   private _runLooksActive(run: JudicialSyncRun): boolean {
@@ -545,11 +713,12 @@ export class JudicialSyncComponent {
     }
   }
 
-  private showToast(message: string): void {
+  private showToast(message: string, kind: 'success' | 'info' | 'error' = 'success'): void {
     if (this._toastTimer != null) {
       clearTimeout(this._toastTimer);
       this._toastTimer = null;
     }
+    this.toastKind.set(kind);
     this.toastMessage.set(message);
     this._toastTimer = setTimeout(() => {
       this.toastMessage.set(null);

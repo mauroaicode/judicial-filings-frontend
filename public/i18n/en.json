@@ -111,6 +111,12 @@
         "dispatchSamai": "SAMAI",
         "dispatchSubmitting": "Queueing…",
         "dispatchHint": "Same process number for both sources. They can run in parallel (separate queues).",
+        "organizationLabel": "Organization",
+        "organizationPlaceholder": "Select an organization",
+        "organizationSearch": "Search organization",
+        "organizationEmpty": "No organizations with active process tracking",
+        "dispatchOrganization": "Judicial Branch for this organization",
+        "dispatchOrganizationHint": "Judicial Branch only. Includes that organization's active filings, including ones shared with another organization.",
         "dataSource": {
             "judicialBranch": "Judicial Branch",
             "samai": "SAMAI",
@@ -124,9 +130,16 @@
             "radicadoLabel": "Process number",
             "scopeLabel": "Scope",
             "scopeAll": "All active processes",
-            "footnote": "Notifications depend on the queue and the selected data source."
+            "organizationLabel": "Organization",
+            "scopeOrganization": "Active filings for this organization",
+            "footnote": "Notifications depend on the queue and the selected data source.",
+            "footnoteOrganization": "Progress shows in the header and in the history. The digest email depends on the server configuration."
         },
         "toastSuccess": "{{source}} sync queued successfully ({{jobs}} job(s)).",
+        "toastOrganizationSuccess": "{{organization}} sync queued ({{jobs}} job(s)).",
+        "toastOrganizationEmpty": "{{organization}} has no eligible Judicial Branch filings.",
+        "toastOrganizationNotFound": "Organization not found.",
+        "toastForbidden": "You do not have permission to run this sync.",
         "toastError": "Could not queue the sync.",
         "moment": {
             "morning": "Morning",

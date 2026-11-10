@@ -110,6 +110,12 @@
     "dispatchSamai": "SAMAI",
     "dispatchSubmitting": "Encolando…",
     "dispatchHint": "Mismo radicado para ambas fuentes. Pueden ejecutarse en paralelo (colas distintas).",
+    "organizationLabel": "Organización",
+    "organizationPlaceholder": "Selecciona una organización",
+    "organizationSearch": "Buscar organización",
+    "organizationEmpty": "No hay organizaciones con seguimiento activo",
+    "dispatchOrganization": "Rama Judicial de esta organización",
+    "dispatchOrganizationHint": "Solo Rama Judicial. Incluye los radicados activos de esa organización, también los que comparte con otra.",
     "dataSource": {
       "judicialBranch": "Rama Judicial",
       "samai": "SAMAI",
@@ -123,9 +129,16 @@
       "radicadoLabel": "Radicado",
       "scopeLabel": "Alcance",
       "scopeAll": "Todos los procesos activos",
-      "footnote": "Las notificaciones por nuevas actuaciones dependen de la cola y de la fuente seleccionada."
+      "organizationLabel": "Organización",
+      "scopeOrganization": "Radicados activos de esta organización",
+      "footnote": "Las notificaciones por nuevas actuaciones dependen de la cola y de la fuente seleccionada.",
+      "footnoteOrganization": "El progreso se sigue en el encabezado y en el historial. El correo del consolidado depende de la configuración del servidor."
     },
     "toastSuccess": "Sincronización {{source}} encolada correctamente ({{jobs}} trabajo(s)).",
+    "toastOrganizationSuccess": "Sincronización de {{organization}} encolada ({{jobs}} trabajo(s)).",
+    "toastOrganizationEmpty": "{{organization}} no tiene radicados elegibles en Rama Judicial.",
+    "toastOrganizationNotFound": "No se encontró la organización.",
+    "toastForbidden": "No tienes permiso para ejecutar esta sincronización.",
     "toastError": "No se pudo encolar la sincronización.",
     "moment": {
       "morning": "Mañana",

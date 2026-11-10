@@ -6,6 +6,7 @@ import {
   JudicialSyncDispatchRequest,
   JudicialSyncDispatchResponse,
   JudicialSyncLiveStatusResponse,
+  JudicialSyncOrganizationDispatchResponse,
   JudicialSyncRunsQuery,
   JudicialSyncRunsResponse,
 } from '@app/core/models/judicial-sync/judicial-sync.model';
@@ -26,6 +27,20 @@ export class JudicialSyncService {
       data_source: payload.data_source ?? 'judicial_branch',
     };
     return this._http.post<JudicialSyncDispatchResponse>(this._baseUrl(), body);
+  }
+
+  /**
+   * Cron de Rama Judicial para una organización.
+   * Sin radicado, el body va vacío y sincroniza los radicados activos de esa organización.
+   */
+  dispatchOrganizationSync(
+    organizationId: string,
+    radicado?: string,
+  ): Observable<JudicialSyncOrganizationDispatchResponse> {
+    const url = `${this._baseUrl()}/organizations/${encodeURIComponent(organizationId.trim())}`;
+    const digits = (radicado ?? '').replace(/\D/g, '');
+    const body = digits.length === 23 ? { radicado: digits } : {};
+    return this._http.post<JudicialSyncOrganizationDispatchResponse>(url, body);
   }
 
   /**

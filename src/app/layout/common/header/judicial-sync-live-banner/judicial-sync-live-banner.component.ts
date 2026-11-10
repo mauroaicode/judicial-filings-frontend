@@ -132,8 +132,11 @@ export class JudicialSyncLiveBannerComponent {
   }
 
   private _chipView(source: JudicialSyncLiveSource, text: string, keySuffix = ''): LiveChip {
+    const runId = source.run_id?.trim();
+    const orgId = source.organization_id?.trim();
+    const identity = runId || (orgId ? `${source.data_source}:${orgId}` : source.data_source);
     return {
-      key: `${source.data_source}${keySuffix}`,
+      key: `${identity}${keySuffix}`,
       text,
       startedTooltip: this._startedTooltip(source),
     };
@@ -150,7 +153,7 @@ export class JudicialSyncLiveBannerComponent {
   }
 
   private _startedTooltip(source: JudicialSyncLiveSource): string {
-    const label = source.data_source_label?.trim() || source.data_source;
+    const label = this._displaySource(source);
     const when = this._formatStartedAt(source.started_at);
     if (when) {
       return this._transloco.translate('judicialSync.liveBanner.startedAt', {
@@ -172,8 +175,14 @@ export class JudicialSyncLiveBannerComponent {
     return date.toLocaleString(lang, { dateStyle: 'full', timeStyle: 'short' });
   }
 
-  private _chipText(source: JudicialSyncLiveSource): string {
+  private _displaySource(source: JudicialSyncLiveSource): string {
     const label = source.data_source_label?.trim() || source.data_source;
+    const organization = source.organization_name?.trim();
+    return organization ? `${label} · ${organization}` : label;
+  }
+
+  private _chipText(source: JudicialSyncLiveSource): string {
+    const label = this._displaySource(source);
     if (source.queue_pending_jobs == null) {
       return this._transloco.translate('judicialSync.liveBanner.preparing', { source: label });
     }
