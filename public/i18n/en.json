@@ -1302,7 +1302,7 @@
     },
     "presence": {
         "title": "User activity",
-        "description": "Who is connected now and who entered the system.",
+        "description": "Who is connected now, who entered the system, and which organizations have gone without connecting.",
         "organization": "Organization",
         "organizationAll": "All organizations",
         "organizationSearch": "Search organization",
@@ -1356,6 +1356,41 @@
             "lastSeen": "Last activity",
             "empty": "No activity in this period."
         },
+        "organizations": {
+            "title": "Organizations offline",
+            "description": "Organizations that have never entered the system or have gone a while without connecting.",
+            "tabs": {
+                "never": "Never",
+                "stale": "No recent connection",
+                "all": "All"
+            },
+            "threshold": "No activity for",
+            "days": "{{count}} days",
+            "search": "Search",
+            "searchPlaceholder": "Search by name",
+            "accountFilter": "Accounts",
+            "activeOnly": "Active only",
+            "inactiveOnly": "Inactive only",
+            "activeBoth": "Active and inactive",
+            "accountInactive": "Inactive account",
+            "neverValue": "Never",
+            "columns": {
+                "organization": "Organization",
+                "users": "Users",
+                "lastSeen": "Last activity",
+                "daysInactive": "Days offline",
+                "status": "Status"
+            },
+            "status": {
+                "never": "Never",
+                "stale": "Inactive",
+                "recent": "Recent"
+            },
+            "emptyNever": "Every active organization has connected at least once.",
+            "emptyStale": "No organization is past the inactivity threshold.",
+            "emptyAll": "No organizations match these filters.",
+            "emptySearch": "No organization matches the search."
+        },
         "table": {
             "person": "Person",
             "organization": "Organization",
@@ -1365,6 +1400,7 @@
             "loadOnline": "Could not load who is online.",
             "loadDaily": "Could not load who entered.",
             "loadSummary": "Could not load the summary.",
+            "loadOrganizations": "Could not load organizations that are offline.",
             "invalidDate": "The date must use the YYYY-MM-DD format.",
             "rangeOrder": "The start date cannot be after the end date.",
             "rangeIncomplete": "Choose a start and an end date.",

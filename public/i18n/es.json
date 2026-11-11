@@ -1299,7 +1299,7 @@
   },
   "presence": {
     "title": "Actividad de usuarios",
-    "description": "Quién está conectado ahora y quién entró al sistema.",
+    "description": "Quién está conectado ahora, quién entró al sistema y qué organizaciones llevan tiempo sin conectarse.",
     "organization": "Organización",
     "organizationAll": "Todas las organizaciones",
     "organizationSearch": "Buscar organización",
@@ -1353,6 +1353,41 @@
       "lastSeen": "Última actividad",
       "empty": "No hay actividad en este periodo."
     },
+    "organizations": {
+      "title": "Organizaciones sin conexión",
+      "description": "Organizaciones que nunca han entrado al sistema o llevan tiempo sin conectarse.",
+      "tabs": {
+        "never": "Nunca",
+        "stale": "Sin conexión reciente",
+        "all": "Todas"
+      },
+      "threshold": "Sin actividad desde hace",
+      "days": "{{count}} días",
+      "search": "Buscar",
+      "searchPlaceholder": "Buscar por nombre",
+      "accountFilter": "Cuentas",
+      "activeOnly": "Solo activas",
+      "inactiveOnly": "Solo inactivas",
+      "activeBoth": "Activas e inactivas",
+      "accountInactive": "Cuenta inactiva",
+      "neverValue": "Nunca",
+      "columns": {
+        "organization": "Organización",
+        "users": "Usuarios",
+        "lastSeen": "Última actividad",
+        "daysInactive": "Días sin conexión",
+        "status": "Estado"
+      },
+      "status": {
+        "never": "Nunca",
+        "stale": "Inactiva",
+        "recent": "Reciente"
+      },
+      "emptyNever": "Todas las organizaciones activas ya se han conectado al menos una vez.",
+      "emptyStale": "Ninguna organización supera el umbral de inactividad.",
+      "emptyAll": "No hay organizaciones con estos filtros.",
+      "emptySearch": "Ninguna organización coincide con la búsqueda."
+    },
     "table": {
       "person": "Persona",
       "organization": "Organización",
@@ -1362,6 +1397,7 @@
       "loadOnline": "No se pudo cargar quién está conectado.",
       "loadDaily": "No se pudo cargar quién entró.",
       "loadSummary": "No se pudo cargar el resumen.",
+      "loadOrganizations": "No se pudieron cargar las organizaciones sin conexión.",
       "invalidDate": "La fecha debe tener el formato AAAA-MM-DD.",
       "rangeOrder": "La fecha inicial no puede ser posterior a la final.",
       "rangeIncomplete": "Elige la fecha inicial y la final.",

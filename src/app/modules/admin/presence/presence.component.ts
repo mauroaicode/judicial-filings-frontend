@@ -21,6 +21,10 @@ import {
   DailyPresenceQuery,
   DailyPresenceRow,
   OnlineUser,
+  OrganizationPresenceListStatus,
+  OrganizationPresenceQuery,
+  OrganizationPresenceRow,
+  OrganizationPresenceTotals,
   PresenceChannelMember,
   PresencePage,
   PresenceSummaryQuery,
@@ -46,12 +50,14 @@ const APP_USERS_ONLINE = 'app-users.online';
 const ADMIN_PRESENCE = 'admin.presence';
 const ACTIVITY_EVENT = '.AppUserActivityRecorded';
 const ONLINE_REFRESH_DEBOUNCE_MS = 1000;
+const ORG_SEARCH_DEBOUNCE_MS = 300;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type DailyMode = 'day' | 'range';
 type SummaryPreset = 'today' | 'month' | 'custom';
 type OnlineState = 'loading' | 'ready' | 'unavailable' | 'error';
+type OrganizationActivityFilter = 'active' | 'inactive' | 'both';
 
 function bogotaToday(now = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -108,6 +114,8 @@ export class PresenceComponent {
   private _onlineRequest = 0;
   private _dailyRequest = 0;
   private _summaryRequest = 0;
+  private _orgRequest = 0;
+  private _orgSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly pageSizeOptions = [10, 20, 50, 100] as const;
 
@@ -155,12 +163,35 @@ export class PresenceComponent {
   summaryTo = signal<string | null>(null);
   summaryTotals = signal<PresenceSummaryTotals | null>(null);
 
+  readonly inactiveDayOptions = [7, 15, 30, 90] as const;
+
+  orgStatus = signal<OrganizationPresenceListStatus>('never');
+  orgInactiveDays = signal(30);
+  orgActivity = signal<OrganizationActivityFilter>('active');
+  orgSearch = signal('');
+  orgSearchDraft = signal('');
+  orgLoading = signal(true);
+  orgError = signal<string | null>(null);
+  orgRows = signal<OrganizationPresenceRow[]>([]);
+  orgMeta = signal<PresencePage | null>(null);
+  orgPerPage = signal(20);
+  orgTotals = signal<OrganizationPresenceTotals | null>(null);
+  orgAllTotal = computed(() => {
+    const totals = this.orgTotals();
+    if (!totals) return null;
+    return Number(totals.never || 0) + Number(totals.stale || 0) + Number(totals.recent || 0);
+  });
+
   constructor() {
     this._destroyRef.onDestroy(() => {
       this._destroyed = true;
       if (this._onlineRefreshTimer != null) {
         clearTimeout(this._onlineRefreshTimer);
         this._onlineRefreshTimer = null;
+      }
+      if (this._orgSearchTimer != null) {
+        clearTimeout(this._orgSearchTimer);
+        this._orgSearchTimer = null;
       }
       this._ws.leave(APP_USERS_ONLINE);
       this._ws.leave(ADMIN_PRESENCE);
@@ -175,6 +206,7 @@ export class PresenceComponent {
     this.loadOnline();
     this.loadDaily(1);
     this.loadSummary(1);
+    this.loadOrganizations(1);
   }
 
   onOrganizationChange(value: string): void {
@@ -474,6 +506,89 @@ export class PresenceComponent {
     this.loadSummary(1);
   };
 
+  setOrgStatus(status: OrganizationPresenceListStatus): void {
+    if (this.orgStatus() === status) return;
+    this.orgStatus.set(status);
+    this.loadOrganizations(1);
+  }
+
+  setOrgInactiveDays(days: number): void {
+    const next = this.inactiveDayOptions.find((option) => option === days);
+    if (next == null || next === this.orgInactiveDays()) return;
+    this.orgInactiveDays.set(next);
+    this.loadOrganizations(1);
+  }
+
+  setOrgActivity(activity: OrganizationActivityFilter): void {
+    if (this.orgActivity() === activity) return;
+    this.orgActivity.set(activity);
+    this.loadOrganizations(1);
+  }
+
+  onOrgSearchInput(value: string): void {
+    this.orgSearchDraft.set(value);
+    if (this._orgSearchTimer != null) clearTimeout(this._orgSearchTimer);
+    this._orgSearchTimer = setTimeout(() => {
+      this._orgSearchTimer = null;
+      if (this._destroyed) return;
+      const next = value.trim();
+      if (next === this.orgSearch()) return;
+      this.orgSearch.set(next);
+      this.loadOrganizations(1);
+    }, ORG_SEARCH_DEBOUNCE_MS);
+  }
+
+  loadOrganizations(page: number, options?: { silent?: boolean }): void {
+    const requestId = ++this._orgRequest;
+    const silent = options?.silent === true;
+    if (!silent) {
+      this.orgLoading.set(true);
+      this.orgError.set(null);
+    }
+    this._presence
+      .getOrganizations(this._organizationsQuery(page))
+      .pipe(takeUntilDestroyed(this._destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this._orgRequest || this._destroyed) return;
+          this.orgLoading.set(false);
+          this.orgError.set(null);
+          this.orgRows.set(response.data ?? []);
+          const perPage = Number(response.per_page) || this.orgPerPage();
+          this.orgPerPage.set(perPage);
+          this.orgTotals.set(response.totals ?? null);
+          this.orgMeta.set({
+            current_page: Number(response.current_page) || 1,
+            per_page: perPage,
+            total: Number(response.total) || 0,
+            last_page: Number(response.last_page) || 1,
+          });
+        },
+        error: (error: HttpErrorResponse) => {
+          if (requestId !== this._orgRequest || this._destroyed) return;
+          this.orgLoading.set(false);
+          if (silent) return;
+          this.orgRows.set([]);
+          this.orgMeta.set(null);
+          this.orgTotals.set(null);
+          this.orgError.set(this._apiError(error, 'presence.errors.loadOrganizations'));
+        },
+      });
+  }
+
+  readonly changeOrgPage = (page: number): void => {
+    const meta = this.orgMeta();
+    if (!meta || page < 1 || page > meta.last_page || page === meta.current_page) return;
+    this.loadOrganizations(page);
+  };
+
+  readonly changeOrgPerPage = (perPage: number): void => {
+    const next = Math.min(100, Math.max(1, Number(perPage) || 20));
+    if (next === this.orgPerPage()) return;
+    this.orgPerPage.set(next);
+    this.loadOrganizations(1);
+  };
+
   pageNumbers(meta: PresencePage): number[] {
     const last = Math.max(meta.last_page, 1);
     const current = Math.min(Math.max(meta.current_page, 1), last);
@@ -570,6 +685,7 @@ export class PresenceComponent {
       this.loadOnline({ silent: true });
       this.loadDaily(this.dailyMeta()?.current_page ?? 1, { silent: true });
       this.loadSummary(this.summaryMeta()?.current_page ?? 1, { silent: true });
+      this.loadOrganizations(this.orgMeta()?.current_page ?? 1, { silent: true });
     }, ONLINE_REFRESH_DEBOUNCE_MS);
   }
 
@@ -623,6 +739,20 @@ export class PresenceComponent {
       return { error: this._transloco.translate('presence.errors.rangeOrder') };
     }
     return { ...org, from, to, page, per_page: perPage };
+  }
+
+  private _organizationsQuery(page: number): OrganizationPresenceQuery {
+    const query: OrganizationPresenceQuery = {
+      status: this.orgStatus(),
+      inactive_days: this.orgInactiveDays(),
+      search: this.orgSearch().trim() || undefined,
+      page,
+      per_page: this.orgPerPage(),
+    };
+    const activity = this.orgActivity();
+    if (activity === 'inactive') query.is_active = false;
+    else if (activity === 'both') query.is_active = '';
+    return query;
   }
 
   private _summaryQuery(page: number): PresenceSummaryQuery | { error: string } {

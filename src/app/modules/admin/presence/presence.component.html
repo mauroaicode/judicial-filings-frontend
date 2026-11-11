@@ -1,4 +1,4 @@
-<div class="w-full space-y-6 pb-8">
+<div class="flex w-full flex-col gap-6 pb-8">
   <div>
     <h1 class="text-2xl font-bold text-base-content md:text-3xl">
       {{ 'presence.title' | transloco }}
@@ -395,6 +395,213 @@
           @if (meta.total > 0) {
             <ng-container
               *ngTemplateOutlet="pager; context: { meta: meta, onPage: changeSummaryPage, onPerPage: changeSummaryPerPage }"
+            ></ng-container>
+          }
+        }
+      }
+    </div>
+  </section>
+
+  <section
+    class="presence-organizations card bg-base-100 border border-base-200 shadow-sm rounded-2xl overflow-hidden"
+    aria-labelledby="presence-organizations-title"
+  >
+    <div class="card-body gap-4 p-4 md:p-5">
+      <div>
+        <h2 id="presence-organizations-title" class="text-lg font-bold text-base-content">
+          {{ 'presence.organizations.title' | transloco }}
+        </h2>
+        <p class="mt-1 text-sm text-base-content/65">{{ 'presence.organizations.description' | transloco }}</p>
+      </div>
+
+      <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap" role="tablist" [attr.aria-label]="'presence.organizations.title' | transloco">
+        <button
+          type="button"
+          role="tab"
+          class="btn btn-sm rounded-xl gap-2"
+          [class.btn-primary]="orgStatus() === 'never'"
+          [attr.aria-selected]="orgStatus() === 'never'"
+          (click)="setOrgStatus('never')"
+        >
+          {{ 'presence.organizations.tabs.never' | transloco }}
+          @if (orgTotals(); as totals) {
+            <span class="badge badge-sm tabular-nums bg-base-100 text-base-content border-0">{{ totals.never }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="btn btn-sm rounded-xl gap-2"
+          [class.btn-primary]="orgStatus() === 'stale'"
+          [attr.aria-selected]="orgStatus() === 'stale'"
+          (click)="setOrgStatus('stale')"
+        >
+          {{ 'presence.organizations.tabs.stale' | transloco }}
+          @if (orgTotals(); as totals) {
+            <span class="badge badge-sm tabular-nums bg-base-100 text-base-content border-0">{{ totals.stale }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="btn btn-sm rounded-xl gap-2"
+          [class.btn-primary]="orgStatus() === 'all'"
+          [attr.aria-selected]="orgStatus() === 'all'"
+          (click)="setOrgStatus('all')"
+        >
+          {{ 'presence.organizations.tabs.all' | transloco }}
+          @if (orgTotals()) {
+            <span class="badge badge-sm tabular-nums bg-base-100 text-base-content border-0">{{ orgAllTotal() }}</span>
+          }
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold text-base-content/60" id="presence-org-threshold">
+            {{ 'presence.organizations.threshold' | transloco }}
+          </span>
+          <div class="join" role="group" aria-labelledby="presence-org-threshold">
+            @for (days of inactiveDayOptions; track days) {
+              <button
+                type="button"
+                class="btn btn-sm join-item"
+                [class.btn-primary]="orgInactiveDays() === days"
+                (click)="setOrgInactiveDays(days)"
+              >
+                {{ 'presence.organizations.days' | transloco: { count: days } }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <label class="flex w-full max-w-xs flex-col gap-1">
+          <span class="text-xs font-semibold text-base-content/60">
+            {{ 'presence.organizations.search' | transloco }}
+          </span>
+          <input
+            type="search"
+            class="input input-bordered input-sm w-full"
+            [ngModel]="orgSearchDraft()"
+            (ngModelChange)="onOrgSearchInput($event)"
+            [placeholder]="'presence.organizations.searchPlaceholder' | transloco"
+            [attr.aria-label]="'presence.organizations.searchPlaceholder' | transloco"
+          />
+        </label>
+
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold text-base-content/60" id="presence-org-activity">
+            {{ 'presence.organizations.accountFilter' | transloco }}
+          </span>
+          <div class="join" role="group" aria-labelledby="presence-org-activity">
+            <button
+              type="button"
+              class="btn btn-sm join-item"
+              [class.btn-primary]="orgActivity() === 'active'"
+              (click)="setOrgActivity('active')"
+            >
+              {{ 'presence.organizations.activeOnly' | transloco }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm join-item"
+              [class.btn-primary]="orgActivity() === 'inactive'"
+              (click)="setOrgActivity('inactive')"
+            >
+              {{ 'presence.organizations.inactiveOnly' | transloco }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm join-item"
+              [class.btn-primary]="orgActivity() === 'both'"
+              (click)="setOrgActivity('both')"
+            >
+              {{ 'presence.organizations.activeBoth' | transloco }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (orgError()) {
+        <div class="alert alert-error rounded-xl">
+          <span>{{ orgError() }}</span>
+        </div>
+      }
+
+      @if (orgLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      } @else if (!orgError() && orgRows().length === 0) {
+        <p class="py-8 text-center text-sm text-base-content/60">
+          @if (orgSearch()) {
+            {{ 'presence.organizations.emptySearch' | transloco }}
+          } @else if (orgStatus() === 'stale') {
+            {{ 'presence.organizations.emptyStale' | transloco }}
+          } @else if (orgStatus() === 'never' && orgActivity() === 'active') {
+            {{ 'presence.organizations.emptyNever' | transloco }}
+          } @else {
+            {{ 'presence.organizations.emptyAll' | transloco }}
+          }
+        </p>
+      } @else if (orgRows().length > 0) {
+        <div class="overflow-x-auto -mx-4 md:-mx-5">
+          <table class="table table-zebra presence-table">
+            <thead>
+              <tr>
+                <th>{{ 'presence.organizations.columns.organization' | transloco }}</th>
+                <th>{{ 'presence.organizations.columns.users' | transloco }}</th>
+                <th>{{ 'presence.organizations.columns.lastSeen' | transloco }}</th>
+                <th>{{ 'presence.organizations.columns.daysInactive' | transloco }}</th>
+                <th>{{ 'presence.organizations.columns.status' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of orgRows(); track row.organization_id) {
+                <tr>
+                  <td>
+                    <div class="font-medium text-base-content">{{ row.organization_name }}</div>
+                    @if (!row.is_active) {
+                      <div class="text-xs text-base-content/50">{{ 'presence.organizations.accountInactive' | transloco }}</div>
+                    }
+                  </td>
+                  <td class="tabular-nums">{{ row.users_count }}</td>
+                  <td class="whitespace-nowrap tabular-nums">
+                    @if (row.last_seen_at) {
+                      {{ formatDateTime(row.last_seen_at) }}
+                    } @else {
+                      {{ 'presence.organizations.neverValue' | transloco }}
+                    }
+                  </td>
+                  <td class="tabular-nums">
+                    @if (row.days_inactive == null) {
+                      {{ 'presence.organizations.neverValue' | transloco }}
+                    } @else {
+                      {{ row.days_inactive }}
+                    }
+                  </td>
+                  <td>
+                    @switch (row.status) {
+                      @case ('never') {
+                        <span class="badge badge-ghost">{{ 'presence.organizations.status.never' | transloco }}</span>
+                      }
+                      @case ('stale') {
+                        <span class="badge badge-warning badge-outline">{{ 'presence.organizations.status.stale' | transloco }}</span>
+                      }
+                      @case ('recent') {
+                        <span class="badge badge-success badge-outline">{{ 'presence.organizations.status.recent' | transloco }}</span>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (orgMeta(); as meta) {
+          @if (meta.total > 0) {
+            <ng-container
+              *ngTemplateOutlet="pager; context: { meta: meta, onPage: changeOrgPage, onPerPage: changeOrgPerPage }"
             ></ng-container>
           }
         }
